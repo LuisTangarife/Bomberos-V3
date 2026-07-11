@@ -1,0 +1,49 @@
+<svg width="220" height="220" viewBox="0 0 220 220"
+xmlns="http://www.w3.org/2000/svg">
+
+<defs>
+
+<radialGradient id="fire">
+<stop offset="0%" stop-color="#FFD54F"/>
+<stop offset="55%" stop-color="#FF9800"/>
+<stop offset="100%" stop-color="#C62828"/>
+</radialGradient>
+
+<filter id="glow">
+<feGaussianBlur stdDeviation="8"/>
+</filter>
+
+</defs>
+
+
+<circle cx="110" cy="110" r="95"
+fill="rgba(255,255,255,.08)"
+stroke="rgba(255,255,255,.25)"
+stroke-width="2"/>
+
+
+<path d="
+M110 35
+C90 70 145 75 120 105
+C105 120 80 105 85 145
+C90 180 160 170 155 115
+C150 75 120 65 110 35Z"
+fill="url(#fire)"
+filter="url(#glow)"
+opacity=".7"/>
+
+
+<path d="
+M110 35
+C90 70 145 75 120 105
+C105 120 80 105 85 145
+C90 180 160 170 155 115
+C150 75 120 65 110 35Z"
+fill="url(#fire)"/>
+
+
+<circle cx="110" cy="140" r="22"
+fill="#FFF3CD"/>
+
+
+</svg>
