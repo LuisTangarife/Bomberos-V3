@@ -25,6 +25,12 @@ export function inicializarFirmas() {
 
     });
 
+    // En móviles, girar la pantalla cambia el ancho disponible del canvas.
+    window.addEventListener("resize", redimensionarCanvasFirmas);
+    window.addEventListener("orientationchange", () => {
+        setTimeout(redimensionarCanvasFirmas, 200);
+    });
+
 }
 
 function inicializarCanvasFirma(idCanvas, tipo) {
@@ -164,6 +170,33 @@ export function limpiarFirma(tipo) {
 
 export function existeFirma(tipo) {
     return !!state.firmas[tipo];
+}
+
+/**
+ * Vuelve a calcular el tamaño real (en píxeles) de los canvas de firma
+ * y restaura el trazo guardado, si existía.
+ *
+ * Es necesario llamarla cada vez que la vista del formulario pasa de
+ * oculta (display:none) a visible, porque al momento de la carga inicial
+ * (inicializarFirmas) el contenedor puede estar oculto y
+ * getBoundingClientRect() devuelve 0x0, dejando el canvas sin área de
+ * dibujo de forma permanente.
+ */
+export function redimensionarCanvasFirmas() {
+
+    ["inspector", "propietario"].forEach(tipo => {
+
+        const firma = state.canvas[tipo];
+        if (!firma) return;
+
+        const rect = firma.canvas.getBoundingClientRect();
+        if (rect.width === 0 || rect.height === 0) return; // aún oculto
+
+        ajustarCanvas(firma.canvas);
+        restaurarFirma(tipo);
+
+    });
+
 }
 
 export function limpiarTodasLasFirmas() {
