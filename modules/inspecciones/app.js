@@ -27,7 +27,7 @@ import { UI, inicializarDOM } from "./dom.js";
 
 import { siguientePaso, pasoAnterior, inicializarMenu, inicializarProgreso } from "./navegacion.js";
 import { inicializarFormulario, establecerFechaHora } from "./formulario.js";
-import { inicializarFirmas } from "./firmas.js";
+import { inicializarFirmas, redimensionarCanvasFirmas } from "./firmas.js";
 import { inicializarFotos } from "./fotos.js";
 import { iniciarAutoGuardado } from "./autoguardado.js";
 import { inicializarScrollTop, mostrarToast } from "./utilidades.js";
@@ -142,6 +142,12 @@ function mostrarVistaFormulario() {
     if (UI.vistaFormulario) UI.vistaFormulario.classList.add("activa");
 
     if (UI.wizard) UI.wizard.style.display = "";
+
+    // El canvas de firmas se inicializa con el DOM aún oculto (display:none),
+    // por lo que su área de dibujo queda en 0x0. Una vez que esta vista es
+    // visible y el navegador recalculó el layout, volvemos a ajustar el
+    // tamaño real de los canvas para que las firmas funcionen.
+    requestAnimationFrame(redimensionarCanvasFirmas);
 
     window.scrollTo({ top: 0, behavior: "smooth" });
 
