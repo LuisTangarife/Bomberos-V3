@@ -1,0 +1,3631 @@
+:root {
+  --red: #CC2200;
+  --red-dark: #991800;
+  --red-light: #FF3D1F;
+  --gold: #F5A623;
+  --dark: #111318;
+  --panel: #1A1D24;
+  --panel2: #22262F;
+  --border: #2E3340;
+  --text: #E8EAF0;
+  --muted: #8890A4;
+  --success: #2ECC71;
+  --font-display: 'Oswald', sans-serif;
+  --font-body: 'Source Sans 3', sans-serif;
+}
+/* ========================================================
+   LIGHT THEME
+========================================================= */
+
+body.light-theme {
+
+  --red: #CC2200;
+  --red-dark: #991800;
+  --red-light: #FF5C33;
+
+  --gold: #C28A00;
+
+  --dark: #F3F5F8;
+
+  --panel: #FFFFFF;
+  --panel2: #F7F8FA;
+
+  --border: #D8DEE8;
+
+  --text: #1B2430;
+  --muted: #667085;
+
+  --success: #1E9E52;
+}
+
+/* =========================================================
+   THEME TOGGLE BUTTON
+========================================================= */
+
+.theme-toggle {
+
+  width: 42px;
+  height: 42px;
+
+  border-radius: 12px;
+
+  border: 1px solid rgba(255,255,255,.12);
+
+  background: rgba(255,255,255,.06);
+
+  color: #fff;
+
+  cursor: pointer;
+
+  font-size: 1rem;
+
+  transition:
+    transform .2s ease,
+    background .2s ease,
+    border-color .2s ease;
+}
+
+.theme-toggle:hover {
+
+  transform: translateY(-1px);
+
+  border-color: rgba(255,255,255,.25);
+
+  background: rgba(255,255,255,.12);
+}
+
+/* LIGHT MODE BUTTON */
+
+body.light-theme .theme-toggle {
+
+  background: #fff;
+
+  color: #222;
+
+  border: 1px solid #D0D5DD;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: var(--font-body);
+  background: var(--dark);
+  color: var(--text);
+  min-height: 100vh;
+  font-size: 15px;
+}
+
+/* =========================================================
+   HEADER PREMIUM BOMBEROS
+========================================================= */
+
+.header{
+  position: sticky;
+  top: 0;
+  z-index: 100000; /* siempre encima */
+  
+  background:
+  linear-gradient(
+    135deg,
+    #6d0d00 0%,
+    #CC2200 55%,
+    #ff5c33 100%
+  );
+
+  border-bottom:4px solid var(--gold);
+
+  overflow:hidden;
+
+  box-shadow:
+  0 10px 35px rgba(0,0,0,.35);
+}
+
+/* brillo decorativo */
+
+.header::before{
+  content:"";
+
+  position:absolute;
+
+  top:-120px;
+  right:-100px;
+
+  width:300px;
+  height:300px;
+
+  background:
+  radial-gradient(
+    circle,
+    rgba(255,255,255,.12),
+    transparent 70%
+  );
+
+  pointer-events:none;
+}
+
+.header-inner{
+
+  max-width:1200px;
+
+  margin:auto;
+
+  padding:14px 25px;
+
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+
+  gap:20px;
+}
+
+
+/* IZQUIERDA */
+
+.logo-block{
+
+  display:flex;
+  align-items:center;
+  gap:18px;
+
+  flex:1;
+}
+
+
+/* LOGO PRINCIPAL */
+
+.logo-principal{
+
+  height:85px;
+  width:auto;
+
+  object-fit:contain;
+
+  transition:.35s;
+
+  filter:
+  drop-shadow(
+  0 6px 15px rgba(0,0,0,.45)
+  );
+}
+
+.logo-principal:hover{
+
+  transform:scale(1.05)
+  rotate(-2deg);
+}
+
+
+/* TEXTOS */
+
+.header-texts{
+
+display:flex;
+flex-direction:column;
+gap:6px;
+
+}
+
+
+.header-title{
+
+font-family:var(--font-display);
+
+font-size:1.8rem;
+
+font-weight:700;
+
+color:white;
+
+letter-spacing:1px;
+
+line-height:1;
+}
+
+
+.header-sub{
+
+font-size:.78rem;
+
+color:rgba(255,255,255,.85);
+
+letter-spacing:2px;
+
+text-transform:uppercase;
+}
+
+.nit-only{
+
+font-size:.72rem;
+
+color:#FFD54A;
+
+font-weight:700;
+
+}
+
+
+/* DERECHA */
+
+.header-right{
+
+display:flex;
+align-items:center;
+gap:14px;
+}
+
+
+/* TARJETAS */
+
+.header-card{
+
+width:90px;
+height:90px;
+
+display:flex;
+align-items:center;
+justify-content:center;
+
+background:
+
+rgba(255,255,255,.08);
+
+backdrop-filter:blur(12px);
+
+border-radius:18px;
+
+border:1px solid rgba(255,255,255,.15);
+
+box-shadow:
+
+0 6px 18px rgba(0,0,0,.25);
+
+transition:.3s;
+}
+
+.header-card:hover{
+
+transform:translateY(-3px);
+}
+
+
+.escudo-colombia{
+
+height:70px;
+width:auto;
+}
+
+
+.qr-header{
+
+height:75px;
+width:75px;
+
+background:#fff;
+
+padding:4px;
+
+border-radius:10px;
+}
+
+
+/* BARRA ESTADOS */
+
+.status-bar{
+
+display:flex;
+
+align-items:center;
+
+gap:10px;
+
+margin-top:8px;
+
+flex-wrap:wrap;
+}
+
+
+.offline-badge,
+.online-badge,
+.pending-badge{
+
+padding:6px 12px;
+
+border-radius:999px;
+
+font-size:.68rem;
+
+font-weight:700;
+
+background:rgba(255,255,255,.12);
+
+color:#fff;
+}
+
+
+/* =========================================================
+   TABLET
+========================================================= */
+
+@media(max-width:900px){
+
+.header-inner{
+
+flex-direction:column;
+text-align:center;
+
+}
+
+.logo-block{
+
+justify-content:center;
+flex-direction:column;
+}
+
+}
+
+
+/* =========================================================
+   MÓVIL
+========================================================= */
+
+@media(max-width:768px){
+
+.logo-principal{
+
+height:70px;
+}
+
+.header-title{
+
+font-size:1.3rem;
+}
+
+.header-right{
+
+gap:8px;
+}
+
+.header-card{
+
+width:70px;
+height:70px;
+}
+
+.escudo-colombia{
+
+height:50px;
+}
+
+.qr-header{
+
+height:55px;
+width:55px;
+}
+
+}
+/* MAIN */
+.main {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 28px 20px 60px;
+}
+
+.form-container {
+  background: var(--panel);
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  padding: 28px;
+  box-shadow: 0 8px 40px rgba(0,0,0,0.4);
+}
+
+/* SECTION TITLES */
+.section-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-family: var(--font-display);
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 2px;
+  color: var(--gold);
+  text-transform: uppercase;
+  margin: 24px 0 16px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+}
+.section-title:first-child { margin-top: 0; }
+.section-num {
+  background: var(--red);
+  color: #fff;
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 4px;
+  letter-spacing: 1px;
+}
+
+/* FIELDS */
+.fields-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+@media (max-width: 600px) {
+  .fields-grid { grid-template-columns: 1fr; }
+}
+.field-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  position: relative;
+}
+.field-group.full-width { grid-column: 1 / -1; }
+
+label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--muted);
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+}
+.req { color: var(--red-light); }
+.voice-hint {
+  color: var(--gold);
+  font-weight: 300;
+  font-size: 0.7rem;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+input[type="text"],
+input[type="number"],
+input[type="date"],
+input[type="time"],
+select,
+textarea {
+  background: var(--panel2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+  padding: 10px 14px;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  width: 100%;
+  outline: none;
+  -webkit-appearance: none;
+}
+input[type="date"]::-webkit-calendar-picker-indicator,
+input[type="time"]::-webkit-calendar-picker-indicator {
+  filter: invert(0.7);
+  cursor: pointer;
+}
+input:focus, select:focus, textarea:focus {
+  border-color: var(--red);
+  box-shadow: 0 0 0 3px rgba(204,34,0,0.15);
+}
+input[readonly] {
+  color: var(--gold);
+  cursor: default;
+}
+select option { background: var(--panel2); }
+textarea { resize: vertical; min-height: 100px; }
+
+/* SPELL SUGGESTIONS */
+.spell-suggestions {
+  display: none;
+  background: var(--panel2);
+  border: 1px solid var(--gold);
+  border-radius: 6px;
+  padding: 8px;
+  margin-top: 4px;
+  font-size: 0.82rem;
+}
+.spell-suggestions.visible { display: block; }
+.spell-suggestions .sugg-label {
+  color: var(--gold);
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 1px;
+  margin-bottom: 6px;
+  text-transform: uppercase;
+}
+.spell-word { 
+  display: inline-block;
+  background: rgba(204,34,0,0.15);
+  border: 1px solid rgba(204,34,0,0.3);
+  border-radius: 4px;
+  padding: 2px 8px;
+  margin: 3px;
+  cursor: pointer;
+  color: #FF8080;
+  font-size: 0.8rem;
+  transition: background 0.15s;
+}
+.spell-word:hover { background: rgba(204,34,0,0.3); }
+.spell-correct {
+  display: inline-block;
+  background: rgba(46,204,113,0.15);
+  border: 1px solid rgba(46,204,113,0.3);
+  border-radius: 4px;
+  padding: 2px 8px;
+  margin: 3px;
+  cursor: pointer;
+  color: #80FF80;
+  font-size: 0.8rem;
+  transition: background 0.15s;
+}
+.spell-correct:hover { background: rgba(46,204,113,0.3); }
+
+/* LOCATION */
+.btn-location {
+  background: linear-gradient(135deg, #1A3D5C, #1E4F78);
+  border: 1px solid #2A6098;
+  border-radius: 6px;
+  color: #7EC8F0;
+  font-family: var(--font-body);
+  font-size: 0.9rem;
+  font-weight: 600;
+  padding: 10px 20px;
+  cursor: pointer;
+  transition: all 0.2s;
+  letter-spacing: 0.5px;
+}
+.btn-location:hover { background: linear-gradient(135deg, #1E4F78, #236090); }
+.location-status {
+  font-size: 0.8rem;
+  margin-top: 6px;
+  min-height: 20px;
+  color: var(--muted);
+}
+.location-status.success { color: var(--success); }
+.location-status.error { color: #FF8080; }
+
+/* VOICE */
+.textarea-wrapper { position: relative; }
+.textarea-wrapper textarea { padding-right: 50px; }
+.btn-voice {
+  position: absolute;
+  right: 8px;
+  top: 8px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  width: 36px;
+  height: 36px;
+  font-size: 1.1rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  padding: 0;
+}
+.btn-voice:hover { border-color: var(--red); background: rgba(204,34,0,0.1); }
+.btn-voice.recording {
+  background: rgba(204,34,0,0.2);
+  border-color: var(--red-light);
+  animation: pulse-rec 1s ease-in-out infinite;
+}
+@keyframes pulse-rec {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(204,34,0,0.4); }
+  50% { box-shadow: 0 0 0 6px rgba(204,34,0,0); }
+}
+.voice-status {
+  font-size: 0.78rem;
+  color: var(--red-light);
+  margin-top: 4px;
+  min-height: 18px;
+  letter-spacing: 0.5px;
+}
+
+/* ACTIONS */
+.actions-bar {
+  display: flex;
+  gap: 12px;
+  margin-top: 28px;
+  flex-wrap: wrap;
+}
+.btn-save, .btn-cert, .btn-clear {
+  font-family: var(--font-display);
+  font-size: 0.95rem;
+  font-weight: 600;
+  letter-spacing: 1.5px;
+  padding: 13px 24px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-transform: uppercase;
+}
+.btn-save {
+  background: linear-gradient(135deg, var(--red-dark), var(--red));
+  color: #fff;
+  box-shadow: 0 4px 16px rgba(204,34,0,0.3);
+  flex: 1;
+}
+.btn-save:hover { background: linear-gradient(135deg, var(--red), var(--red-light)); box-shadow: 0 6px 20px rgba(204,34,0,0.5); }
+.btn-cert {
+  background: linear-gradient(135deg, #1A4A1A, #226622);
+  color: #80FF80;
+  border: 1px solid #2E7D2E;
+  flex: 1;
+}
+.btn-cert:hover { background: linear-gradient(135deg, #226622, #2E7D2E); }
+.btn-clear {
+  background: var(--panel2);
+  color: var(--muted);
+  border: 1px solid var(--border);
+  padding: 13px 18px;
+}
+.btn-clear:hover { border-color: #FF8080; color: #FF8080; }
+
+.save-feedback {
+  margin-top: 12px;
+  font-size: 0.85rem;
+  min-height: 20px;
+  text-align: center;
+  letter-spacing: 0.5px;
+  transition: all 0.3s;
+}
+.save-feedback.ok { color: var(--success); }
+.save-feedback.err { color: #FF8080; }
+
+/* SAVED REPORTS */
+.saved-section {
+  margin-top: 32px;
+  background: var(--panel);
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  padding: 24px;
+}
+.report-card {
+  background: var(--panel2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 14px 16px;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+.report-card:hover { border-color: var(--red); }
+.report-tag {
+  background: var(--red);
+  color: #fff;
+  font-family: var(--font-display);
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 4px;
+  white-space: nowrap;
+  letter-spacing: 1px;
+}
+.report-info { flex: 1; }
+.report-title { font-size: 0.9rem; font-weight: 600; color: var(--text); }
+.report-meta { font-size: 0.75rem; color: var(--muted); margin-top: 2px; }
+.report-actions { display: flex; gap: 8px; }
+.btn-mini {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--muted);
+  border-radius: 4px;
+  padding: 4px 10px;
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.btn-mini:hover { border-color: var(--red); color: var(--text); }
+.empty-msg { color: var(--muted); font-size: 0.85rem; text-align: center; padding: 20px; }
+
+/* MODAL */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.8);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  backdrop-filter: blur(4px);
+  overflow-y: auto;
+}
+.modal {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  width: 100%;
+  max-width: 880px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.7);
+  animation: modalIn 0.25s ease;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+@keyframes modalIn {
+  from { transform: scale(0.95) translateY(20px); opacity: 0; }
+  to { transform: scale(1) translateY(0); opacity: 1; }
+}
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 24px;
+  border-bottom: 1px solid var(--border);
+  font-family: var(--font-display);
+  font-size: 0.9rem;
+  letter-spacing: 2px;
+  color: var(--gold);
+}
+.modal{
+  max-height: 95vh;
+  overflow-y: auto;
+}
+.cert-content{
+  overflow: visible;
+}
+.modal-close {
+  background: transparent;
+  border: none;
+  color: var(--muted);
+  font-size: 1.2rem;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: color 0.15s;
+}
+.modal-close:hover { color: var(--text); }
+
+
+
+/* ============================================================
+   FOTO / EVIDENCIA — NUEVO DISEÑO MODERNO
+============================================================ */
+
+.photo-upload-wrapper{
+  display:flex;
+  flex-direction:column;
+  gap:18px;
+}
+
+/* ZONA DE CARGA */
+
+.photo-upload-box{
+  position:relative;
+
+  background:
+    linear-gradient(
+      145deg,
+      rgba(255,255,255,.03),
+      rgba(255,255,255,.015)
+    );
+
+  border:1px solid rgba(255,255,255,.08);
+
+  border-radius:18px;
+
+  padding:28px;
+
+  transition:
+    border-color .25s ease,
+    transform .25s ease,
+    box-shadow .25s ease;
+
+  overflow:hidden;
+}
+
+.photo-upload-box:hover{
+  border-color:rgba(255,92,51,.55);
+
+  box-shadow:
+    0 10px 35px rgba(0,0,0,.25),
+    0 0 0 1px rgba(255,92,51,.15);
+
+  transform:translateY(-2px);
+}
+
+/* brillo decorativo */
+
+.photo-upload-box::before{
+  content:'';
+
+  position:absolute;
+
+  top:-40%;
+  right:-10%;
+
+  width:220px;
+  height:220px;
+
+  background:
+    radial-gradient(
+      circle,
+      rgba(255,92,51,.14),
+      transparent 70%
+    );
+
+  pointer-events:none;
+}
+
+/* INPUT */
+
+.photo-upload-box input{
+  display:none;
+}
+
+/* CONTENIDO */
+
+.upload-content{
+  position:relative;
+  z-index:2;
+
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:24px;
+
+  flex-wrap:wrap;
+}
+
+/* TEXTO */
+
+.upload-text{
+  flex:1;
+  min-width:220px;
+}
+
+.upload-label{
+  display:flex;
+  align-items:center;
+  gap:10px;
+
+  font-size:1rem;
+  font-weight:700;
+  color:#fff;
+}
+
+.upload-label-icon{
+  width:38px;
+  height:38px;
+
+  border-radius:12px;
+
+  display:flex;
+  align-items:center;
+  justify-content:center;
+
+  background:rgba(255,92,51,.12);
+
+  border:1px solid rgba(255,92,51,.25);
+
+  font-size:1rem;
+}
+
+.upload-subtitle{
+  margin-top:8px;
+
+  color:rgba(255,255,255,.62);
+
+  font-size:.9rem;
+  line-height:1.6;
+}
+
+/* BOTÓN */
+
+.upload-btn{
+  background:
+    linear-gradient(
+      135deg,
+      #CC2200,
+      #ff5c33
+    );
+
+  color:white;
+
+  border:none;
+
+  border-radius:12px;
+
+  padding:12px 22px;
+
+  font-weight:700;
+  font-size:.9rem;
+
+  cursor:pointer;
+
+  transition:
+    transform .2s ease,
+    box-shadow .2s ease;
+}
+
+.upload-btn:hover{
+  transform:translateY(-1px);
+
+  box-shadow:
+    0 8px 20px rgba(255,92,51,.3);
+}
+
+/* GRID */
+.photo-preview-grid{
+  display:grid;
+
+  grid-template-columns:
+    repeat(auto-fill,minmax(160px,1fr));
+
+  gap:16px;
+}
+
+.photo-preview-grid{
+  display:grid;
+
+  grid-template-columns:
+    repeat(auto-fill,minmax(160px,1fr));
+
+  gap:16px;
+}
+
+/* CARD */
+
+.preview-card{
+  position:relative;
+
+  border-radius:18px;
+
+  overflow:hidden;
+
+  background:#111;
+
+  border:1px solid rgba(255,255,255,.08);
+
+  transition:
+    transform .25s ease,
+    border-color .25s ease,
+    box-shadow .25s ease;
+}
+.preview-card:hover{
+  transform:translateY(-3px);
+
+  border-color:rgba(255,92,51,.45);
+
+  box-shadow:
+    0 12px 28px rgba(0,0,0,.35);
+}
+
+/* IMAGEN */
+
+.preview-card img{
+  display:block;
+
+  width:100%;
+  height:auto;
+
+  max-height:280px;
+
+  object-fit:contain;
+}
+
+.preview-card:hover img{
+  transform:scale(1.05);
+}
+
+/* OVERLAY */
+
+.preview-card::after{
+  content:'';
+
+  position:absolute;
+  inset:0;
+
+  background:
+    linear-gradient(
+      to top,
+      rgba(0,0,0,.55),
+      transparent 45%
+    );
+
+  pointer-events:none;
+}
+
+/* NÚMERO */
+
+.preview-number{
+  position:absolute;
+
+  top:10px;
+  right:10px;
+
+  width:28px;
+  height:28px;
+
+  border-radius:50%;
+
+  display:flex;
+  align-items:center;
+  justify-content:center;
+
+  background:rgba(0,0,0,.55);
+
+  backdrop-filter:blur(8px);
+
+  color:#fff;
+
+  font-size:.78rem;
+  font-weight:700;
+
+  z-index:5;
+}
+
+/* BOTÓN ELIMINAR */
+
+.preview-remove{
+  position:absolute;
+
+  bottom:10px;
+  right:10px;
+
+  width:32px;
+  height:32px;
+
+  border:none;
+
+  border-radius:10px;
+
+  background:rgba(15,15,15,.75);
+
+  backdrop-filter:blur(8px);
+
+  color:#fff;
+
+  cursor:pointer;
+
+  z-index:5;
+
+  transition:
+    background .2s ease,
+    transform .2s ease;
+}
+
+.preview-remove:hover{
+  background:#CC2200;
+  transform:scale(1.08);
+}
+
+/* INFO */
+
+.photo-counter{
+  font-size:.82rem;
+  color:rgba(255,255,255,.55);
+
+  margin-top:-4px;
+}
+/* ============================================================
+   MODO CLARO — FOTO / EVIDENCIA
+============================================================ */
+
+body.light-theme .photo-upload-box{
+  background:
+    linear-gradient(
+      145deg,
+      rgba(255,255,255,.95),
+      rgba(245,245,245,.95)
+    );
+
+  border:1px solid rgba(0,0,0,.08);
+}
+
+body.light-theme .upload-label{
+  color:#111;
+}
+
+body.light-theme .upload-subtitle{
+  color:#444;
+}
+
+body.light-theme .photo-counter{
+  color:#555;
+}
+
+body.light-theme .upload-label-icon{
+  background:rgba(204,34,0,.08);
+
+  border:1px solid rgba(204,34,0,.15);
+}
+
+body.light-theme .preview-card{
+  background:#fff;
+
+  border:1px solid rgba(0,0,0,.08);
+}
+
+body.light-theme .preview-number{
+  background:rgba(255,255,255,.85);
+
+  color:#111;
+}
+
+body.light-theme .preview-remove{
+  background:rgba(255,255,255,.9);
+
+  color:#111;
+}
+/* ============================================================
+   ESTILOS GENERALES (pantalla)
+   Idéntica estructura al certificado ANBC Chile
+   Paleta: amarillo/negro institucional Villamaría, Caldas
+   ============================================================ */
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+/* ============================================================
+   SOLO CERTIFICADO / PREVIEW PDF
+============================================================ */
+
+.cert-preview-wrapper {
+  background: #e8e8e8;
+  display: flex;
+  justify-content: center;
+  padding: 40px 20px;
+}
+
+.cert-preview-wrapper .page {
+  font-family: "Century Gothic", sans-serif;
+}
+
+/* Hoja A4 simulada */
+/* ============================================================
+   CONTENEDOR DEL CERTIFICADO
+============================================================ */
+
+.page{
+  font-family:"Century Gothic",sans-serif;
+  color:#222;
+  background:#fff;
+
+  width:794px;
+  min-height:1123px;
+
+  position:relative;
+  overflow:visible;
+
+  margin:40px auto;
+
+  box-shadow:0 4px 32px rgba(0,0,0,.18);
+}
+/* ============================================================
+   FONDO SUPERIOR CURVO — mismo clip-path que Chile
+   Color: amarillo dorado → negro profundo (Villamaría)
+   ============================================================ */
+
+.page::before{
+  content:"";
+  position:absolute;
+
+  top:0;
+  left:0;
+  right:0;
+
+  height:200px;
+
+  background:
+  linear-gradient(
+    135deg,
+    #c49a00 0%,
+    #1a1200 60%,
+    #0d0900 100%
+  );
+
+  clip-path:
+  ellipse(
+    130% 100%
+    at 50% 0%
+  );
+
+  z-index:0;
+}
+
+.page::after{
+  content:"";
+
+  position:absolute;
+
+  top:120px;
+  left:-5%;
+
+  width:110%;
+  height:100px;
+
+  background:white;
+
+  border-radius:50%;
+
+  z-index:1;
+}
+/* ============================================================
+   BARRA SUPERIOR
+   Chile: rojo + "ACADEMIA NACIONAL DE BOMBEROS DE CHILE" blanco
+   Aquí: negro + texto amarillo
+   ============================================================ */
+
+.top-bar{
+  position:relative;
+  z-index:10;
+
+  background:#1a1200;
+
+  padding:8px 30px;
+
+  text-align:center;
+
+  border-bottom:3px solid #f5c400;
+}
+
+.top-bar-text{
+  color:#f5c400;
+
+  font-size:9.5pt;
+
+  letter-spacing:5px;
+
+  font-weight:700;
+
+  text-transform:uppercase;
+
+  font-family:Garamond,serif;
+}
+
+/* ============================================================
+   CABECERA: logo centrado sobre la curva
+   ============================================================ */
+
+.cert-header{
+  padding:30px 60px 10px;
+
+  position:relative;
+  z-index:5;
+}
+.cert-top{
+  display:grid;
+
+  grid-template-columns:1fr;
+
+  justify-items:center;
+
+  gap:0;
+}
+
+/* Logo principal centrado — igual que el escudo en Chile */
+.cert-logo-center{
+  width:450px;
+  height:4500px;
+
+  object-fit:contain;
+
+  display:block;
+
+  margin:auto;
+
+  position:relative;
+  z-index:5;
+}
+
+/* Nombre institucional bajo el logo */
+.cert-inst-name{
+  text-align:center;
+}
+
+.cert-inst-name h1{
+  font-size:11pt;
+
+  font-weight:700;
+
+  text-transform:uppercase;
+
+  letter-spacing:1.5px;
+
+  color:#222;
+
+  line-height:1.4;
+}
+
+.cert-inst-name p{
+  font-size:9pt;
+
+  color:#555;
+
+  margin-top:2px;
+
+  letter-spacing:.5px;
+}
+
+/* Número de documento y fecha — derecha */
+.cert-doc-info{
+  text-align:center;
+
+  margin-top:10px;
+  margin-bottom:30px;
+}
+
+.cert-doc-num{
+  font-size:11pt;
+  font-weight:700;
+  color:#222;
+}
+.cert-doc-date{
+  font-size:10pt;
+  color:#555;
+  margin-top:2px;
+}
+/* ============================================================
+   CUERPO DEL DOCUMENTO
+   ============================================================ */
+
+.cert-body{
+  padding:20px 60px 40px;
+}
+
+/* Título del reporte — mismo estilo que "CERTIFICADO" en Chile */
+.cert-body-title{
+  text-align:center;
+
+  font-size:19pt;
+
+  font-weight:700;
+
+  color:#7a5800;
+
+  text-transform:uppercase;
+
+  letter-spacing:1px;
+
+  margin-bottom:36px;
+
+  margin-top:10px;
+}
+
+
+/* ---- Campos de datos ---- */
+
+.cert-field{
+  background:transparent;
+  border:none;
+  padding:0;
+}
+.cert-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:0 30px;
+}
+
+.cert-label {
+  display: inline;
+  font-size: 11pt;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #7a5800;
+  letter-spacing: .5px;
+}
+
+.cert-label::after {
+  content: ': ';
+}
+
+.cert-value {
+  display: inline;
+  font-size: 11.5pt;
+  line-height: 1.9;
+  color: #222;
+}
+
+/* Grid de dos columnas para campos cortos */
+.cert-grid-2{
+  display:grid;
+
+  grid-template-columns:1fr 1fr;
+
+  gap:18px;
+}
+.cert-field{
+  background:#f9fafb;
+
+  border:1px solid #e5e7eb;
+
+  border-radius:12px;
+
+  padding:14px 16px;
+}
+/* Descripción con borde lateral — idéntico a Chile */
+/* Descripción / novedades */
+
+.cert-desc-box{
+  margin-top:8px;
+
+  padding-left:16px;
+
+  border-left:2px solid #c5a100;
+
+  font-size:11.5pt;
+
+  line-height:1.9;
+
+  color:#222;
+
+  text-align:justify;
+
+  white-space:pre-wrap;
+
+  word-break:break-word;
+
+  overflow-wrap:break-word;
+
+  max-width:100%;
+
+  break-inside:avoid;
+}
+
+.cert-desc-box p{
+
+  margin:0 0 14px 0;
+
+  text-indent:20px;
+}
+
+/* ---- Víctimas / Lesionados ---- */
+.cert-victims-bar {
+  display: flex;
+  justify-content: center;
+  gap: 80px;
+  margin: 36px 0;
+}
+
+.cert-victim-box {
+  text-align: center;
+  border: 1.5px solid #e8d58a;
+  border-radius: 8px;
+  padding: 18px 32px;
+  background: #fffdf0;
+  min-width: 130px;
+}
+
+.cert-victim-num {
+  font-size: 38pt;
+  font-weight: 700;
+  color: #7a5800;
+  line-height: 1;
+}
+
+.cert-victim-label {
+  margin-top: 8px;
+  font-size: 9pt;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: #555;
+}
+
+/* ============================================================
+   EVIDENCIA FOTOGRÁFICA
+   ============================================================ */
+
+.cert-photo-section {
+  margin-top: 40px;
+}
+
+.cert-photo-title {
+  text-align: center;
+  font-size: 13pt;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  color: #7a5800;
+  margin-bottom: 16px;
+  padding-bottom: 6px;
+  border-bottom: 1.5px solid #e8d58a;
+}
+
+.cert-photo-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.cert-photo-card img {
+
+  width:100%;
+
+  max-height:260px;
+
+  height:auto;
+
+  object-fit:cover;
+
+  border:1px solid #d8d8d8;
+
+  display:block;
+}
+/* ============================================================
+   PIE — FIRMAS + QR
+   Idéntico al certificado chileno
+   ============================================================ */
+
+.cert-footer {
+  padding: 0 55px;
+  margin-top: 50px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 20px;
+  position: relative;
+  z-index: 5;
+}
+
+.cert-footer-left {
+  flex: 1;
+  display: flex;
+  justify-content: space-around;
+  gap: 20px;
+}
+
+.cert-signature {
+  flex: 1;
+  text-align: center;
+}
+
+.cert-signature-img-wrap {
+  height: 72px;
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+}
+
+.cert-firma-img {
+  max-height: 65px;
+  object-fit: contain;
+}
+
+.cert-signature-line {
+  border-top: 1px solid #000;
+  margin-top: 6px;
+  margin-bottom: 6px;
+}
+
+.cert-signature-role {
+  font-size: 8.5pt;
+  text-transform: uppercase;
+  font-weight: 700;
+  line-height: 1.5;
+  color: #222;
+}
+
+/* QR — igual posición que en Chile */
+.cert-footer-right {
+  width: 120px;
+  text-align: center;
+}
+
+.cert-qr-img {
+  width: 90px;
+  height: 90px;
+  object-fit: contain;
+}
+
+.cert-qr-text {
+  margin-top: 5px;
+  font-size: 7.5pt;
+  line-height: 1.5;
+  color: #666;
+}
+
+
+/* ============================================================
+   MARCA DE AGUA
+============================================================ */
+
+.watermark{
+  position:absolute;
+  top:50%;
+  left:50%;
+  transform:translate(-50%, -50%);
+  width:420px;
+  height:420px;
+  object-fit:contain;
+  opacity:.04;
+  z-index:0;
+  pointer-events:none;
+}
+
+/* ============================================================
+   WATERMARK EN TODAS LAS PÁGINAS PDF / PRINT
+============================================================ */
+
+@media print{
+
+  .watermark{
+
+    position:fixed !important;
+
+    top:50% !important;
+    left:50% !important;
+
+    transform:translate(-50%, -50%) !important;
+
+    width:420px !important;
+    height:420px !important;
+
+    opacity:.04 !important;
+
+    z-index:0 !important;
+
+    pointer-events:none !important;
+
+    -webkit-print-color-adjust:exact;
+    print-color-adjust:exact;
+  }
+
+}
+
+/* ============================================================
+   @MEDIA PRINT — página real A4
+   ============================================================ */
+
+.cert-qr {
+  width: 90px;
+  height: 90px;
+  object-fit: contain;
+}
+.cert-preview-wrapper{
+  background:#e8e8e8;
+  padding:40px 20px;
+  display:flex;
+  justify-content:center;
+}
+/* =========================================================
+   IMPRESIÓN PROFESIONAL A4
+========================================================= */
+
+@media print {
+
+  @page{
+    size:A4;
+    margin:18mm 14mm 18mm 14mm;
+  }
+
+  html,
+  body{
+    background:#fff !important;
+    margin:0;
+    padding:0;
+  }
+
+  body *{
+    visibility:hidden;
+  }
+
+  .page,
+  .page *{
+    visibility:visible;
+  }
+
+  .page{
+
+    width:100% !important;
+    min-height:auto !important;
+
+    margin:0 auto !important;
+
+    box-shadow:none !important;
+
+    overflow:visible !important;
+
+    page-break-after:auto;
+
+    break-after:auto;
+  }
+
+  /* cuerpo */
+
+  .cert-body{
+    padding:0 50px 30px 50px !important;
+  }
+
+  /* evitar cortes feos */
+
+  .cert-field,
+  .cert-desc-box,
+  .cert-victims-bar,
+  .cert-photo-section,
+  .cert-photo-card,
+  .cert-footer,
+  .cert-signature{
+
+    break-inside:avoid;
+    page-break-inside:avoid;
+  }
+
+  /* títulos nunca al final */
+
+  .cert-label,
+  .cert-photo-title,
+  .cert-body-title{
+
+    break-after:avoid;
+    page-break-after:avoid;
+  }
+
+  /* párrafos */
+
+  .cert-desc-box p{
+
+    orphans:3;
+    widows:3;
+
+    break-inside:avoid;
+    page-break-inside:avoid;
+  }
+
+  /* GRID FOTOS */
+
+
+  /* TARJETA FOTO */
+
+/* ==========================================================
+   EVIDENCIA FOTOGRÁFICA
+   ========================================================== */
+
+.cert-photo-grid{
+
+  display:grid;
+
+  grid-template-columns:1fr;
+
+  gap:20px;
+}
+
+.cert-photo-card{
+
+  break-inside:avoid;
+  page-break-inside:avoid;
+
+  overflow:visible;
+
+  text-align:center;
+
+  border:1px solid #d8d8d8;
+
+  border-radius:10px;
+
+  padding:10px;
+
+  background:#fff;
+}
+
+.cert-photo-card img{
+
+  width:auto !important;
+
+  height:auto !important;
+
+  max-width:100%;
+
+  object-fit:contain;
+}
+  /* footer */
+
+  .cert-footer{
+    margin-top:35px;
+  }
+
+}/* ===== FIX TOM SELECT ===== */
+
+.ts-wrapper {
+  width: 100% !important;
+}
+
+.ts-control {
+  min-height: 48px !important;
+  border-radius: 12px !important;
+  padding: 8px !important;
+  font-size: 14px;
+}
+
+.ts-wrapper.multi .ts-control {
+  max-height: 140px;
+  overflow-y: auto;
+}
+
+.ts-dropdown {
+  z-index: 9999 !important;
+}
+
+/* evita que el campo expanda todo el layout */
+.field-group,
+.fields-grid,
+.full-width {
+  min-width: 0;
+}
+
+.delete-bombero-box{
+  margin-top:12px;
+  display:flex;
+  gap:10px;
+}
+
+.delete-bombero-box input{
+  flex:1;
+}
+
+/* ==========================================
+   AFECTADOS + VEHÍCULOS + FIRMAS
+   ESTILO BOMBEROS PROFESIONAL
+========================================== */
+
+/* Variables automáticas */
+
+:root{
+
+    /* TARJETAS CLARO */
+
+    --card-bg:
+    linear-gradient(
+    145deg,
+
+    #ffffff 0%,
+    #f7f9fc 55%,
+    #fff1ec 100%
+
+    );
+
+    --card-border:#e2e8f0;
+
+    --card-highlight:
+    rgba(204,34,0,.08);
+
+}
+
+
+/* MODO OSCURO APP */
+
+body:not(.light-theme){
+
+    /* TARJETAS OSCURO */
+
+    --card-bg:
+    linear-gradient(
+    145deg,
+
+    #20242c 0%,
+    #2c313c 45%,
+    #441d16 100%
+
+    );
+
+    --card-border:
+    rgba(255,255,255,.06);
+
+    --card-highlight:
+    rgba(255,92,51,.12);
+
+}
+
+    --card-border:
+    rgba(255,255,255,.06);
+
+    --card-highlight:
+    rgba(255,92,51,.12);
+
+}
+
+
+/* CONTENEDORES */
+
+#affectedContainer,
+#firefighterSignatures,
+#vehicleAssignments{
+
+display:flex;
+flex-direction:column;
+gap:24px;
+margin-top:20px;
+
+}
+
+
+/* TARJETAS */
+
+.affected-card,
+.signature-card,
+.vehicle-card{
+
+position:relative;
+
+padding:26px;
+
+border-radius:24px;
+
+background:
+var(--card-bg);
+
+border:1px solid
+var(--card-border);
+
+overflow:visible;
+
+box-shadow:
+
+0 12px 35px
+rgba(0,0,0,.18),
+
+inset 0 1px 0
+rgba(255,255,255,.05);
+
+transition:.35s;
+
+backdrop-filter:blur(14px);
+
+}
+
+
+/* FRANJA BOMBEROS */
+
+.affected-card::before,
+.signature-card::before,
+.vehicle-card::before{
+
+content:"";
+
+position:absolute;
+
+left:0;
+top:0;
+bottom:0;
+
+width:6px;
+
+border-radius:24px 0 0 24px;
+
+background:
+
+linear-gradient(
+to bottom,
+#ff5c33,
+#cc2200,
+#991800
+);
+
+}
+
+
+/* BRILLO */
+
+.affected-card::after,
+.signature-card::after,
+.vehicle-card::after{
+
+content:"";
+
+position:absolute;
+
+top:-100px;
+right:-100px;
+
+width:220px;
+height:220px;
+
+background:
+
+radial-gradient(
+circle,
+var(--card-highlight),
+transparent 70%
+);
+
+pointer-events:none;
+
+}
+
+
+/* HOVER */
+
+.affected-card:hover,
+.signature-card:hover,
+.vehicle-card:hover{
+
+transform:
+translateY(-4px);
+
+box-shadow:
+
+0 18px 40px
+rgba(0,0,0,.28);
+
+}
+
+
+/* TITULOS */
+
+.card-title,
+.vehicle-title{
+
+display:flex;
+align-items:center;
+gap:12px;
+
+font-size:17px;
+font-weight:700;
+
+color:var(--text);
+
+margin-bottom:20px;
+
+padding-bottom:15px;
+
+border-bottom:1px solid
+var(--card-border);
+
+}
+
+
+/* INPUTS */
+
+.affected-card input,
+.affected-card select,
+.signature-card input,
+.vehicle-card input,
+.vehicle-card select{
+
+background:var(--panel2);
+
+border:1px solid
+var(--border);
+
+border-radius:14px;
+
+padding:13px 14px;
+
+color:var(--text);
+
+transition:.3s;
+
+}
+
+
+.affected-card input:focus,
+.affected-card select:focus,
+.signature-card input:focus,
+.vehicle-card input:focus,
+.vehicle-card select:focus{
+
+border-color:var(--red);
+
+box-shadow:
+
+0 0 0 4px
+rgba(255,92,51,.15);
+
+}
+
+
+/* RECUADRO FIRMA DESTACADO */
+
+.signature-pad{
+
+width:100%;
+height:180px;
+
+display:block;
+
+border-radius:18px;
+
+background:
+
+linear-gradient(
+145deg,
+rgba(255,255,255,.05),
+rgba(255,255,255,.02)
+);
+
+border:2px dashed
+rgba(255,92,51,.55);
+
+box-shadow:
+
+0 0 0 2px
+rgba(255,92,51,.15),
+
+0 0 25px
+rgba(255,92,51,.25),
+
+inset 0 0 18px
+rgba(255,92,51,.06);
+
+padding:8px;
+
+cursor:crosshair;
+
+transition:.3s;
+
+}
+
+
+/* RESALTAR AL FIRMAR */
+
+.signature-pad:hover{
+
+border-color:#ff5c33;
+
+box-shadow:
+
+0 0 0 3px
+rgba(255,92,51,.20),
+
+0 0 35px
+rgba(255,92,51,.35);
+
+}
+
+
+/* MENSAJE */
+
+.signature-card .firma-ayuda{
+
+margin-top:10px;
+
+text-align:center;
+
+font-size:12px;
+
+color:var(--muted);
+
+letter-spacing:.5px;
+
+}
+
+
+/* BADGE VEHICULOS */
+
+.vehicle-badge{
+
+background:
+linear-gradient(
+135deg,
+rgba(204,34,0,.2),
+rgba(255,92,51,.15)
+);
+
+color:#ff8b6b;
+
+padding:7px 14px;
+
+border-radius:999px;
+
+font-size:12px;
+
+font-weight:700;
+
+}
+
+
+/* RESUMEN */
+
+.summary-box{
+
+background:
+rgba(255,255,255,.03);
+
+border:1px solid
+var(--card-border);
+
+border-radius:16px;
+
+padding:15px;
+
+margin-top:16px;
+
+}
+
+
+/* MÓVIL */
+
+@media(max-width:768px){
+
+.signature-pad{
+
+height:140px;
+
+}
+
+.affected-card,
+.signature-card,
+.vehicle-card{
+
+padding:18px;
+
+}
+
+}
+
+/* ==========================================
+   CORREGIR OPCIONES OCULTAS DE BOMBEROS
+========================================== */
+
+/* Permitir que los dropdown salgan del card */
+.vehicle-card,
+.affected-card,
+.signature-card{
+
+    overflow:visible !important;
+
+}
+
+/* ==========================================
+   VEHÍCULOS + MÓVIL + BOMBEROS
+   ESTILO PROFESIONAL BOMBEROS
+========================================== */
+
+/* Contenedor TomSelect */
+.ts-wrapper{
+    width:100%;
+    position:relative;
+}
+
+/* Campo principal */
+.ts-control{
+
+    min-height:56px !important;
+
+    display:flex;
+    align-items:center;
+    flex-wrap:wrap;
+    gap:8px;
+
+    padding:10px 14px !important;
+
+    border-radius:16px !important;
+
+    border:1px solid rgba(255,92,51,.15) !important;
+
+    background:
+    linear-gradient(
+        145deg,
+        rgba(255,255,255,.04),
+        rgba(255,255,255,.02)
+    ) !important;
+
+    backdrop-filter:blur(16px);
+
+    color:var(--text) !important;
+
+    box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.03),
+    0 6px 20px rgba(0,0,0,.18);
+
+    transition:
+    .3s ease;
+}
+
+
+/* MODO OSCURO */
+
+body:not(.light-theme) .ts-control{
+
+    background:
+    linear-gradient(
+        135deg,
+        #232830 0%,
+        #2d313b 50%,
+        rgba(204,34,0,.18) 100%
+    ) !important;
+
+    border:
+    1px solid rgba(255,92,51,.18) !important;
+}
+
+
+/* MODO CLARO */
+
+body.light-theme .ts-control{
+
+    background:
+    linear-gradient(
+        135deg,
+        #ffffff 0%,
+        #f8f9fc 50%,
+        rgba(255,92,51,.08) 100%
+    ) !important;
+
+    border:
+    1px solid rgba(204,34,0,.15) !important;
+}
+
+
+/* HOVER */
+
+.ts-control:hover{
+
+    transform:translateY(-1px);
+
+    border-color:
+    rgba(255,92,51,.45) !important;
+
+    box-shadow:
+
+    0 10px 24px rgba(0,0,0,.22),
+    0 0 0 1px rgba(255,92,51,.1);
+}
+
+
+/* FOCUS */
+
+.ts-wrapper.focus .ts-control{
+
+    border-color:
+    var(--red) !important;
+
+    box-shadow:
+
+    0 0 0 4px rgba(255,92,51,.15),
+    0 10px 30px rgba(204,34,0,.25);
+
+}
+
+
+/* Etiquetas seleccionadas */
+
+.ts-control .item{
+
+    background:
+    linear-gradient(
+        135deg,
+        var(--red-dark),
+        var(--red)
+    ) !important;
+
+    color:#fff !important;
+
+    border:none !important;
+
+    border-radius:999px !important;
+
+    padding:6px 12px !important;
+
+    font-size:.84rem !important;
+
+    font-weight:600;
+
+    box-shadow:
+    0 4px 10px rgba(204,34,0,.25);
+
+}
+
+
+/* X eliminar */
+
+.ts-control .remove{
+
+    color:rgba(255,255,255,.7);
+
+    margin-left:6px;
+
+    transition:.2s;
+}
+
+.ts-control .remove:hover{
+
+    color:#fff;
+
+    transform:scale(1.2);
+}
+
+
+/* INPUT INTERNO */
+
+.ts-control input{
+
+    color:var(--text) !important;
+}
+
+
+/* PLACEHOLDER */
+
+.ts-control input::placeholder{
+
+    color:var(--muted);
+}
+
+
+/* DROPDOWN */
+
+.ts-dropdown{
+
+    border:none !important;
+
+    border-radius:18px !important;
+
+    overflow:hidden;
+
+    margin-top:8px;
+
+    backdrop-filter:blur(16px);
+
+    box-shadow:
+    0 18px 45px rgba(0,0,0,.35);
+
+    animation:dropdownFade .25s ease;
+}
+
+
+/* Dropdown oscuro */
+
+body:not(.light-theme) .ts-dropdown{
+
+    background:
+    linear-gradient(
+        145deg,
+        #1f232a,
+        #2b303a
+    ) !important;
+}
+
+
+/* Dropdown claro */
+
+body.light-theme .ts-dropdown{
+
+    background:#fff !important;
+}
+
+
+/* Opciones */
+
+.ts-dropdown .option{
+
+    padding:12px 15px;
+
+    color:var(--text);
+
+    transition:.25s;
+}
+
+
+/* Hover opciones */
+
+.ts-dropdown .option:hover,
+.ts-dropdown .active{
+
+    background:
+    linear-gradient(
+        135deg,
+        rgba(204,34,0,.15),
+        rgba(255,92,51,.12)
+    ) !important;
+
+    color:var(--red-light);
+}
+
+
+/* Animación */
+
+@keyframes dropdownFade{
+
+from{
+opacity:0;
+transform:translateY(-10px);
+}
+
+to{
+opacity:1;
+transform:translateY(0);
+}
+
+}
+
+
+/* Móvil */
+
+@media(max-width:768px){
+
+.ts-control{
+
+    min-height:52px !important;
+    padding:8px 12px !important;
+
+}
+
+.ts-control .item{
+
+    font-size:.78rem !important;
+    padding:5px 10px !important;
+
+}
+
+}
+/* Evita deformaciones cuando hay muchos elementos */
+
+.vehicle-card,
+.field-group,
+.ts-wrapper{
+
+    min-width:0;
+    overflow:visible !important;
+
+}
+
+/* Mantiene etiquetas largas ordenadas */
+
+.ts-control .item{
+
+    max-width:100%;
+
+    white-space:normal !important;
+
+    word-break:break-word;
+
+    overflow-wrap:break-word;
+
+}
+
+/* ==========================================
+   FIX DROPDOWN BOMBEROS ENTRE VEHÍCULOS
+========================================== */
+
+/* Permitir que el contenido salga de cada tarjeta */
+.vehicle-card{
+    position: relative;
+    overflow: visible !important;
+}
+
+/* Cuando una tarjeta tiene el selector activo,
+   la subimos sobre las demás */
+.vehicle-card:focus-within{
+    z-index: 1000;
+}
+
+/* Contenedor TomSelect */
+.ts-wrapper{
+    position: relative !important;
+    z-index: 1;
+}
+
+/* Al abrir/usar el selector */
+.ts-wrapper.focus{
+    z-index: 50 !important;
+}
+/* Lista desplegable*/
+
+.ts-dropdown{
+    position:absolute !important;
+    z-index:500 !important;
+}
+/* Contenedor general de vehículos */
+#vehicleAssignments{
+    position: relative;
+    overflow: visible !important;
+}
+/* ==========================================
+   CERTIFICADO MEMBRETADO VILLAMARÍA — v2
+   Diseño institucional profesional
+========================================== */
+
+/* ── Wrapper externo (fondo gris pantalla) ── */
+.cert-preview-wrapper {
+  background: #d4d4d4;
+  display: flex;
+  justify-content: center;
+  padding: 32px 40px;
+}
+
+/* ── Hoja A4 ── */
+.document-page {
+  width: 794px;
+  min-height: 1123px;
+  background: #fff;
+  box-sizing: border-box;
+  font-family: 'Georgia', 'Times New Roman', serif;
+  font-size: 11pt;
+  line-height: 1.75;
+  color: #111;
+  position: relative;
+  box-shadow: 0 6px 40px rgba(0,0,0,.22);
+  overflow: visible;
+}
+
+/* ── Banda superior institucional ── */
+.document-page::before {
+  content: '';
+  display: block;
+  width: 100%;
+  height: 7px;
+  background: linear-gradient(90deg, #8B0000 0%, #CC2200 45%, #f5c400 100%);
+}
+
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex: 1;
+}
+
+.header-logo {
+  height: 72px;
+  width: auto;
+  flex-shrink: 0;
+  object-fit: contain;
+}
+
+.doc-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.doc-nit {
+  font-size: 9pt;
+  font-weight: 700;
+  color: #555;
+  letter-spacing: .6px;
+  text-transform: uppercase;
+}
+
+.doc-inst-name {
+  font-size: 11.5pt;
+  font-weight: 700;
+  color: #1a0000;
+  line-height: 1.35;
+  letter-spacing: .3px;
+}
+
+.doc-inst-sub {
+  font-size: 8.5pt;
+  color: #666;
+  letter-spacing: .5px;
+}
+
+.doc-city {
+  text-align: right;
+  font-size: 9.5pt;
+  color: #444;
+  line-height: 1.5;
+  white-space: nowrap;
+  padding-top: 2px;
+}
+
+/* ── Banda roja con título del documento ── */
+.doc-title-bar {
+  background: linear-gradient(135deg, #8B0000 0%, #CC2200 100%);
+  color: #fff;
+  text-align: center;
+  padding: 10px 32px;
+  font-size: 10.5pt;
+  font-weight: 700;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  font-family: Arial, sans-serif;
+}
+
+/* ── Cuerpo principal ── */
+.doc-body {
+  padding: 22px 32px 28px 32px;
+}
+
+/* ── Número de documento ── */
+.doc-num-row {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 18px;
+}
+
+.doc-num-badge {
+  background: #fff8e1;
+  border: 1px solid #f5c400;
+  border-radius: 4px;
+  padding: 4px 14px;
+  font-size: 9pt;
+  color: #7a5800;
+  font-weight: 700;
+  letter-spacing: .5px;
+}
+
+
+/* ── Párrafos intro ── */
+.doc-saludo {
+  margin-bottom: 10px;
+  font-size: 10.5pt;
+}
+
+/* ── Descripción / novedades ── */
+.doc-descripcion,
+.doc-novedades {
+  text-align: justify;
+  line-height: 1.85;
+  font-size: 10.5pt;
+  color: #222;
+  padding: 10px 14px;
+  background: #fafafa;
+  border: 1px solid #eee;
+  border-left: 3px solid #CC2200;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* ── Firmas ── */
+.signature-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 24px;
+  margin-top: 16px;
+  margin-bottom: 28px;
+}
+
+.signature-box {
+  text-align: center;
+  padding: 10px;
+  min-height: 130px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  border: 1px solid #e8e8e8;
+  border-radius: 4px;
+  background: #fafafa;
+}
+
+.signature-img {
+  max-width: 160px;
+  height: 65px;
+  object-fit: contain;
+  margin: 0 auto 4px;
+}
+
+.signature-line {
+  border-top: 1px solid #666;
+  margin-top: 8px;
+  padding-top: 5px;
+}
+
+.signature-name {
+  font-size: 9.5pt;
+  font-weight: 700;
+  color: #222;
+  letter-spacing: .3px;
+}
+
+
+.firma-img {
+  height: 72px;
+  object-fit: contain;
+  display: block;
+  margin: 0 auto 6px;
+}
+
+.doc-firma-line {
+  border-top: 1px solid #333;
+  width: 220px;
+  margin: 0 auto 6px;
+}
+
+/* ── Banda inferior de color ── */
+.document-page::after {
+  content: '';
+  display: block;
+  width: 100%;
+  height: 5px;
+  background: linear-gradient(90deg, #f5c400 0%, #CC2200 55%, #8B0000 100%);
+  position: absolute;
+  bottom: 0;
+  left: 0;
+}
+
+/* ── Marca de agua ── */
+.watermark {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.watermark-logo {
+  width: 380px;
+  height: 380px;
+  object-fit: contain;
+  opacity: 0.04;
+}
+
+
+/* ── Print ── */
+@media print {
+  @page { size: A4; margin: 18mm 20mm; }
+
+  body { background: white; }
+
+  .document-page {
+    margin: 0;
+    box-shadow: none;
+    width: 100%;
+    min-height: 100vh;
+  }
+
+  .document-page::before,
+  .document-page::after {
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+
+  .doc-title-bar,
+  .doc-table tr:first-child td,
+  .doc-subtitle {
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+
+  .signature-grid { page-break-inside: avoid; }
+  .signature-box  { break-inside: avoid; }
+}
+
+
+/* ============================================================
+   ESTILOS GENERALES (pantalla)
+   Idéntica estructura al certificado ANBC Chile
+   Paleta: amarillo/negro institucional Villamaría, Caldas
+   ============================================================ */
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+/* ============================================================
+   SOLO CERTIFICADO / PREVIEW PDF
+============================================================ */
+
+.cert-preview-wrapper {
+  background: #e8e8e8;
+  display: flex;
+  justify-content: center;
+  padding: 40px 20px;
+}
+
+.cert-preview-wrapper .page {
+  font-family: "Century Gothic", sans-serif;
+}
+
+/* Hoja A4 simulada */
+/* ============================================================
+   CONTENEDOR DEL CERTIFICADO
+============================================================ */
+
+.page {
+  font-family: "Century Gothic", sans-serif;
+  color: #222;
+  background: #fff;
+
+  width: 794px;
+  min-height: 1123px;
+
+  position: relative;
+  overflow: visible;
+
+  margin: 40px auto;
+
+  box-shadow: 0 4px 32px rgba(0,0,0,.18);
+}
+
+/* ============================================================
+   FONDO SUPERIOR CURVO — mismo clip-path que Chile
+   Color: amarillo dorado → negro profundo (Villamaría)
+   ============================================================ */
+
+.page::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 200px;
+  background: linear-gradient(135deg, #c49a00 0%, #1a1200 60%, #0d0900 100%);
+  clip-path: ellipse(130% 100% at 50% 0%);
+  z-index: 0;
+}
+
+/* Ola blanca — idéntica al certificado chileno */
+.page::after {
+  content: '';
+  position: absolute;
+  top: 120px;
+  left: -5%;
+  width: 110%;
+  height: 100px;
+  background: #fff;
+  border-radius: 50%;
+  z-index: 1;
+}
+
+/* ============================================================
+   BARRA SUPERIOR
+   Chile: rojo + "ACADEMIA NACIONAL DE BOMBEROS DE CHILE" blanco
+   Aquí: negro + texto amarillo
+   ============================================================ */
+
+.top-bar {
+  position: relative;
+  z-index: 10;
+  background: #1a1200;
+  padding: 8px 30px;
+  text-align: center;
+  border-bottom: 3px solid #f5c400;
+}
+
+.top-bar-text {
+  color: #f5c400;
+  font-size: 9.5pt;
+  letter-spacing: 5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  font-family: "Garamond", serif;
+}
+
+/* ============================================================
+   CABECERA: logo centrado sobre la curva
+   ============================================================ */
+
+.cert-header{
+  position:relative;
+  z-index:10;
+
+  padding:18px 50px 0;
+}
+
+.cert-top {
+  display: grid;
+  grid-template-columns: 1fr;
+  justify-items: center;
+  gap: 0;
+}
+
+/* Logo principal centrado — igual que el escudo en Chile */
+.cert-logo-center {
+  width: 400px;
+  height: 400px;
+  object-fit: contain;
+  display: block;
+  margin: 0 auto;
+  position: relative;
+  z-index: 5;
+}
+
+/* Nombre institucional bajo el logo */
+.cert-inst-name {
+  text-align: center;
+  margin-top: 14px;
+  color: #222;
+}
+
+.cert-inst-name h1 {
+  font-size: 11pt;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: #222;
+  line-height: 1.4;
+}
+
+.cert-inst-name p {
+  font-family: "Century Gothic", sans-serif;
+  font-size: 9pt;
+  color: #555;
+  margin-top: 2px;
+  letter-spacing: 0.5px;
+}
+
+/* Número de documento y fecha — derecha */
+.cert-doc-info {
+  text-align: center;
+  margin-top: 10px;
+  margin-bottom: 30px;
+}
+
+.cert-doc-num {
+  font-size: 11pt;
+  font-weight: 700;
+  color: #222;
+}
+
+.cert-doc-date {
+  font-size: 10pt;
+  color: #555;
+  margin-top: 2px;
+}
+
+/* ============================================================
+   CUERPO DEL DOCUMENTO
+   ============================================================ */
+
+.cert-body {
+  padding: 0 55px 40px 55px;
+  position: relative;
+  z-index: 5;
+  
+}
+
+/* Título del reporte — mismo estilo que "CERTIFICADO" en Chile */
+.cert-body-title {
+  text-align: center;
+  font-size: 19pt;
+  font-weight: 700;
+  color: #7a5800;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 36px;
+  margin-top: 10px;
+}
+
+/* ---- Campos de datos ---- */
+
+.cert-field.full {
+  margin-top: 24px;
+}
+
+.cert-label{
+  display:block;
+
+  font-size:9pt;
+
+  text-transform:uppercase;
+
+  color:#6b7280;
+
+  font-weight:700;
+
+  margin-bottom:6px;
+}
+.cert-label::after {
+  content: ': ';
+}
+
+.cert-value{
+  font-size:11pt;
+
+  color:#111827;
+
+  font-weight:600;
+}
+
+/* Grid de dos columnas para campos cortos */
+.cert-grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0 30px;
+}
+
+/* Descripción con borde lateral — idéntico a Chile */
+/* Descripción / novedades */
+.cert-desc-box{
+  margin-top:20px;
+
+  background:#fafafa;
+
+  border-left:6px solid #c1121f;
+
+  border-radius:12px;
+
+  padding:20px;
+
+  line-height:1.8;
+
+  color:#374151;
+}
+
+/* ---- Víctimas / Lesionados ---- */
+.cert-victims-bar {
+  display: flex;
+  justify-content: center;
+  gap: 80px;
+  margin: 36px 0;
+}
+
+.cert-victim-box{
+  text-align:center;
+
+  border:1.5px solid #e8d58a;
+
+  border-radius:8px;
+
+  padding:18px 32px;
+
+  background:#fffdf0;
+
+  min-width:130px;
+}
+.cert-victim-num {
+  font-size: 38pt;
+  font-weight: 700;
+  color: #7a5800;
+  line-height: 1;
+}
+
+.cert-victim-label {
+  margin-top: 8px;
+  font-size: 9pt;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: #555;
+}
+
+/* ============================================================
+   EVIDENCIA FOTOGRÁFICA
+   ============================================================ */
+
+.cert-photo-section {
+  margin-top: 40px;
+}
+
+.cert-photo-title {
+  text-align: center;
+  font-size: 13pt;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  color: #7a5800;
+  margin-bottom: 16px;
+  padding-bottom: 6px;
+  border-bottom: 1.5px solid #e8d58a;
+}
+
+.cert-photo-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.cert-photo-card img {
+  width: 100%;
+  height: 220px;
+  object-fit: cover;
+  border: 1px solid #d8d8d8;
+  display: block;
+}
+.cert-photo-card{
+  background:white;
+
+  border-radius:14px;
+
+  overflow:hidden;
+
+  border:1px solid #e5e7eb;
+
+  box-shadow:
+    0 4px 15px rgba(0,0,0,.08);
+}
+
+/* ============================================================
+   PIE — FIRMAS + QR
+   Idéntico al certificado chileno
+   ============================================================ */
+
+.cert-footer{
+  padding:0 55px;
+
+  margin-top:50px;
+
+  display:flex;
+
+  justify-content:space-between;
+
+  align-items:flex-end;
+
+  gap:20px;
+
+  position:relative;
+  z-index:5;
+}
+
+.cert-footer-left {
+  flex: 1;
+  display: flex;
+  justify-content: space-around;
+  gap: 20px;
+}
+
+.cert-signature {
+  flex: 1;
+  text-align: center;
+}
+
+.cert-signature-img-wrap {
+  height: 72px;
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+}
+
+.cert-firma-img {
+  max-height: 65px;
+  object-fit: contain;
+}
+
+.cert-firma-bombero{
+
+    max-width:140px;
+    max-height:70px;
+
+    object-fit:contain;
+
+    display:block;
+
+    margin:auto;
+
+}
+
+.cert-signature-line{
+  border-top:2px solid #111827;
+
+  margin:10px 0;
+}
+
+.cert-signature-role{
+  font-size:9pt;
+
+  font-weight:700;
+
+  color:#111827;
+
+  text-transform:uppercase;
+}
+
+/* QR — igual posición que en Chile */
+.cert-footer-right{
+  background:#f8fafc;
+
+  border:1px solid #e5e7eb;
+
+  border-radius:12px;
+
+  padding:12px;
+
+  text-align:center;
+}
+.cert-qr-img {
+  width: 90px;
+  height: 90px;
+  object-fit: contain;
+}
+
+.cert-qr-text {
+  margin-top: 5px;
+  font-size: 7.5pt;
+  line-height: 1.5;
+  color: #666;
+}
+
+/* ============================================================
+   PIE FINAL DE PÁGINA
+   Chile: línea + dirección / teléfono / web
+   ============================================================ */
+
+.cert-contact-footer{
+  margin-top:40px;
+
+  border-top:1px solid #d4a800;
+
+  padding:8px 55px;
+
+  font-size:8pt;
+
+  color:#555;
+
+  text-align:center;
+
+  letter-spacing:.3px;
+
+  position:relative;
+  z-index:5;
+}
+/* ============================================================
+   MARCA DE AGUA — igual opacidad que Chile (4%)
+   ============================================================ */
+
+.watermark {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 420px;
+  height: 420px;
+  object-fit: contain;
+  opacity: 0.04;
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* ============================================================
+   @MEDIA PRINT — página real A4
+   ============================================================ */
+
+@media print {
+
+  @page {
+    size: A4;
+    margin: 18mm 15mm 18mm 15mm;
+  }
+
+  body {
+    background: #fff;
+    padding: 0;
+    display: block;
+  }
+
+  .page {
+    width: 100%;
+    min-height: auto;
+    box-shadow: none;
+    padding-left: 10mm;
+    padding-right: 10mm;
+  }
+}
+.cert-qr {
+  width: 90px;
+  height: 90px;
+  object-fit: contain;
+}
+.cert-preview-wrapper{
+  background:#e8e8e8;
+  padding:40px 20px;
+  display:flex;
+  justify-content:center;
+}
+/* =========================================================
+   SELECTOR DE HORAS MILITARES
+========================================================= */
+
+.time-selector{
+
+    display:flex;
+    gap:12px;
+    width:100%;
+
+}
+
+
+.time-selector select{
+
+    flex:1;
+
+    min-height:48px;
+
+    padding:12px 14px;
+
+    border-radius:12px;
+
+    border:1px solid var(--border-color);
+
+    background:var(--input-bg);
+
+    color:var(--text-color);
+
+    font-size:16px;
+
+    font-weight:700;
+
+    cursor:pointer;
+
+    appearance:auto;
+
+    transition:
+        background .3s ease,
+        color .3s ease,
+        border .3s ease,
+        box-shadow .3s ease;
+
+}
+
+
+/* Campo seleccionado */
+.time-selector select:focus{
+
+    outline:none;
+
+    border-color:#d62828;
+
+    box-shadow:
+        0 0 0 3px rgba(214,40,40,.20);
+
+}
+
+
+/* =========================================================
+   MENÚ DESPLEGABLE
+========================================================= */
+
+.time-selector select option{
+
+    background:var(--menu-bg);
+
+    color:var(--menu-text);
+
+    font-size:16px;
+
+    font-weight:600;
+
+    padding:12px;
+
+}
+
+
+/* =========================================================
+   VARIABLES GENERALES
+========================================================= */
+
+:root{
+
+    --input-bg:#ffffff;
+
+    --menu-bg:#ffffff;
+
+    --text-color:#111827;
+
+    --menu-text:#111827;
+
+    --border-color:#cbd5e1;
+
+}
+
+
+/* =========================================================
+   TEMA OSCURO
+========================================================= */
+
+body.dark-theme{
+
+    --input-bg:#1f2937;
+
+    --menu-bg:#111827;
+
+    --text-color:#f9fafb;
+
+    --menu-text:#f9fafb;
+
+    --border-color:#4b5563;
+
+}
+
+
+/* =========================================================
+   TEMA CLARO
+========================================================= */
+
+body.light-theme{
+
+    --input-bg:#ffffff;
+
+    --menu-bg:#ffffff;
+
+    --text-color:#111827;
+
+    --menu-text:#111827;
+
+    --border-color:#cbd5e1;
+
+}
+
+/* =========================================================
+   CERTIFICADO RESPONSIVE MÓVIL
+========================================================= */
+
+@media (max-width: 768px){
+
+  .cert-preview-wrapper{
+    padding:10px;
+    overflow-x:auto;
+  }
+
+  .page{
+
+    width:100%;
+    max-width:100%;
+
+    min-height:auto;
+
+    margin:10px 0;
+
+    box-sizing:border-box;
+
+    overflow:hidden;
+  }
+
+  .cert-header{
+    padding:15px 15px 0;
+  }
+
+  .cert-body{
+    padding:0 15px 25px;
+  }
+
+  .cert-footer{
+    padding:0 15px;
+  }
+
+  .cert-contact-footer{
+    padding:8px 15px;
+  }
+
+  /* Logo */
+
+  .cert-logo-center{
+    width:180px;
+    height:180px;
+  }
+
+  /* Título */
+
+  .cert-body-title{
+    font-size:1.2rem;
+    margin-bottom:20px;
+  }
+
+  /* Campos */
+
+  .cert-grid,
+  .cert-grid-2{
+    grid-template-columns:1fr;
+    gap:12px;
+  }
+
+  .cert-value{
+    font-size:0.95rem;
+    word-break:break-word;
+  }
+
+  /* Víctimas */
+
+  .cert-victims-bar{
+    flex-direction:column;
+    gap:15px;
+    align-items:center;
+  }
+
+  .cert-victim-box{
+    width:100%;
+    max-width:220px;
+  }
+
+  /* Fotos */
+
+  .cert-photo-grid{
+    grid-template-columns:1fr;
+  }
+
+  .cert-photo-card img{
+    height:auto;
+    max-height:300px;
+    object-fit:contain;
+  }
+
+  /* Firmas */
+
+  .cert-footer{
+    flex-direction:column;
+    align-items:center;
+  }
+
+  .cert-footer-left{
+    width:100%;
+    flex-direction:column;
+  }
+
+  .cert-signature{
+    width:100%;
+  }
+
+  .cert-footer-right{
+    margin-top:20px;
+  }
+
+  /* Textos largos */
+
+  .cert-desc-box{
+    padding:15px;
+    font-size:0.95rem;
+    line-height:1.7;
+    overflow-wrap:anywhere;
+  }
+
+  .top-bar-text{
+    font-size:7pt;
+    letter-spacing:2px;
+  }
+
+}
