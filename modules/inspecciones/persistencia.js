@@ -289,7 +289,10 @@ function actualizarEstadoSincronizacion() {
 
 export async function guardarInspeccion() {
 
-    if (!validarFormularioCompleto()) return false;
+    if (!validarFormularioCompleto()) {
+        irAlPrimerCampoInvalido();
+        return false;
+    }
 
     establecerEstadoGuardando(true);
 
@@ -318,6 +321,33 @@ export async function guardarInspeccion() {
     } finally {
         establecerEstadoGuardando(false);
     }
+
+}
+
+/**
+ * validarFormularioCompleto() revisa TODOS los pasos del wizard, no solo
+ * el que se está viendo. Si el campo obligatorio que falta está en un
+ * paso anterior (oculto con "hidden" mientras no es el activo), el
+ * usuario nunca veía el error: el botón "Guardar" parecía no hacer
+ * nada. Esta función lleva al wizard al paso correcto y enfoca el
+ * campo con el problema.
+ */
+function irAlPrimerCampoInvalido() {
+
+    const campo = UI.form?.querySelector(".is-invalid");
+    if (!campo) return;
+
+    const paso = campo.closest(".form-step");
+    const indice = paso ? UI.pasos.indexOf(paso) : -1;
+
+    if (indice !== -1 && indice !== state.pasoActual) {
+        mostrarPaso(indice);
+    }
+
+    requestAnimationFrame(() => {
+        campo.focus({ preventScroll: true });
+        campo.scrollIntoView({ behavior: "smooth", block: "center" });
+    });
 
 }
 

@@ -31,6 +31,16 @@ export function inicializarFirmas() {
         setTimeout(redimensionarCanvasFirmas, 200);
     });
 
+    // El wizard oculta cada paso con el atributo "hidden" (ver navegacion.js),
+    // incluido el paso de Firmas mientras no es el paso activo. Por eso, al
+    // cargar la página o al mostrar la vista de formulario, el canvas puede
+    // seguir teniendo 0x0 de área aunque ya se haya "mostrado" el formulario:
+    // sigue oculto hasta que el wizard llega justo a ese paso. Por eso hay
+    // que reajustarlo también cada vez que cambia el paso.
+    document.addEventListener("stepChanged", () => {
+        requestAnimationFrame(redimensionarCanvasFirmas);
+    });
+
 }
 
 function inicializarCanvasFirma(idCanvas, tipo) {
