@@ -35,6 +35,17 @@ function renderHeader(title = "Panel General") {
 
             <div class="header-right">
 
+                <button
+                    id="btnInstalarApp"
+                    class="btn-instalar-app"
+                    type="button"
+                    hidden>
+
+                    <i class="fa-solid fa-download"></i>
+                    Instalar app
+
+                </button>
+
                 <div id="clock"></div>
 
                 <div class="header-avatar">
@@ -50,5 +61,9 @@ function renderHeader(title = "Panel General") {
     `;
 
     actualizarHora();
+
+    if (typeof window.actualizarBotonInstalarSiCorresponde === "function") {
+        window.actualizarBotonInstalarSiCorresponde();
+    }
 
 }

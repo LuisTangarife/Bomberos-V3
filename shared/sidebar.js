@@ -3,6 +3,17 @@
  SIDEBAR COMPONENT — consola de navegación
 ==========================================================*/
 
+// sidebar.js se incluye desde páginas en distinto nivel de carpetas
+// (index.html en la raíz, modules/inspecciones/index.html dos niveles
+// abajo). Los enlaces del menú deben apuntar SIEMPRE al index.html
+// principal (raíz), sin importar desde qué página se esté viendo el
+// sidebar. Por eso calculamos la raíz a partir de la URL de este mismo
+// script en vez de usar rutas relativas fijas como "index.html", que
+// resolvían distinto según la página que las incluyera.
+const RAIZ_SITIO = document.currentScript?.src
+    ? new URL('../', document.currentScript.src).href
+    : new URL('../', document.baseURI).href;
+
 function renderSidebar(active = "") {
 
     const container = document.getElementById("sidebar");
@@ -36,7 +47,7 @@ function renderSidebar(active = "") {
         <nav>
 
             <a
-                href="index.html"
+                href="${RAIZ_SITIO}index.html"
                 class="${active === "dashboard" ? "active" : ""}">
 
                 <i class="fa-solid fa-gauge-high"></i>
@@ -46,7 +57,7 @@ function renderSidebar(active = "") {
             </a>
 
             <a
-                href="modules/emergencia/index.html"
+                href="${RAIZ_SITIO}modules/emergencia/index.html"
                 class="${active === "emergencia" ? "active" : ""}">
 
                 <i class="fa-solid fa-fire-extinguisher"></i>
@@ -57,7 +68,7 @@ function renderSidebar(active = "") {
 
             <a
                 href="#"
-                onclick="abrirAPH()">
+                onclick="abrirAPH(); return false;">
 
                 <i class="fa-solid fa-truck-medical"></i>
 
@@ -67,7 +78,7 @@ function renderSidebar(active = "") {
 
             <a
                 href="#"
-                onclick="abrirAyudas()">
+                onclick="abrirAyudas(); return false;">
 
                 <i class="fa-solid fa-box-open"></i>
 
@@ -76,8 +87,7 @@ function renderSidebar(active = "") {
             </a>
 
             <a
-                href="#"
-                onclick="abrirInspecciones()"
+                href="${RAIZ_SITIO}modules/inspecciones/index.html"
                 class="${active === "inspecciones" ? "active" : ""}">
 
                 <i class="fa-solid fa-building-shield"></i>
@@ -88,7 +98,7 @@ function renderSidebar(active = "") {
 
             <a
                 href="#"
-                onclick="abrirEstadisticas()">
+                onclick="abrirEstadisticas(); return false;">
 
                 <i class="fa-solid fa-chart-column"></i>
 
@@ -114,4 +124,25 @@ function renderSidebar(active = "") {
 
     `;
 
+}
+
+// Funciones "Próximamente" para las secciones sin desarrollar todavía.
+// Se definen aquí (no en dashboard.js) para que el sidebar funcione
+// igual sin importar en qué página/módulo se esté renderizando.
+if (typeof window.abrirAPH !== "function") {
+    window.abrirAPH = function () {
+        alert("Próximamente");
+    };
+}
+
+if (typeof window.abrirAyudas !== "function") {
+    window.abrirAyudas = function () {
+        alert("Próximamente");
+    };
+}
+
+if (typeof window.abrirEstadisticas !== "function") {
+    window.abrirEstadisticas = function () {
+        alert("Próximamente");
+    };
 }
