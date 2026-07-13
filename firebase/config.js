@@ -11,7 +11,7 @@ import { initializeApp } from
 import {
     initializeFirestore,
     persistentLocalCache,
-    persistentMultipleTabManager
+    persistentSingleTabManager
 }
 from
 "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
@@ -59,9 +59,26 @@ const app = initializeApp(firebaseConfig);
 ========================================================= */
 
 const db = initializeFirestore(app, {
+
+    // persistentMultipleTabManager() espera pestañas REALES abiertas al
+    // mismo tiempo y se coordina entre ellas con un "lease" (turno) en
+    // IndexedDB. El problema: esta es una app multi-página (dashboard,
+    // inspecciones, emergencia, etc. son navegaciones normales, no una
+    // SPA), y varios navegadores/PWAs mantienen la página anterior viva
+    // un momento (bfcache) al navegar. Eso hace que, al entrar a
+    // "Centro de Gestión de Inspecciones", la página nueva a veces tenga
+    // que ESPERAR a que la anterior libere el turno — de ahí la demora
+    // y que recargar (que sí fuerza a soltar todo) lo arreglara.
+    //
+    // persistentSingleTabManager({ forceOwnership: true }) evita esa
+    // espera: la pestaña/página activa toma el control de una vez, sin
+    // negociar con nadie. Como en la práctica solo hay una página de
+    // esta app abierta a la vez por usuario, no hay ninguna
+    // funcionalidad real que se pierda.
     localCache: persistentLocalCache({
-        tabManager: persistentMultipleTabManager()
+        tabManager: persistentSingleTabManager({ forceOwnership: true })
     })
+
 });
 
 /* =========================================================
