@@ -92,3 +92,22 @@ function abrirEstadisticas(){
     alert("Próximamente");
 
 }
+
+/*=============================================
+ EXPOSICIÓN GLOBAL (necesaria por el atributo
+ "onclick" de index.html)
+=============================================*/
+// dashboard.js se carga como <script type="module">, así que las
+// funciones declaradas arriba viven en el scope del módulo, NO en
+// "window". Los "onclick" en HTML solo pueden llamar funciones que
+// existan en el scope global (window), así que sin estas líneas
+// "abrirInspecciones()" (y las demás) fallan con
+// "ReferenceError: abrirInspecciones is not defined" y el botón no
+// hace nada. Por eso solo funcionaban los botones que tenían la
+// navegación escrita directo en el onclick (ej:
+// onclick="location.href='...'"), y no los que llamaban a una función.
+window.abrirEmergencias = abrirEmergencias;
+window.abrirAPH = abrirAPH;
+window.abrirAyudas = abrirAyudas;
+window.abrirInspecciones = abrirInspecciones;
+window.abrirEstadisticas = abrirEstadisticas;
