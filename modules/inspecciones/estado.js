@@ -39,6 +39,11 @@ export const state = {
     // Fotografías
     fotos: [],
 
+    // Fotos que el usuario quitó del formulario y que, si ya estaban
+    // subidas a Storage (tienen "url"), hay que borrar de Storage al
+    // guardar. Se vacía después de cada guardado exitoso.
+    fotosEliminadas: [],
+
     // Firmas
     firmas: {
         inspector: null,

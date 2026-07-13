@@ -11,13 +11,15 @@ import { eliminarBorrador, guardarAhora } from "./autoguardado.js";
 import { renderizarFotos } from "./fotos.js";
 import { restaurarFirma } from "./firmas.js";
 import { mostrarPaso } from "./navegacion.js";
-import { confirmar } from "./utilidades.js";
+import { confirmar, mostrarToast } from "./utilidades.js";
 
 import {
     guardarInspeccion as guardarInspeccionFirestore,
     listarInspecciones as listarInspeccionesFirestore,
     actualizarInspeccion as actualizarInspeccionFirestore,
-    eliminarInspeccion as eliminarInspeccionFirestore
+    eliminarInspeccion as eliminarInspeccionFirestore,
+    subirFotoStorage,
+    eliminarFotoStorage
 } from "./firebase.js";
 
 /* ------------------------------------------------------------------------
@@ -81,9 +83,90 @@ export function obtenerInspeccionActual() {
         fechaActualizacion: new Date().toISOString(),
         usuario: state.usuario,
         formulario: obtenerDatosFormulario(),
-        fotos: structuredClone(state.fotos),
+        // Solo se guardan los metadatos + URL de cada foto (nunca el
+        // File original ni el base64), porque esto es lo que va directo
+        // al documento de Firestore. subirFotosPendientes() debe haberse
+        // ejecutado antes de llamar a esta función para que todas las
+        // fotos ya tengan "url".
+        fotos: state.fotos.map(foto => ({
+            id: foto.id,
+            nombre: foto.nombre,
+            tipo: foto.tipo,
+            peso: foto.peso,
+            fecha: foto.fecha,
+            orden: foto.orden,
+            url: foto.url
+        })),
         firmas: structuredClone(state.firmas)
     };
+
+}
+
+async function base64AFile(dataUrl, nombre, tipo) {
+    const respuesta = await fetch(dataUrl);
+    const blob = await respuesta.blob();
+    return new File([blob], nombre, { type: tipo });
+}
+
+function obtenerConsecutivoActual() {
+    return state.form?.elements?.namedItem("numeroInspeccion")?.value
+        || state.inspeccionId;
+}
+
+/**
+ * Sube a Firebase Storage cualquier foto que todavía no tenga "url"
+ * (fotos nuevas, recién elegidas de la cámara/galería) y actualiza
+ * state.fotos con la URL resultante, en el mismo orden en que quedaron
+ * en pantalla.
+ */
+async function subirFotosPendientes(consecutivo) {
+
+    for (let i = 0; i < state.fotos.length; i++) {
+
+        const foto = state.fotos[i];
+
+        if (foto.url) continue; // ya estaba subida de un guardado anterior
+
+        // Inspecciones guardadas ANTES de este arreglo tienen la foto
+        // completa en base64 dentro de "imagen" y no tienen "archivo".
+        // Si es el caso, se convierte a File aquí mismo para poder
+        // subirla a Storage igual (así se "sanean" solas al editarlas).
+        const archivo = foto.archivo || await base64AFile(foto.imagen, foto.nombre, foto.tipo);
+
+        const subida = await subirFotoStorage(consecutivo, {
+            ...foto,
+            archivo,
+            orden: i
+        });
+
+        state.fotos[i] = subida;
+
+    }
+
+    renderizarFotos();
+
+}
+
+/**
+ * Borra de Firebase Storage las fotos que el usuario quitó del
+ * formulario (y que ya estaban subidas). Si falla el borrado de alguna,
+ * no se interrumpe el guardado: es preferible dejar un archivo huérfano
+ * en Storage que perder la inspección completa.
+ */
+async function eliminarFotosPendientes(consecutivo) {
+
+    const pendientes = state.fotosEliminadas;
+    state.fotosEliminadas = [];
+
+    for (const foto of pendientes) {
+
+        try {
+            await eliminarFotoStorage(consecutivo, foto);
+        } catch (error) {
+            console.error("No se pudo borrar la foto de Storage", foto.id, error);
+        }
+
+    }
 
 }
 
@@ -249,13 +332,40 @@ export function reiniciarEstado() {
 ------------------------------------------------------------------------ */
 
 function establecerEstadoCarga(valor) {
+
     state.estado.cargando = valor;
     document.body.classList.toggle("loading", valor);
+
+    const contenedor = document.getElementById("inspectionCards");
+
+    if (valor && contenedor) {
+        contenedor.innerHTML = `
+            <div class="photo-placeholder">
+                <i class="fa-solid fa-spinner fa-spin"></i>
+                <span>Cargando inspecciones...</span>
+            </div>
+        `;
+    }
+
 }
 
 function establecerEstadoGuardando(valor) {
+
     state.estado.guardando = valor;
     document.body.classList.toggle("saving", valor);
+
+    // El toggle de clase por sí solo no bastaba: no había ningún CSS
+    // enganchado a "body.saving", así que el botón se veía igual todo
+    // el tiempo y el usuario no tenía forma de saber si el guardado
+    // seguía en curso. Deshabilitar el botón y cambiar su texto es la
+    // señal explícita.
+    if (UI.btnGuardar) {
+        UI.btnGuardar.disabled = valor;
+        UI.btnGuardar.innerHTML = valor
+            ? '<i class="fa-solid fa-spinner fa-spin"></i> Guardando...'
+            : '<i class="fa-solid fa-floppy-disk"></i> Guardar Inspección';
+    }
+
 }
 
 function establecerEstadoSincronizacion(valor) {
@@ -306,6 +416,16 @@ export async function guardarInspeccion() {
     try {
 
         await guardarAhora();
+
+        // Antes de construir el snapshot que se guarda en Firestore, se
+        // suben las fotos nuevas a Firebase Storage y se borran las que
+        // el usuario quitó. Así el documento de Firestore solo guarda
+        // URLs de fotos (unos pocos bytes cada una) en vez de las fotos
+        // completas en base64 (que podían pesar varios MB cada una y
+        // eran las que hacían lentísimo tanto guardar como listar).
+        const consecutivo = obtenerConsecutivoActual();
+        await subirFotosPendientes(consecutivo);
+        await eliminarFotosPendientes(consecutivo);
 
         const inspeccion = obtenerInspeccionActual();
 
@@ -446,7 +566,13 @@ async function obtenerInspeccionesRemotas() {
 
     } catch (error) {
 
-        console.error("No se pudo listar desde Firestore, usando copia local", error);
+        // Antes esto fallaba en silencio y mostraba solo la copia local
+        // de ESTE dispositivo (localStorage), lo que parecía "no veo las
+        // inspecciones de otros dispositivos". Ahora se avisa
+        // explícitamente para que quede claro que es un problema de
+        // conexión/permmisos y no que faltan datos.
+        console.error("No se pudo listar desde Firestore, usando copia local de este dispositivo", error);
+        mostrarToast("No se pudo conectar con el servidor: mostrando solo lo guardado en este dispositivo", "error");
         return leerListaLocal();
 
     }

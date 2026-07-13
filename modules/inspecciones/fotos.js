@@ -64,7 +64,15 @@ async function agregarFoto(file) {
         tipo: file.type,
         peso: file.size,
         fecha: Date.now(),
-        imagen: base64
+        // "imagen" se usa para la vista previa mientras se edita el
+        // formulario. Al guardar, persistencia.js sube "archivo" a
+        // Firebase Storage y reemplaza "imagen" por la URL resultante,
+        // para no meter fotos completas en base64 dentro del documento
+        // de Firestore (eso es lo que hacía que guardar y listar fuera
+        // lentísimo).
+        imagen: base64,
+        archivo: file,
+        url: null
     });
 
 }
@@ -164,6 +172,15 @@ export function bajarFoto(indice) {
 
 export function eliminarFoto(id) {
 
+    const foto = state.fotos.find(item => item.id === id);
+
+    // Si la foto ya estaba subida a Storage (tiene url), hay que borrarla
+    // de ahí también cuando se guarde; si es una foto nueva que nunca se
+    // subió, con quitarla del arreglo local basta.
+    if (foto?.url) {
+        state.fotosEliminadas.push(foto);
+    }
+
     state.fotos = state.fotos.filter(foto => foto.id !== id);
 
     renderizarFotos();
@@ -217,5 +234,6 @@ export function cantidadFotos() {
 
 export function limpiarFotos() {
     state.fotos = [];
+    state.fotosEliminadas = [];
     renderizarFotos();
 }

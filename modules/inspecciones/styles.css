@@ -745,6 +745,18 @@ BOTONES
 
 }
 
+.primary:disabled,
+
+.btn-primary:disabled{
+
+    opacity:.65;
+
+    cursor:default;
+
+    transform:none;
+
+}
+
 .primary:hover,
 
 .btn-primary:hover{

@@ -131,7 +131,13 @@ export async function subirFotoStorage(consecutivo, foto){
 
         orden: foto.orden,
 
-        url
+        url,
+
+        // Las tarjetas de foto en fotos.js usan "imagen" como src del
+        // <img>. Al quedar igual a la URL de Storage, tanto las fotos
+        // recién subidas como las que se cargan de vuelta desde
+        // Firestore se muestran igual, sin tener que tocar fotos.js.
+        imagen: url
 
     };
 
