@@ -49,35 +49,65 @@ import {
 
 document.addEventListener("DOMContentLoaded", iniciarAplicacion);
 
+// Red de seguridad: si algo se rompe en cualquier parte de este módulo
+// (una promesa que nadie atrapó, un error inesperado) antes no se veía
+// NADA en pantalla — el botón de Guardar podía quedarse sin reaccionar
+// y sin ninguna pista de qué pasó. Esto al menos lo deja en la consola
+// (F12 → Console) bien visible, en rojo, con el mensaje real del error.
+window.addEventListener("unhandledrejection", event => {
+    console.error("[Inspecciones] Promesa sin atrapar:", event.reason);
+});
+
+window.addEventListener("error", event => {
+    console.error("[Inspecciones] Error no controlado:", event.error || event.message);
+});
+
 async function iniciarAplicacion() {
 
-    const usuario = await protegerPagina();
-    state.usuario = usuario.email || usuario.uid;
+    try {
 
-    console.log(
-        `%cSistema de Inspecciones v${APP.VERSION}`,
-        "color:#ff6b00;font-weight:bold;font-size:13px;"
-    );
+        const usuario = await protegerPagina();
+        state.usuario = usuario.email || usuario.uid;
 
-    if (typeof renderSidebar === "function") renderSidebar("inspecciones");
-    if (typeof renderHeader === "function") renderHeader("Inspecciones");
+        console.log(
+            `%cSistema de Inspecciones v${APP.VERSION}`,
+            "color:#ff6b00;font-weight:bold;font-size:13px;"
+        );
 
-    inicializarDOM();
-    inicializarEventos();
-    inicializarFormulario();
+        if (typeof renderSidebar === "function") renderSidebar("inspecciones");
+        if (typeof renderHeader === "function") renderHeader("Inspecciones");
 
-    establecerFechaHora();
+        inicializarDOM();
+        inicializarEventos();
+        inicializarFormulario();
 
-    inicializarMenu();
-    inicializarProgreso();
-    inicializarFirmas();
-    inicializarFotos();
+        establecerFechaHora();
 
-    iniciarAutoGuardado();
-    await cargarInspecciones();
+        inicializarMenu();
+        inicializarProgreso();
+        inicializarFirmas();
+        inicializarFotos();
 
-    inicializarListado();
-    inicializarScrollTop();
+        iniciarAutoGuardado();
+        await cargarInspecciones();
+
+        inicializarListado();
+        inicializarScrollTop();
+
+    } catch (error) {
+
+        // Si esto se dispara, la página quedó a medio inicializar (por
+        // eso ningún botón respondía). Se deja bien visible en consola
+        // y, ya que no podemos confiar en que mostrarToast/UI estén
+        // listos en este punto, también en una alerta simple.
+        console.error("[Inspecciones] Falló la inicialización de la página:", error);
+        alert(
+            "La página de Inspecciones no cargó completamente y por eso los botones (como Guardar) pueden no responder.\n\n" +
+            "Error: " + (error?.message || error) +
+            "\n\nRevisa la consola (F12) para más detalle, o recarga la página."
+        );
+
+    }
 
 }
 
@@ -117,14 +147,25 @@ function inicializarEventos() {
         UI.form.addEventListener("submit", async e => {
             e.preventDefault();
 
-            const guardada = await guardarInspeccion();
+            try {
 
-            if (guardada) {
-                mostrarToast("Inspección guardada correctamente");
-                mostrarVistaListado();
-            } else {
-                mostrarToast("Revisa los campos obligatorios antes de guardar", "error");
+                const guardada = await guardarInspeccion();
+
+                if (guardada) {
+                    mostrarToast("Inspección guardada correctamente");
+                    mostrarVistaListado();
+                } else {
+                    mostrarToast("Revisa los campos obligatorios antes de guardar", "error");
+                }
+
+            } catch (error) {
+                // guardarInspeccion() ya atrapa sus propios errores; esto
+                // es solo una red de seguridad extra por si algo más
+                // (mostrarToast, mostrarVistaListado) fallara.
+                console.error("[Inspecciones] Error en el envío del formulario:", error);
+                mostrarToast(`Ocurrió un error inesperado: ${error?.message || error}`, "error");
             }
+
         });
     }
 

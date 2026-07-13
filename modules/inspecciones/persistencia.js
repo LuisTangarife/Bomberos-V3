@@ -74,9 +74,37 @@ function generarSiguienteConsecutivo() {
 
 }
 
+// Firestore rechaza el documento COMPLETO si cualquier campo, en
+// cualquier nivel, es "undefined" (a diferencia de "null", que sí
+// acepta). Esto pasaba con inspecciones guardadas antes de estos
+// cambios: sus fotos no tenían campos como "peso" o "imagen", y al
+// volver a guardarlas esos campos llegaban como undefined y Firestore
+// rechazaba todo con "Unsupported field value: undefined". Esta
+// función recorre el objeto entero y cambia cualquier undefined por
+// null, sin importar en qué campo esté escondido.
+function limpiarUndefined(valor) {
+
+    if (valor === undefined) return null;
+
+    if (Array.isArray(valor)) {
+        return valor.map(limpiarUndefined);
+    }
+
+    if (valor !== null && typeof valor === "object" && !(valor instanceof Date)) {
+        const limpio = {};
+        for (const [clave, v] of Object.entries(valor)) {
+            limpio[clave] = limpiarUndefined(v);
+        }
+        return limpio;
+    }
+
+    return valor;
+
+}
+
 export function obtenerInspeccionActual() {
 
-    return {
+    return limpiarUndefined({
         id: state.inspeccionId ?? crypto.randomUUID(),
         fechaCreacion:
             state.seleccionada?.fechaCreacion || new Date().toISOString(),
@@ -104,7 +132,7 @@ export function obtenerInspeccionActual() {
             imagen: APP.USAR_STORAGE ? null : foto.imagen
         })),
         firmas: structuredClone(state.firmas)
-    };
+    });
 
 }
 
@@ -491,7 +519,20 @@ export async function guardarInspeccion() {
 
         }
 
-        await guardarInspeccionRemota(inspeccion);
+        // Si Firestore no responde (reglas de seguridad, sin internet,
+        // proyecto mal configurado, etc.) antes esto se podía quedar
+        // esperando indefinidamente sin avisar nada. Con este límite de
+        // 20s, si no hay respuesta se cancela y se muestra un error en
+        // vez de dejar el botón pegado sin explicación.
+        await Promise.race([
+            guardarInspeccionRemota(inspeccion),
+            new Promise((_, reject) =>
+                setTimeout(
+                    () => reject(new Error("Tiempo de espera agotado guardando en Firestore (20s). Revisa tu conexión a internet o las reglas de seguridad del proyecto en Firebase.")),
+                    20000
+                )
+            )
+        ]);
 
         actualizarInspeccionMemoria(inspeccion);
         ordenarInspecciones();
@@ -506,6 +547,24 @@ export async function guardarInspeccion() {
         );
 
         return true;
+
+    } catch (error) {
+
+        // Antes, cualquier error acá (reglas de Firestore, sin red,
+        // proyecto mal configurado, etc.) quedaba silencioso: la
+        // promesa de guardarInspeccion() se rechazaba, nadie la
+        // atrapaba, y en la interfaz no pasaba absolutamente nada -
+        // ni el botón cambiaba a "Guardando...", ni había ningún
+        // aviso. Ahora se registra en la consola (F12 → Console) y se
+        // le muestra al usuario el motivo real.
+        console.error("[guardarInspeccion] Error al guardar la inspección:", error);
+
+        mostrarToast(
+            `No se pudo guardar la inspección: ${error?.message || "error desconocido"}. Revisa la consola (F12) para más detalle.`,
+            "error"
+        );
+
+        return false;
 
     } finally {
         establecerEstadoGuardando(false);
