@@ -86,11 +86,14 @@ async function agregarFoto(file) {
 
 }
 
-// Ancho máximo y calidad JPEG usados al comprimir. 1600px de ancho es
-// más que suficiente para ver detalle en un informe/PDF y para
-// imprimir; casi ninguna foto de celular necesita más para este uso.
-const FOTO_ANCHO_MAXIMO = 1600;
-const FOTO_CALIDAD_JPEG = 0.75;
+// Ancho máximo y calidad JPEG usados al comprimir. Con Storage
+// deshabilitado (APP.USAR_STORAGE = false), las fotos viajan como
+// base64 DENTRO del documento de Firestore, que tiene un límite duro
+// de 1 MiB por documento. Por eso, sin Storage se comprime bastante
+// más fuerte (800px / calidad 0.5) que con Storage habilitado (1600px
+// / calidad 0.75), donde el tamaño del archivo casi no importa.
+const FOTO_ANCHO_MAXIMO = APP.USAR_STORAGE ? 1600 : 800;
+const FOTO_CALIDAD_JPEG = APP.USAR_STORAGE ? 0.75 : 0.5;
 
 /**
  * Redimensiona (si hace falta) y comprime una foto a JPEG usando un

@@ -11,7 +11,18 @@ export const APP = {
     STORAGE_KEY_LISTA: "inspecciones_guardadas",
     STORAGE_KEY_CONSECUTIVO: "inspecciones_consecutivo",
     SCROLL_OFFSET: 80,
-    DEBUG: false
+    DEBUG: false,
+
+    // Firebase Storage requiere el plan de pago (Blaze) del proyecto.
+    // Mientras el proyecto siga en el plan gratuito (Spark), Storage no
+    // está habilitado y cualquier intento de subir algo ahí se queda
+    // reintentando varios segundos/minutos antes de fallar; eso es lo
+    // que hacía sentir colgado el botón "Guardar Inspección". Con esto
+    // en false, las fotos se guardan directo como base64 dentro del
+    // documento de Firestore (persistencia.js y fotos.js respetan este
+    // flag). El día que se habilite Storage (facturación activada),
+    // basta con volver a poner esto en true.
+    USAR_STORAGE: false
 };
 
 export const state = {

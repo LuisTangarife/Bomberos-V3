@@ -95,7 +95,13 @@ export function obtenerInspeccionActual() {
             peso: foto.peso,
             fecha: foto.fecha,
             orden: foto.orden,
-            url: foto.url
+            url: foto.url,
+            // Sin Storage (APP.USAR_STORAGE = false), la foto completa
+            // (comprimida y en base64) viaja dentro del documento de
+            // Firestore. Con Storage habilitado esto se deja vacío
+            // porque ya existe "url" y repetir el base64 sería
+            // desperdiciar espacio del documento.
+            imagen: APP.USAR_STORAGE ? null : foto.imagen
         })),
         firmas: structuredClone(state.firmas)
     };
@@ -135,6 +141,12 @@ const FOTOS_SUBIDA_CONCURRENTE = 4;
  * orden final en state.fotos.
  */
 async function subirFotosPendientes(consecutivo) {
+
+    // Storage deshabilitado (proyecto en plan gratuito): no hay nada que
+    // subir. Las fotos ya quedaron comprimidas y en base64 en
+    // foto.imagen (ver fotos.js), y eso es justamente lo que se guarda
+    // en el documento de Firestore desde obtenerInspeccionActual().
+    if (!APP.USAR_STORAGE) return;
 
     const pendientes = [];
 
@@ -182,6 +194,11 @@ async function eliminarFotosPendientes(consecutivo) {
 
     const pendientes = state.fotosEliminadas;
     state.fotosEliminadas = [];
+
+    // Sin Storage no hay archivos remotos que borrar: las fotos quitadas
+    // simplemente dejan de estar en el arreglo "fotos" del documento la
+    // próxima vez que se guarde.
+    if (!APP.USAR_STORAGE) return;
 
     for (const foto of pendientes) {
 
@@ -442,17 +459,37 @@ export async function guardarInspeccion() {
 
         await guardarAhora();
 
-        // Antes de construir el snapshot que se guarda en Firestore, se
-        // suben las fotos nuevas a Firebase Storage y se borran las que
-        // el usuario quitó. Así el documento de Firestore solo guarda
-        // URLs de fotos (unos pocos bytes cada una) en vez de las fotos
-        // completas en base64 (que podían pesar varios MB cada una y
-        // eran las que hacían lentísimo tanto guardar como listar).
+        // Con Storage habilitado (APP.USAR_STORAGE = true) esto sube las
+        // fotos nuevas a Firebase Storage y borra las que el usuario
+        // quitó, para que el documento de Firestore solo guarde URLs.
+        // Con Storage deshabilitado (el caso actual, plan gratuito) estas
+        // dos funciones no hacen nada: las fotos ya van en base64 dentro
+        // del propio documento (ver obtenerInspeccionActual).
         const consecutivo = obtenerConsecutivoActual();
         await subirFotosPendientes(consecutivo);
         await eliminarFotosPendientes(consecutivo);
 
         const inspeccion = obtenerInspeccionActual();
+
+        // Firestore rechaza cualquier documento de más de 1 MiB. Sin
+        // Storage, las fotos van en base64 dentro de este mismo
+        // documento, así que si hay muchas fotos (o muy pesadas) se
+        // puede llegar a ese límite. Mejor avisar claro aquí que dejar
+        // que Firestore lo rechace con un error críptico.
+        if (!APP.USAR_STORAGE) {
+
+            const pesoAproximado = new Blob([JSON.stringify(inspeccion)]).size;
+            const LIMITE_FIRESTORE = 1024 * 1024; // 1 MiB
+
+            if (pesoAproximado >= LIMITE_FIRESTORE * 0.9) {
+                mostrarToast(
+                    "Hay demasiadas fotos (o muy pesadas) para guardar esta inspección. Quita algunas fotos e intenta de nuevo.",
+                    "error"
+                );
+                return false;
+            }
+
+        }
 
         await guardarInspeccionRemota(inspeccion);
 
