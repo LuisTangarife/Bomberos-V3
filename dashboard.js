@@ -2,7 +2,11 @@
  PANEL GENERAL — CENTRO DE OPERACIONES
 =============================================*/
 
-document.addEventListener("DOMContentLoaded", () => {
+import { protegerPagina } from "./shared/auth.js";
+
+document.addEventListener("DOMContentLoaded", async () => {
+
+    await protegerPagina();
 
     renderSidebar("dashboard");
 
