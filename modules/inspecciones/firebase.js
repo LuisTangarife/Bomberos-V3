@@ -20,7 +20,6 @@ import {
     doc,
     setDoc,
     getDoc,
-    updateDoc,
     deleteDoc,
     collection,
     query,
@@ -243,7 +242,16 @@ export async function listarInspecciones(){
 
 export async function actualizarInspeccion(id,datos){
 
-    await updateDoc(
+    // Antes usaba updateDoc(), que EXIGE que el documento ya exista en
+    // Firestore (si no, falla con "No document to update"). Por el
+    // problema anterior (reglas "if false" y luego la base en edición
+    // Enterprise colgándose), hay inspecciones que quedaron marcadas
+    // como "existentes" en el dispositivo/local pero que en realidad
+    // nunca llegaron a crearse en Firestore. Con setDoc(..., {merge:
+    // true}) se actualiza si ya existe, y se crea si no — así esas
+    // inspecciones "huérfanas" se auto-reparan solas en el próximo
+    // guardado en vez de fallar.
+    await setDoc(
 
         doc(db,"inspecciones",id),
 
@@ -252,6 +260,12 @@ export async function actualizarInspeccion(id,datos){
             ...datos,
 
             updatedAt:serverTimestamp()
+
+        },
+
+        {
+
+            merge: true
 
         }
 
