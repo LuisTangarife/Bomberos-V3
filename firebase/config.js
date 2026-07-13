@@ -1,10 +1,8 @@
 /* =========================================================
    FIREBASE CONFIG
 
-   1) Pega aquí abajo, en "firebaseConfig", las llaves reales que te
-      da Firebase Console → Configuración del proyecto → Tus apps → Web.
-   2) No necesitas nada más: Firestore, Storage y Auth ya quedan listos
-      para usarse desde el resto de la app (firebase.js, auth.js).
+   Configuración de Firebase para el proyecto
+   Bomberos Villamaría
 ========================================================= */
 
 import { initializeApp } from
@@ -31,39 +29,56 @@ from
 "https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js";
 
 /* =========================================================
-   ⚠️ REEMPLAZA ESTOS VALORES POR LOS DE TU PROYECTO REAL
+   CONFIGURACIÓN DE FIREBASE
 ========================================================= */
+
 const firebaseConfig = {
 
-    apiKey: "...",
+    apiKey: "AIzaSyAfzmdBE0Y-NHOnn-2bv2Oahio8NPxd4uo",
 
-    authDomain: "...",
+    authDomain: "bomberos-villamaria.firebaseapp.com",
 
-    projectId: "...",
+    projectId: "bomberos-villamaria",
 
-    storageBucket: "...",
+    storageBucket: "bomberos-villamaria.firebasestorage.app",
 
-    messagingSenderId: "...",
+    messagingSenderId: "842979154285",
 
-    appId: "..."
+    appId: "1:842979154285:web:2f96d9079da84e8a2b2264"
 
 };
 
+/* =========================================================
+   INICIALIZAR FIREBASE
+========================================================= */
+
 const app = initializeApp(firebaseConfig);
 
-// Firestore con caché local persistente: los datos quedan disponibles
-// sin conexión (igual que antes con localStorage) y se sincronizan
-// solos apenas vuelve la señal. "persistentMultipleTabManager" permite
-// tener la app abierta en varias pestañas/dispositivos a la vez.
+/* =========================================================
+   FIRESTORE CON CACHÉ PERSISTENTE
+========================================================= */
+
 const db = initializeFirestore(app, {
     localCache: persistentLocalCache({
         tabManager: persistentMultipleTabManager()
     })
 });
 
+/* =========================================================
+   STORAGE
+========================================================= */
+
 const storage = getStorage(app);
 
+/* =========================================================
+   AUTH
+========================================================= */
+
 const auth = getAuth(app);
+
+/* =========================================================
+   EXPORTAR INSTANCIAS
+========================================================= */
 
 export {
 
