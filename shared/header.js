@@ -48,6 +48,17 @@ function renderHeader(title = "Panel General") {
 
                 <div id="clock"></div>
 
+                <button
+                    id="btnCerrarSesion"
+                    class="btn-cerrar-sesion"
+                    type="button"
+                    title="Cerrar sesión"
+                    onclick="typeof cerrarSesionApp === 'function' && cerrarSesionApp()">
+
+                    <i class="fa-solid fa-arrow-right-from-bracket"></i>
+
+                </button>
+
                 <div class="header-avatar">
 
                     <i class="fa-solid fa-user"></i>

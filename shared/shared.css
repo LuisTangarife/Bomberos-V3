@@ -226,6 +226,26 @@ button:focus-visible{
     display:none;
 }
 
+.btn-cerrar-sesion{
+    width:38px;
+    height:38px;
+    border-radius:10px;
+    border:1px solid var(--border);
+    background:rgba(255,255,255,.04);
+    color:var(--text-light);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    cursor:pointer;
+    font-size:14px;
+    flex-shrink:0;
+}
+
+.btn-cerrar-sesion:hover{
+    color:var(--primary);
+    border-color:var(--border-hover);
+}
+
 /* ========================================================== */
 /* BANNER PWA (actualización disponible / instrucciones iOS)   */
 /* ========================================================== */
