@@ -56,13 +56,22 @@ async function agregarFoto(file) {
 
     if (!file.type.startsWith("image/")) return;
 
-    const base64 = await convertirBase64(file);
+    // Las fotos de cámara pueden pesar varios MB cada una. Sin
+    // comprimir, con hasta APP.MAX_FOTOS (50) fotos permitidas, eso
+    // significaba: (a) subidas larguísimas a Firebase Storage al
+    // guardar, y (b) un borrador en localStorage enorme (el autoguardado
+    // serializa "imagen" en base64 en cada tanda), lo que podía incluso
+    // llegar al límite de localStorage y volver lenta toda la pestaña.
+    // Se comprime/redimensiona aquí, antes de guardar nada en el estado.
+    const comprimida = await comprimirImagen(file);
+
+    const base64 = await convertirBase64(comprimida);
 
     state.fotos.push({
         id: crypto.randomUUID(),
         nombre: file.name,
-        tipo: file.type,
-        peso: file.size,
+        tipo: comprimida.type,
+        peso: comprimida.size,
         fecha: Date.now(),
         // "imagen" se usa para la vista previa mientras se edita el
         // formulario. Al guardar, persistencia.js sube "archivo" a
@@ -71,9 +80,53 @@ async function agregarFoto(file) {
         // de Firestore (eso es lo que hacía que guardar y listar fuera
         // lentísimo).
         imagen: base64,
-        archivo: file,
+        archivo: comprimida,
         url: null
     });
+
+}
+
+// Ancho máximo y calidad JPEG usados al comprimir. 1600px de ancho es
+// más que suficiente para ver detalle en un informe/PDF y para
+// imprimir; casi ninguna foto de celular necesita más para este uso.
+const FOTO_ANCHO_MAXIMO = 1600;
+const FOTO_CALIDAD_JPEG = 0.75;
+
+/**
+ * Redimensiona (si hace falta) y comprime una foto a JPEG usando un
+ * canvas. Si por algún motivo falla (formato no soportado, etc.), se
+ * devuelve el archivo original para no bloquear al usuario.
+ */
+async function comprimirImagen(file) {
+
+    try {
+
+        const bitmap = await createImageBitmap(file);
+
+        const escala = Math.min(1, FOTO_ANCHO_MAXIMO / bitmap.width);
+        const ancho = Math.round(bitmap.width * escala);
+        const alto = Math.round(bitmap.height * escala);
+
+        const canvas = document.createElement("canvas");
+        canvas.width = ancho;
+        canvas.height = alto;
+
+        const contexto = canvas.getContext("2d");
+        contexto.drawImage(bitmap, 0, 0, ancho, alto);
+
+        const blob = await new Promise(resolve =>
+            canvas.toBlob(resolve, "image/jpeg", FOTO_CALIDAD_JPEG)
+        );
+
+        if (!blob || blob.size >= file.size) return file; // no ganamos nada, usar el original
+
+        const nombreJpg = file.name.replace(/\.\w+$/, "") + ".jpg";
+        return new File([blob], nombreJpg, { type: "image/jpeg" });
+
+    } catch (error) {
+        console.error("No se pudo comprimir la foto, se usará el archivo original", error);
+        return file;
+    }
 
 }
 

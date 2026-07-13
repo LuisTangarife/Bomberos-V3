@@ -37,7 +37,16 @@ export async function guardarBorrador() {
         firmas: state.firmas
     };
 
-    localStorage.setItem(APP.STORAGE_KEY, JSON.stringify(datos));
+    try {
+        localStorage.setItem(APP.STORAGE_KEY, JSON.stringify(datos));
+    } catch (error) {
+        // Con muchas fotos, el borrador serializado (incluye "imagen" en
+        // base64 de cada una) puede superar el límite de localStorage
+        // (~5-10MB) y esto lanza una excepción. No debe tumbar el
+        // autoguardado ni el guardado real (guardarInspeccion llama a
+        // guardarAhora antes de subir a Firebase).
+        console.error("No se pudo guardar el borrador local (posiblemente por espacio)", error);
+    }
 
     state.estado.guardando = false;
     state.hayCambios = false;

@@ -113,33 +113,58 @@ function obtenerConsecutivoActual() {
         || state.inspeccionId;
 }
 
+// Cuántas fotos se suben al mismo tiempo. Subir las 50 fotos permitidas
+// (APP.MAX_FOTOS) todas a la vez podría saturar la conexión del celular
+// (sobre todo en 4G), así que se suben en tandas de este tamaño en vez
+// de una por una (que era lo que hacía que guardar tardara minutos:
+// antes el tiempo total era la SUMA de cada subida, ahora es más
+// parecido al tiempo de la tanda más lenta).
+const FOTOS_SUBIDA_CONCURRENTE = 4;
+
 /**
  * Sube a Firebase Storage cualquier foto que todavía no tenga "url"
  * (fotos nuevas, recién elegidas de la cámara/galería) y actualiza
  * state.fotos con la URL resultante, en el mismo orden en que quedaron
  * en pantalla.
+ *
+ * Antes esto se hacía con un "for" que esperaba (await) cada foto
+ * antes de empezar la siguiente, es decir, en serie. Con hasta 50
+ * fotos permitidas (APP.MAX_FOTOS) y fotos de cámara sin comprimir
+ * (varios MB cada una), eso podía sumar varios minutos. Ahora se suben
+ * varias fotos EN PARALELO (Promise.all por tanda), manteniendo el
+ * orden final en state.fotos.
  */
 async function subirFotosPendientes(consecutivo) {
 
+    const pendientes = [];
+
     for (let i = 0; i < state.fotos.length; i++) {
+        if (!state.fotos[i].url) pendientes.push(i);
+    }
 
-        const foto = state.fotos[i];
+    for (let inicio = 0; inicio < pendientes.length; inicio += FOTOS_SUBIDA_CONCURRENTE) {
 
-        if (foto.url) continue; // ya estaba subida de un guardado anterior
+        const tanda = pendientes.slice(inicio, inicio + FOTOS_SUBIDA_CONCURRENTE);
 
-        // Inspecciones guardadas ANTES de este arreglo tienen la foto
-        // completa en base64 dentro de "imagen" y no tienen "archivo".
-        // Si es el caso, se convierte a File aquí mismo para poder
-        // subirla a Storage igual (así se "sanean" solas al editarlas).
-        const archivo = foto.archivo || await base64AFile(foto.imagen, foto.nombre, foto.tipo);
+        await Promise.all(tanda.map(async i => {
 
-        const subida = await subirFotoStorage(consecutivo, {
-            ...foto,
-            archivo,
-            orden: i
-        });
+            const foto = state.fotos[i];
 
-        state.fotos[i] = subida;
+            // Inspecciones guardadas ANTES de este arreglo tienen la foto
+            // completa en base64 dentro de "imagen" y no tienen "archivo".
+            // Si es el caso, se convierte a File aquí mismo para poder
+            // subirla a Storage igual (así se "sanean" solas al editarlas).
+            const archivo = foto.archivo || await base64AFile(foto.imagen, foto.nombre, foto.tipo);
+
+            const subida = await subirFotoStorage(consecutivo, {
+                ...foto,
+                archivo,
+                orden: i
+            });
+
+            state.fotos[i] = subida;
+
+        }));
 
     }
 
