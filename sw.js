@@ -4,7 +4,7 @@
    y sea instalable como PWA.
 ======================================================================== */
 
-const SW_VERSION = 'v22'; // v21 -> v22: limpieza de campos "undefined" antes de guardar en Firestore
+const SW_VERSION = 'v23'; // v22 -> v23: hora/fecha con formato local (no Intl/UTC) + mensajes de validación con el nombre del campo
 const STATIC_CACHE = `bomberos-static-${SW_VERSION}`;
 const DYNAMIC_CACHE = `bomberos-dynamic-${SW_VERSION}`;
 const CACHES_VIGENTES = [STATIC_CACHE, DYNAMIC_CACHE];
