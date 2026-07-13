@@ -18,12 +18,13 @@ const auth = getAuth(app);
 // que pwa.js y sidebar.js: calculamos la raíz real del sitio a partir de
 // la URL de este mismo script para que "login.html" siempre apunte al
 // login de la raíz, sin importar desde qué página se use.
-const URL_ESTE_SCRIPT = document.currentScript?.src
-    || new URL('auth.js', document.baseURI).href;
+// Detecta automáticamente si la app está en GitHub Pages o en localhost
+const BASE_PATH = window.location.pathname.includes("/Bomberos-V3/")
+    ? "/Bomberos-V3/"
+    : "/";
 
-const RAIZ_SITIO = new URL('../', URL_ESTE_SCRIPT);
-const URL_LOGIN = new URL('login.html', RAIZ_SITIO).href;
-const URL_DASHBOARD = new URL('index.html', RAIZ_SITIO).href;
+const URL_LOGIN = `${window.location.origin}${BASE_PATH}login.html`;
+const URL_DASHBOARD = `${window.location.origin}${BASE_PATH}index.html`;
 
 /**
  * Inicia sesión con correo y contraseña. Lanza el error de Firebase si
