@@ -10,9 +10,19 @@
 // sidebar. Por eso calculamos la raíz a partir de la URL de este mismo
 // script en vez de usar rutas relativas fijas como "index.html", que
 // resolvían distinto según la página que las incluyera.
-const RAIZ_SITIO = document.currentScript?.src
-    ? new URL('../', document.currentScript.src).href
-    : new URL('../', document.baseURI).href;
+/*==========================================================
+ RUTA BASE DE LA APLICACIÓN
+ Funciona tanto en:
+ - GitHub Pages
+ - Localhost
+ - Otros servidores
+==========================================================*/
+
+const BASE_PATH = window.location.pathname.includes("/Bomberos-V3/")
+    ? "/Bomberos-V3/"
+    : "/";
+
+const RAIZ_SITIO = `${window.location.origin}${BASE_PATH}`;
 
 function renderSidebar(active = "") {
 
