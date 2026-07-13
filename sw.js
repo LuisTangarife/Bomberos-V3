@@ -4,7 +4,7 @@
    y sea instalable como PWA.
 ======================================================================== */
 
-const SW_VERSION = 'v16';
+const SW_VERSION = 'v17';
 const STATIC_CACHE = `bomberos-static-${SW_VERSION}`;
 const DYNAMIC_CACHE = `bomberos-dynamic-${SW_VERSION}`;
 const CACHES_VIGENTES = [STATIC_CACHE, DYNAMIC_CACHE];
@@ -19,6 +19,7 @@ const LIMITE_CACHE_DINAMICA = 80;
 const FILES = [
     "./",
     "./index.html",
+    "./login.html",
     "./offline.html",
 
     "./dashboard.css",
@@ -31,6 +32,7 @@ const FILES = [
     "./shared/sidebar.js",
     "./shared/header.js",
     "./shared/pwa.js",
+    "./shared/auth.js",
 
     "./firebase/config.js",
 
