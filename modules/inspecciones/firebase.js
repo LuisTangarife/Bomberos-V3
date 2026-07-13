@@ -2,34 +2,32 @@
    FIREBASE - INSPECCIONES
 ========================================================= */
 import {
-
     db,
-
     storage
-
 }
 from "../../firebase/config.js";
 
 import {
-
     ref,
-
     uploadBytes,
-
     getDownloadURL,
-
     deleteObject
-
 }
 from
 "https://www.gstatic.com/firebasejs/11.9.1/firebase-storage.js";
 
 import {
-
+    doc,
+    setDoc,
+    getDoc,
+    updateDoc,
+    deleteDoc,
+    collection,
+    query,
+    orderBy,
+    getDocs,
     runTransaction,
-
-    increment
-
+    serverTimestamp
 }
 from
 "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
@@ -161,13 +159,10 @@ export async function eliminarFotoStorage(consecutivo,foto){
 
 }
 
-export {
+/* =========================================================
+   CRUD INSPECCIONES (FIRESTORE)
+========================================================= */
 
-    db,
-
-    storage
-
-};
 export async function guardarInspeccion(id, datos){
 
     await setDoc(
@@ -181,6 +176,12 @@ export async function guardarInspeccion(id, datos){
             createdAt: serverTimestamp(),
 
             updatedAt: serverTimestamp()
+
+        },
+
+        {
+
+            merge: true
 
         }
 
@@ -218,7 +219,7 @@ export async function listarInspecciones(){
 
         collection(db,"inspecciones"),
 
-        orderBy("createdAt","desc")
+        orderBy("updatedAt","desc")
 
     );
 
@@ -261,3 +262,11 @@ export async function eliminarInspeccion(id){
     );
 
 }
+
+export {
+
+    db,
+
+    storage
+
+};

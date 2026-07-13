@@ -24,6 +24,7 @@
 
 import { APP, state } from "./estado.js";
 import { UI, inicializarDOM } from "./dom.js";
+import { protegerPagina } from "../../shared/auth.js";
 
 import { siguientePaso, pasoAnterior, inicializarMenu, inicializarProgreso } from "./navegacion.js";
 import { inicializarFormulario, establecerFechaHora } from "./formulario.js";
@@ -49,6 +50,9 @@ import {
 document.addEventListener("DOMContentLoaded", iniciarAplicacion);
 
 async function iniciarAplicacion() {
+
+    const usuario = await protegerPagina();
+    state.usuario = usuario.email || usuario.uid;
 
     console.log(
         `%cSistema de Inspecciones v${APP.VERSION}`,

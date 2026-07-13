@@ -65,7 +65,14 @@ function ajustarCanvas(canvas) {
     canvas.width = rect.width * ratio;
     canvas.height = rect.height * ratio;
 
-    canvas.getContext("2d").scale(ratio, ratio);
+    const ctx = canvas.getContext("2d");
+
+    // Reiniciar la transformación explícitamente (en vez de confiar en que
+    // reasignar width/height ya la resetea) evita que sucesivos llamados a
+    // ajustarCanvas() (en cada cambio de paso, resize u orientationchange)
+    // vayan acumulando escalas una sobre otra.
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.scale(ratio, ratio);
 
 }
 
@@ -158,8 +165,19 @@ export function restaurarFirma(tipo) {
     const img = new Image();
 
     img.onload = () => {
-        firma.ctx.clearRect(0, 0, firma.canvas.width, firma.canvas.height);
-        firma.ctx.drawImage(img, 0, 0, firma.canvas.width, firma.canvas.height);
+
+        const { ctx, canvas } = firma;
+
+        // Se limpia y se dibuja en coordenadas de píxel real (transformación
+        // identidad), no en las coordenadas "CSS" del scale(ratio,ratio),
+        // para no depender de qué escala esté activa en ese momento y así
+        // cubrir siempre el lienzo completo.
+        ctx.save();
+        ctx.setTransform(1, 0, 0, 1, 0, 0);
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        ctx.restore();
+
     };
 
     img.src = imagen;
@@ -171,7 +189,19 @@ export function limpiarFirma(tipo) {
     const firma = state.canvas[tipo];
     if (!firma) return;
 
-    firma.ctx.clearRect(0, 0, firma.canvas.width, firma.canvas.height);
+    const { ctx, canvas } = firma;
+
+    // Igual que en restaurarFirma: se limpia en coordenadas de píxel real
+    // (transformación identidad) para garantizar que se borra el lienzo
+    // COMPLETO sin importar la escala (devicePixelRatio) activa en ese
+    // momento. Antes, clearRect() se ejecutaba bajo el scale(ratio,ratio),
+    // lo que en algunos dispositivos dejaba fragmentos de la firma sin
+    // borrar.
+    ctx.save();
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.restore();
+
     state.firmas[tipo] = null;
 
     programarAutoGuardado();

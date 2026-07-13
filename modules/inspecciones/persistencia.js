@@ -13,6 +13,13 @@ import { restaurarFirma } from "./firmas.js";
 import { mostrarPaso } from "./navegacion.js";
 import { confirmar } from "./utilidades.js";
 
+import {
+    guardarInspeccion as guardarInspeccionFirestore,
+    listarInspecciones as listarInspeccionesFirestore,
+    actualizarInspeccion as actualizarInspeccionFirestore,
+    eliminarInspeccion as eliminarInspeccionFirestore
+} from "./firebase.js";
+
 /* ------------------------------------------------------------------------
    CRUD LOCAL — INSPECCIÓN ACTUAL
 ------------------------------------------------------------------------ */
@@ -353,17 +360,24 @@ function irAlPrimerCampoInvalido() {
 
 async function guardarInspeccionRemota(inspeccion) {
 
-    /*
-        NOTA: Firebase aún no está configurado (firebase/config.js tiene
-        llaves vacías), así que por ahora esto persiste localmente en
-        localStorage. Cuando tengas tu proyecto de Firebase listo, este
-        es el lugar para reemplazarlo por, por ejemplo:
+    // Si ya era una inspección existente (se estaba editando), solo se
+    // actualiza (no se toca su fecha de creación). Si es la primera vez
+    // que se guarda, se crea el documento completo en Firestore.
+    if (state.editando) {
+        await actualizarInspeccionFirestore(inspeccion.id, inspeccion);
+    } else {
+        await guardarInspeccionFirestore(inspeccion.id, inspeccion);
+    }
 
-        import { guardarInspeccion as guardarEnFirestore } from "./firebase.js";
-        await guardarEnFirestore(inspeccion.id, inspeccion);
-    */
+    // Copia local de respaldo: si el dispositivo pierde conexión más
+    // adelante, el listado sigue disponible gracias a la caché de
+    // Firestore, pero mantenemos también esta copia como respaldo extra.
+    guardarListaLocal(actualizarEnListaLocal(leerListaLocal(), inspeccion));
 
-    const lista = leerListaLocal();
+}
+
+function actualizarEnListaLocal(lista, inspeccion) {
+
     const indice = lista.findIndex(item => item.id === inspeccion.id);
 
     if (indice === -1) {
@@ -372,9 +386,7 @@ async function guardarInspeccionRemota(inspeccion) {
         lista[indice] = inspeccion;
     }
 
-    guardarListaLocal(lista);
-
-    return Promise.resolve(inspeccion);
+    return lista;
 
 }
 
@@ -422,15 +434,22 @@ export async function cargarInspecciones() {
 
 async function obtenerInspeccionesRemotas() {
 
-    /*
-        NOTA: mientras Firebase no esté configurado, el listado se lee
-        de localStorage. Cuando tengas tu proyecto de Firebase listo:
+    try {
 
-        import { listarInspecciones } from "./firebase.js";
-        return await listarInspecciones();
-    */
+        const datos = await listarInspeccionesFirestore();
 
-    return leerListaLocal();
+        // Se guarda una copia local por si más adelante se abre la app
+        // sin conexión y todavía no hay caché de Firestore disponible.
+        guardarListaLocal(datos);
+
+        return datos;
+
+    } catch (error) {
+
+        console.error("No se pudo listar desde Firestore, usando copia local", error);
+        return leerListaLocal();
+
+    }
 
 }
 
@@ -461,17 +480,9 @@ export async function eliminarInspeccion(id) {
 
 async function eliminarInspeccionRemota(id) {
 
-    /*
-        NOTA: mientras Firebase no esté configurado, la eliminación se
-        hace en localStorage. Cuando tengas tu proyecto de Firebase listo:
-
-        import { eliminarInspeccion as eliminarEnFirestore } from "./firebase.js";
-        await eliminarEnFirestore(id);
-    */
+    await eliminarInspeccionFirestore(id);
 
     guardarListaLocal(leerListaLocal().filter(item => item.id !== id));
-
-    return Promise.resolve();
 
 }
 
