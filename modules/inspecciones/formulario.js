@@ -26,16 +26,34 @@ export function establecerFechaHora() {
 
     const ahora = new Date();
 
+    // input[type=date] / input[type=time] solo aceptan un formato EXACTO
+    // ("YYYY-MM-DD" y "HH:MM" respectivamente). Si el valor asignado no
+    // calza con eso, el navegador lo rechaza EN SILENCIO: el campo queda
+    // vacío, sin ningún error visible, aunque el código "ya lo llenó".
+    // Eso es justo lo que pasaba aquí:
+    //
+    // 1) fecha usaba ahora.toISOString(), que convierte a UTC. En
+    //    Colombia (UTC-5), pasadas las 7pm ya es "mañana" en UTC, así
+    //    que la fecha quedaba adelantada un día.
+    // 2) hora usaba toLocaleTimeString(), que depende del navegador y el
+    //    idioma del sistema operativo — en algunos casos agrega
+    //    caracteres invisibles o un formato con espacios distintos que
+    //    input[type=time] no acepta, dejando el campo vacío.
+    //
+    // Construir el string a mano con los componentes LOCALES (no UTC)
+    // evita ambos problemas.
+    const año = ahora.getFullYear();
+    const mes = String(ahora.getMonth() + 1).padStart(2, "0");
+    const dia = String(ahora.getDate()).padStart(2, "0");
+    const horas = String(ahora.getHours()).padStart(2, "0");
+    const minutos = String(ahora.getMinutes()).padStart(2, "0");
+
     if (!fecha.value) {
-        fecha.value = ahora.toISOString().split("T")[0];
+        fecha.value = `${año}-${mes}-${dia}`;
     }
 
     if (!hora.value) {
-        hora.value = ahora.toLocaleTimeString("es-CO", {
-            hour: "2-digit",
-            minute: "2-digit",
-            hour12: false
-        });
+        hora.value = `${horas}:${minutos}`;
     }
 
 }

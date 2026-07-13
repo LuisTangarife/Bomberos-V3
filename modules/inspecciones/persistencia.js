@@ -477,7 +477,13 @@ function actualizarEstadoSincronizacion() {
 export async function guardarInspeccion() {
 
     if (!validarFormularioCompleto()) {
-        irAlPrimerCampoInvalido();
+        const nombreCampo = irAlPrimerCampoInvalido();
+        mostrarToast(
+            nombreCampo
+                ? `Falta completar: "${nombreCampo}".`
+                : "Revisa los campos obligatorios antes de guardar.",
+            "error"
+        );
         return false;
     }
 
@@ -583,7 +589,7 @@ export async function guardarInspeccion() {
 function irAlPrimerCampoInvalido() {
 
     const campo = UI.form?.querySelector(".is-invalid");
-    if (!campo) return;
+    if (!campo) return null;
 
     const paso = campo.closest(".form-step");
     const indice = paso ? UI.pasos.indexOf(paso) : -1;
@@ -596,6 +602,16 @@ function irAlPrimerCampoInvalido() {
         campo.focus({ preventScroll: true });
         campo.scrollIntoView({ behavior: "smooth", block: "center" });
     });
+
+    // Busca la etiqueta visible del campo (label[for=id], o el label que
+    // lo envuelve) para poder decirle al usuario, con nombre propio,
+    // cuál campo le falta — en vez de un genérico "revisa el formulario"
+    // que obliga a adivinar entre docenas de campos.
+    const label =
+        (campo.id && UI.form?.querySelector(`label[for="${campo.id}"]`)) ||
+        campo.closest(".form-group")?.querySelector("label");
+
+    return label?.textContent?.trim() || campo.name || campo.id || null;
 
 }
 

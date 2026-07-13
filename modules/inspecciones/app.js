@@ -154,9 +154,10 @@ function inicializarEventos() {
                 if (guardada) {
                     mostrarToast("Inspección guardada correctamente");
                     mostrarVistaListado();
-                } else {
-                    mostrarToast("Revisa los campos obligatorios antes de guardar", "error");
                 }
+                // Si "guardada" es false, guardarInspeccion() ya mostró un
+                // toast específico (campo faltante, error de Firestore,
+                // etc.); no hace falta uno genérico encima.
 
             } catch (error) {
                 // guardarInspeccion() ya atrapa sus propios errores; esto
