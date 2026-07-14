@@ -160,6 +160,47 @@ async function syncToCloud(data){
     }
 
 }
+// ── GESTOR DE EMERGENCIAS (CONSOLIDADO FIRESTORE) ────────────────────────
+// Copia liviana (sin fotos ni PDF en base64) que alimenta el "Gestor de
+// Emergencias": el listado que junta, en una sola vista, las emergencias
+// guardadas desde cualquier dispositivo. Se hace con import() dinámico
+// para no tener que convertir este archivo (script clásico) en módulo.
+// Es "best effort": si falla (sin internet, etc.) no interrumpe el
+// guardado normal del reporte, que ya quedó a salvo en IndexedDB y/o
+// en el Apps Script.
+async function sincronizarEmergenciaConsolidado(data) {
+
+  try {
+
+    const { guardarEmergencia } = await import('./firebase.js');
+
+    const { photos, pdfBase64, pending, synced, id, ...datosLivianos } = data;
+
+    await guardarEmergencia(crypto.randomUUID(), {
+
+      ...datosLivianos,
+
+      numFotos: Array.isArray(photos) ? photos.length : 0,
+
+      dispositivo: navigator.userAgent
+
+    });
+
+  } catch (error) {
+
+    console.error(
+      '[gestor emergencias] No se pudo sincronizar con el consolidado:',
+      error
+    );
+
+  } finally {
+
+    document.dispatchEvent(new CustomEvent('emergencia:sincronizada'));
+
+  }
+
+}
+
 function getAllFromIDB() {
   return new Promise((resolve, reject) => {
     const req = db.transaction(STORE).objectStore(STORE).getAll();
@@ -1170,6 +1211,10 @@ async function saveReport() {
         }
     
     }
+    // No se espera (sin "await"): es de mejor esfuerzo y no debe
+    // demorar ni bloquear el guardado normal del reporte.
+    sincronizarEmergenciaConsolidado(data);
+
     await updatePendingBadge();
 
     await loadSavedReports();

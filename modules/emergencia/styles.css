@@ -720,6 +720,34 @@ textarea { resize: vertical; min-height: 100px; }
 .btn-mini:hover { border-color: var(--red); color: var(--text); }
 .empty-msg { color: var(--muted); font-size: 0.85rem; text-align: center; padding: 20px; }
 
+/* GESTOR DE EMERGENCIAS (CONSOLIDADO) */
+.gestor-subtitle {
+  color: var(--muted);
+  font-size: 0.8rem;
+  margin: -8px 0 16px;
+}
+.gestor-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+.gestor-buscar,
+.gestor-filtro {
+  background: var(--panel2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 0.85rem;
+  font-family: var(--font-body);
+}
+.gestor-buscar { flex: 1 1 220px; }
+.gestor-filtro { flex: 0 1 200px; }
+.gestor-buscar:focus,
+.gestor-filtro:focus { outline: none; border-color: var(--red); }
+#btnRefrescarGestor { flex: 0 0 auto; }
+
 /* MODAL */
 .modal-overlay {
   position: fixed;
