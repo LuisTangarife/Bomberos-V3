@@ -1,35 +1,38 @@
 /* ========================================================================
    GESTOR.JS
-   Módulo Emergencia — Gestor de Emergencias consolidado
+   Módulo Emergencia — Centro de Gestión de Emergencias
 
-   Muestra en una sola lista TODAS las emergencias guardadas desde
-   cualquier dispositivo (Firestore), con búsqueda y filtro por tipo
-   de evento. No reemplaza el listado "REPORTES GUARDADOS" (ese sigue
-   mostrando solo lo que hay en este dispositivo/localStorage); este
-   gestor es la vista consolidada entre dispositivos.
+   Muestra en una sola vista TODAS las emergencias guardadas desde
+   cualquier dispositivo (Firestore): estadísticas rápidas, mapa de
+   puntos críticos y tarjetas con búsqueda + filtro por tipo de evento
+   y por gravedad. No reemplaza el listado "REPORTES GUARDADOS" (ese
+   sigue mostrando solo lo que hay en este dispositivo/localStorage);
+   este gestor es la vista consolidada entre dispositivos.
 
-   No toca el formulario ni el diseño existente: reutiliza las clases
-   .report-card / .btn-mini / .empty-msg ya definidas en styles.css, y
-   para "Ver" reutiliza el modal de certificado que ya existe en la
-   página (window.renderCertificate), así el botón "Imprimir / Guardar
-   PDF" del modal funciona igual que con los reportes locales.
+   Para "Ver" y "PDF" reutiliza el modal de certificado que ya existe
+   en la página (window.renderCertificate / window.printCertificate),
+   así funcionan igual que con los reportes locales.
 ======================================================================== */
 
 import { listarEmergencias, eliminarEmergencia } from "./firebase.js";
+import { inicializarMapa, renderizarMapa } from "./mapas.js";
 
 let emergencias = [];
 let cargando = false;
 
 export function inicializarGestor() {
 
+    inicializarMapa();
     cargarEmergencias();
 
     const buscador = document.getElementById("buscarEmergenciaGestor");
-    const filtro = document.getElementById("filtroEventoGestor");
+    const filtroEvento = document.getElementById("filtroEventoGestor");
+    const filtroGravedad = document.getElementById("filtroGravedadGestor");
     const btnRefrescar = document.getElementById("btnRefrescarGestor");
 
-    if (buscador) buscador.addEventListener("input", renderizarTarjetas);
-    if (filtro) filtro.addEventListener("change", renderizarTarjetas);
+    if (buscador) buscador.addEventListener("input", actualizarVista);
+    if (filtroEvento) filtroEvento.addEventListener("change", actualizarVista);
+    if (filtroGravedad) filtroGravedad.addEventListener("change", actualizarVista);
     if (btnRefrescar) btnRefrescar.addEventListener("click", cargarEmergencias);
 
     // app.js dispara este evento después de guardar (con éxito o no) una
@@ -46,14 +49,17 @@ async function cargarEmergencias() {
 
     const contenedor = document.getElementById("gestorEmergenciasList");
     if (contenedor) {
-        contenedor.innerHTML = `<div class="empty-msg">Cargando emergencias registradas...</div>`;
+        contenedor.innerHTML = `<div class="empty-cards-em">
+            <i class="fa-solid fa-satellite-dish"></i>
+            <strong>Cargando emergencias registradas...</strong>
+        </div>`;
     }
 
     try {
 
         emergencias = await listarEmergencias();
         actualizarOpcionesFiltro();
-        renderizarTarjetas();
+        actualizarVista();
 
     } catch (error) {
 
@@ -61,9 +67,10 @@ async function cargarEmergencias() {
 
         if (contenedor) {
             contenedor.innerHTML = `
-                <div class="empty-msg">
-                    ⚠️ No se pudo conectar con el servidor para traer el consolidado.
-                    Revisa tu conexión a internet e intenta de nuevo.
+                <div class="empty-cards-em">
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                    <strong>No se pudo conectar con el servidor</strong>
+                    <p>Revisa tu conexión a internet e intenta de nuevo.</p>
                 </div>
             `;
         }
@@ -96,6 +103,12 @@ function actualizarOpcionesFiltro() {
 
 }
 
+function esCritica(emergencia) {
+    const lesionados = parseInt(emergencia?.lesionados, 10) || 0;
+    const victimas = parseInt(emergencia?.victimas, 10) || 0;
+    return (lesionados + victimas) > 0;
+}
+
 function obtenerEmergenciasFiltradas() {
 
     const texto = (document.getElementById("buscarEmergenciaGestor")?.value || "")
@@ -103,10 +116,14 @@ function obtenerEmergenciasFiltradas() {
         .toLowerCase();
 
     const evento = document.getElementById("filtroEventoGestor")?.value || "";
+    const gravedad = document.getElementById("filtroGravedadGestor")?.value || "";
 
     return emergencias.filter(emergencia => {
 
         if (evento && emergencia.evento !== evento) return false;
+
+        if (gravedad === "critica" && !esCritica(emergencia)) return false;
+        if (gravedad === "controlada" && esCritica(emergencia)) return false;
 
         if (texto) {
             const contenido = [
@@ -129,12 +146,63 @@ function obtenerEmergenciasFiltradas() {
 
 }
 
-function renderizarTarjetas() {
+function actualizarVista() {
+
+    const filtradas = obtenerEmergenciasFiltradas();
+
+    renderizarTarjetas(filtradas);
+    renderizarMapa(filtradas);
+    actualizarEstadisticas(filtradas);
+
+}
+
+function actualizarEstadisticas(filtradas) {
+
+    const statTotal = document.getElementById("statTotal");
+    const statCriticas = document.getElementById("statCriticas");
+    const statMes = document.getElementById("statMes");
+    const statUbicadas = document.getElementById("statUbicadas");
+
+    if (statTotal) statTotal.textContent = filtradas.length;
+
+    if (statCriticas) {
+        statCriticas.textContent = filtradas.filter(esCritica).length;
+    }
+
+    if (statMes) {
+
+        const ahora = new Date();
+        const mesActual = ahora.getMonth();
+        const anioActual = ahora.getFullYear();
+
+        const delMes = filtradas.filter(e => {
+            if (!e.fecha) return false;
+            const [y, m] = e.fecha.split("-").map(Number);
+            return y === anioActual && (m - 1) === mesActual;
+        });
+
+        statMes.textContent = delMes.length;
+
+    }
+
+    if (statUbicadas) {
+
+        const ubicadas = filtradas.filter(e => {
+            const lat = parseFloat(e.latitud);
+            const lng = parseFloat(e.longitud);
+            return Number.isFinite(lat) && Number.isFinite(lng) && !(lat === 0 && lng === 0);
+        });
+
+        statUbicadas.textContent = ubicadas.length;
+
+    }
+
+}
+
+function renderizarTarjetas(filtradas) {
 
     const contenedor = document.getElementById("gestorEmergenciasList");
     if (!contenedor) return;
-
-    const filtradas = obtenerEmergenciasFiltradas();
 
     contenedor.innerHTML = "";
 
@@ -153,11 +221,19 @@ function crearEstadoVacio() {
 
     const div = document.createElement("div");
 
-    div.className = "empty-msg";
+    div.className = "empty-cards-em";
 
-    div.textContent = emergencias.length
-        ? "Sin resultados para la búsqueda o el filtro seleccionado."
-        : "Aún no hay emergencias registradas por ningún dispositivo.";
+    div.innerHTML = emergencias.length
+        ? `
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <strong>Sin resultados</strong>
+            <p>No hay emergencias que coincidan con la búsqueda o los filtros seleccionados.</p>
+        `
+        : `
+            <i class="fa-solid fa-fire-flame-curved"></i>
+            <strong>Aún no hay emergencias registradas</strong>
+            <p>Los reportes que se guarden desde cualquier dispositivo aparecerán aquí.</p>
+        `;
 
     return div;
 
@@ -167,6 +243,8 @@ function crearTarjeta(emergencia) {
 
     const lugar = emergencia.lugar?.trim() || "Lugar sin especificar";
     const evento = emergencia.evento || "Sin tipo de evento";
+    const direccion = emergencia.direccion?.trim() || "";
+    const critica = esCritica(emergencia);
 
     const vehiculos = Array.isArray(emergencia.vehiculos)
         ? emergencia.vehiculos.map(v => v.vehiculo).filter(Boolean).join(", ")
@@ -178,43 +256,69 @@ function crearTarjeta(emergencia) {
 
     const fechaTexto = formatearFecha(emergencia.fecha);
 
-    const card = document.createElement("div");
-    card.className = "report-card";
+    const card = document.createElement("article");
+    card.className = "emergencia-card";
 
     card.innerHTML = `
-        <span class="report-tag">${escaparHTML(evento)}</span>
-        <div class="report-info">
-            <div class="report-title">${escaparHTML(lugar)}</div>
-            <div class="report-meta">
-                ${fechaTexto ? `${fechaTexto} · ` : ""}${escaparHTML(emergencia.horaReporte || "")}
-                ${vehiculos ? ` · ${escaparHTML(vehiculos)}` : ""}
-                ${personal ? ` · ${escaparHTML(personal)}` : ""}
-            </div>
+        <div class="emergencia-card-header">
+            <h3>${escaparHTML(lugar)}</h3>
+            <span class="gravedad-badge ${critica ? "critica" : "controlada"}">
+                <i class="fa-solid ${critica ? "fa-truck-medical" : "fa-circle-check"}"></i>
+                ${critica ? "Con víctimas" : "Sin víctimas"}
+            </span>
         </div>
-        <div class="report-actions">
-            <button type="button" class="btn-mini btn-ver-emergencia">📄 Ver</button>
-            <button type="button" class="btn-mini btn-eliminar-emergencia">🗑</button>
+
+        <div class="card-meta">
+            <span><i class="fa-solid fa-fire"></i> ${escaparHTML(evento)}</span>
+            ${direccion ? `<span><i class="fa-solid fa-location-dot"></i> ${escaparHTML(direccion)}</span>` : ""}
+            ${fechaTexto || emergencia.horaReporte
+                ? `<span><i class="fa-solid fa-clock"></i> ${fechaTexto}${fechaTexto && emergencia.horaReporte ? " · " : ""}${escaparHTML(emergencia.horaReporte || "")}</span>`
+                : ""}
+            ${vehiculos ? `<span><i class="fa-solid fa-truck"></i> ${escaparHTML(vehiculos)}</span>` : ""}
+            ${personal ? `<span><i class="fa-solid fa-user-group"></i> ${escaparHTML(personal)}</span>` : ""}
+        </div>
+
+        <div class="card-actions">
+            <button type="button" class="action-ver-em">
+                <i class="fa-solid fa-eye"></i> Ver
+            </button>
+            <button type="button" class="action-pdf-em">
+                <i class="fa-solid fa-file-pdf"></i> PDF
+            </button>
+            <button type="button" class="action-delete-em">
+                <i class="fa-solid fa-trash"></i>
+            </button>
         </div>
     `;
 
-    card.querySelector(".btn-ver-emergencia")
+    card.querySelector(".action-ver-em")
         .addEventListener("click", () => {
             if (typeof window.renderCertificate === "function") {
                 window.renderCertificate(emergencia);
             }
         });
 
-    card.querySelector(".btn-eliminar-emergencia")
+    card.querySelector(".action-pdf-em")
+        .addEventListener("click", () => {
+            if (typeof window.renderCertificate === "function") {
+                window.renderCertificate(emergencia);
+            }
+            if (typeof window.printCertificate === "function") {
+                setTimeout(() => window.printCertificate(), 150);
+            }
+        });
+
+    card.querySelector(".action-delete-em")
         .addEventListener("click", async () => {
 
-            if (!confirm(`¿Eliminar del consolidado la emergencia en "${lugar}"?\n\nEsto solo la quita del Gestor de Emergencias, no borra copias guardadas en otros dispositivos.`)) {
+            if (!confirm(`¿Eliminar del consolidado la emergencia en "${lugar}"?\n\nEsto solo la quita del Centro de Gestión, no borra copias guardadas en otros dispositivos.`)) {
                 return;
             }
 
             try {
                 await eliminarEmergencia(emergencia.id);
                 emergencias = emergencias.filter(e => e.id !== emergencia.id);
-                renderizarTarjetas();
+                actualizarVista();
             } catch (error) {
                 console.error("[gestor emergencias] No se pudo eliminar", error);
                 alert("No se pudo eliminar la emergencia del consolidado. Intenta de nuevo.");
