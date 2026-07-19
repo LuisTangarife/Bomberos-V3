@@ -23,8 +23,10 @@ let cargando = false;
 export function inicializarGestor() {
 
     inicializarMapa();
+
     cargarEmergencias();
-    inicializarNavegacionVistas();
+
+    configurarBotones();
 
     const buscador = document.getElementById("buscarEmergenciaGestor");
     const filtroEvento = document.getElementById("filtroEventoGestor");
@@ -51,31 +53,17 @@ export function inicializarGestor() {
    pide explícitamente registrar una emergencia nueva.
 ======================================================================== */
 
-function inicializarNavegacionVistas() {
+function configurarBotones() {
 
-    const dashboard = document.getElementById("gestorEmergenciasSection");
-    const vistaFormulario = document.getElementById("vistaFormularioEmergencia");
     const btnNueva = document.getElementById("btnNuevaEmergencia");
-    const btnVolver = document.getElementById("btnVolverGestionEmergencia");
 
-    function mostrarFormulario() {
-        if (dashboard) dashboard.hidden = true;
-        if (vistaFormulario) vistaFormulario.hidden = false;
-        window.scrollTo({ top: 0, behavior: "smooth" });
-    }
+    if (!btnNueva) return;
 
-    function mostrarGestion() {
-        if (vistaFormulario) vistaFormulario.hidden = true;
-        if (dashboard) dashboard.hidden = false;
-        window.scrollTo({ top: 0, behavior: "smooth" });
-        // El mapa se creó con el panel oculto (o con otro tamaño), así
-        // que al volver a mostrarlo hay que decirle a Leaflet que
-        // recalcule su tamaño o se ve cortado/gris.
-        setTimeout(actualizarVista, 150);
-    }
+    btnNueva.addEventListener("click", () => {
 
-    if (btnNueva) btnNueva.addEventListener("click", mostrarFormulario);
-    if (btnVolver) btnVolver.addEventListener("click", mostrarGestion);
+        window.location.href = "index.html";
+
+    });
 
 }
 
