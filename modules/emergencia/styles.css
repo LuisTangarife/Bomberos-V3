@@ -755,6 +755,11 @@ textarea { resize: vertical; min-height: 100px; }
 
 .emergencia-dashboard {
   margin-top: 32px;
+  background: linear-gradient(180deg, var(--panel), var(--panel2));
+  border-radius: 20px;
+  border: 1px solid var(--border);
+  padding: 28px;
+  box-shadow: 0 15px 35px rgba(0,0,0,.28);
 }
 
 .emergencia-toolbar {
@@ -2367,6 +2372,14 @@ body:not(.light-theme){
     #441d16 100%
 
     );
+
+    --card-border:
+    rgba(255,255,255,.06);
+
+    --card-highlight:
+    rgba(255,92,51,.12);
+
+}
 
     --card-border:
     rgba(255,255,255,.06);
