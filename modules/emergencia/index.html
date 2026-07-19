@@ -200,7 +200,7 @@ rel="stylesheet">
   <div id="vistaFormularioEmergencia" hidden>
 
     <button type="button" id="btnVolverGestionEmergencia" class="btn-volver-em">
-      <i class="fa-solid fa-arrow-left"></i> Volver al Centro de Gestión
+      <i class="fa-solid fa-arrow-left"></i> Volver al 
     </button>
 
   <div class="form-container" id="formularioEmergencia">
@@ -649,94 +649,7 @@ rel="stylesheet">
   </div>
 
   </div>
-  <!-- /VISTA: FORMULARIO DE REPORTE -->
 
-  <!-- CENTRO DE GESTIÓN DE EMERGENCIAS (CONSOLIDADO ENTRE DISPOSITIVOS) -->
-  <section class="emergencia-dashboard" id="gestorEmergenciasSection">
-
-    <div class="emergencia-toolbar">
-      <div>
-        <h2><i class="fa-solid fa-tower-broadcast"></i> Centro de Gestión de Emergencias</h2>
-        <p>Consolida en tiempo real las emergencias registradas desde todos los dispositivos del cuerpo de bomberos, con mapa de puntos críticos.</p>
-      </div>
-      <div class="emergencia-toolbar-actions">
-        <button type="button" id="btnNuevaEmergencia" class="btn-em btn-em-primary">
-          <i class="fa-solid fa-plus"></i> Nueva emergencia
-        </button>
-        <button type="button" id="btnRefrescarGestor" class="btn-em btn-em-ghost">
-          <i class="fa-solid fa-arrows-rotate"></i> Actualizar
-        </button>
-      </div>
-    </div>
-
-    <div class="emergencia-stats" id="emergenciaStats">
-      <div class="stat-mini">
-        <div class="stat-mini-icon"><i class="fa-solid fa-fire-flame-curved"></i></div>
-        <div>
-          <div class="stat-mini-num" id="statTotal">0</div>
-          <div class="stat-mini-label">Emergencias totales</div>
-        </div>
-      </div>
-      <div class="stat-mini">
-        <div class="stat-mini-icon stat-mini-icon--critica"><i class="fa-solid fa-truck-medical"></i></div>
-        <div>
-          <div class="stat-mini-num" id="statCriticas">0</div>
-          <div class="stat-mini-label">Con víctimas</div>
-        </div>
-      </div>
-      <div class="stat-mini">
-        <div class="stat-mini-icon stat-mini-icon--mes"><i class="fa-solid fa-calendar-days"></i></div>
-        <div>
-          <div class="stat-mini-num" id="statMes">0</div>
-          <div class="stat-mini-label">Este mes</div>
-        </div>
-      </div>
-      <div class="stat-mini">
-        <div class="stat-mini-icon stat-mini-icon--mapa"><i class="fa-solid fa-map-location-dot"></i></div>
-        <div>
-          <div class="stat-mini-num" id="statUbicadas">0</div>
-          <div class="stat-mini-label">Ubicadas en el mapa</div>
-        </div>
-      </div>
-    </div>
-
-    <div class="emergencia-filters">
-      <div class="search-box-em">
-        <i class="fa-solid fa-magnifying-glass"></i>
-        <input
-          type="search"
-          id="buscarEmergenciaGestor"
-          placeholder="Buscar por lugar, dirección, evento...">
-      </div>
-
-      <select id="filtroEventoGestor">
-        <option value="">Todos los eventos</option>
-      </select>
-
-      <select id="filtroGravedadGestor">
-        <option value="">Toda gravedad</option>
-        <option value="critica">🚨 Con víctimas</option>
-        <option value="controlada">✅ Sin víctimas</option>
-      </select>
-    </div>
-
-    <div class="mapa-panel">
-      <div class="mapa-panel-head">
-        <div class="mapa-panel-title"><i class="fa-solid fa-map-location-dot"></i> Mapa de puntos críticos</div>
-        <div class="mapa-legend">
-          <span><i class="dot dot-critica"></i> Con víctimas</span>
-          <span><i class="dot dot-controlada"></i> Sin víctimas</span>
-        </div>
-      </div>
-      <div id="mapaEmergencias" class="mapa-emergencias"></div>
-      <div class="mapa-panel-foot" id="mapaMensaje"></div>
-    </div>
-
-    <div id="gestorEmergenciasList" class="emergencia-cards"></div>
-
-  </section>
-
-</main>
 
 <!-- CERTIFICATE MODAL -->
 <div class="modal-overlay" id="certModal" style="display:none">
