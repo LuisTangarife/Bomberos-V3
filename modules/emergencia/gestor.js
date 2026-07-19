@@ -24,6 +24,7 @@ export function inicializarGestor() {
 
     inicializarMapa();
     cargarEmergencias();
+    inicializarNavegacionVistas();
 
     const buscador = document.getElementById("buscarEmergenciaGestor");
     const filtroEvento = document.getElementById("filtroEventoGestor");
@@ -39,6 +40,42 @@ export function inicializarGestor() {
     // emergencia hacia Firestore, para que el gestor se mantenga al día
     // sin que el usuario tenga que refrescar manualmente.
     document.addEventListener("emergencia:sincronizada", cargarEmergencias);
+
+}
+
+/* ========================================================================
+   NAVEGACIÓN ENTRE VISTAS
+   El Centro de Gestión es la vista principal del módulo; el formulario
+   de reporte (y la lista de "REPORTES GUARDADOS" local del dispositivo,
+   que vive dentro del mismo bloque) solo se muestra cuando el usuario
+   pide explícitamente registrar una emergencia nueva.
+======================================================================== */
+
+function inicializarNavegacionVistas() {
+
+    const dashboard = document.getElementById("gestorEmergenciasSection");
+    const vistaFormulario = document.getElementById("vistaFormularioEmergencia");
+    const btnNueva = document.getElementById("btnNuevaEmergencia");
+    const btnVolver = document.getElementById("btnVolverGestionEmergencia");
+
+    function mostrarFormulario() {
+        if (dashboard) dashboard.hidden = true;
+        if (vistaFormulario) vistaFormulario.hidden = false;
+        window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    function mostrarGestion() {
+        if (vistaFormulario) vistaFormulario.hidden = true;
+        if (dashboard) dashboard.hidden = false;
+        window.scrollTo({ top: 0, behavior: "smooth" });
+        // El mapa se creó con el panel oculto (o con otro tamaño), así
+        // que al volver a mostrarlo hay que decirle a Leaflet que
+        // recalcule su tamaño o se ve cortado/gris.
+        setTimeout(actualizarVista, 150);
+    }
+
+    if (btnNueva) btnNueva.addEventListener("click", mostrarFormulario);
+    if (btnVolver) btnVolver.addEventListener("click", mostrarGestion);
 
 }
 

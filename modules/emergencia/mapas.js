@@ -75,6 +75,11 @@ export function renderizarMapa(emergencias) {
         return 0;
     }
 
+    // Si el panel del mapa estuvo oculto (se pasó a la vista de
+    // formulario y se volvió), Leaflet puede haber calculado mal su
+    // tamaño; esto lo corrige antes de reencuadrar los puntos.
+    mapa.invalidateSize();
+
     capaMarcadores.clearLayers();
     indiceEmergencias = {};
 

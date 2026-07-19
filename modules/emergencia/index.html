@@ -195,9 +195,18 @@ rel="stylesheet">
 
 <!-- MAIN FORM -->
 <main class="main">
+
+  <!-- VISTA: FORMULARIO DE REPORTE (oculta hasta pedir "Nueva emergencia") -->
+  <div id="vistaFormularioEmergencia" hidden>
+
+    <button type="button" id="btnVolverGestionEmergencia" class="btn-volver-em">
+      <i class="fa-solid fa-arrow-left"></i> Volver al Centro de Gestión
+    </button>
+
   <div class="form-container" id="formularioEmergencia">
 
     <div class="section-title">
+
       <span class="section-num">01</span> DATOS TEMPORALES
     </div>
     <div class="fields-grid">
@@ -639,6 +648,9 @@ rel="stylesheet">
     <div id="savedList"></div>
   </div>
 
+  </div>
+  <!-- /VISTA: FORMULARIO DE REPORTE -->
+
   <!-- CENTRO DE GESTIÓN DE EMERGENCIAS (CONSOLIDADO ENTRE DISPOSITIVOS) -->
   <section class="emergencia-dashboard" id="gestorEmergenciasSection">
 
@@ -648,9 +660,9 @@ rel="stylesheet">
         <p>Consolida en tiempo real las emergencias registradas desde todos los dispositivos del cuerpo de bomberos, con mapa de puntos críticos.</p>
       </div>
       <div class="emergencia-toolbar-actions">
-        <a href="#formularioEmergencia" class="btn-em btn-em-primary">
+        <button type="button" id="btnNuevaEmergencia" class="btn-em btn-em-primary">
           <i class="fa-solid fa-plus"></i> Nueva emergencia
-        </a>
+        </button>
         <button type="button" id="btnRefrescarGestor" class="btn-em btn-em-ghost">
           <i class="fa-solid fa-arrows-rotate"></i> Actualizar
         </button>
