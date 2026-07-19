@@ -4,7 +4,7 @@
    y sea instalable como PWA.
 ======================================================================== */
 
-const SW_VERSION = 'v24'; // v23 -> v24: Centro de Gestión de Emergencias como vista por defecto (con mapa de puntos críticos)
+const SW_VERSION = 'v26'; // v23 -> v24: Centro de Gestión de Emergencias como vista por defecto (con mapa de puntos críticos)
 const STATIC_CACHE = `bomberos-static-${SW_VERSION}`;
 const DYNAMIC_CACHE = `bomberos-dynamic-${SW_VERSION}`;
 const CACHES_VIGENTES = [STATIC_CACHE, DYNAMIC_CACHE];
