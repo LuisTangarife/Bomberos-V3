@@ -1215,14 +1215,15 @@ async function saveReport() {
     // demorar ni bloquear el guardado normal del reporte.
     sincronizarEmergenciaConsolidado(data);
 
-    await updatePendingBadge();
-
-    await loadSavedReports();
-
     fb.textContent = '✅ Reporte guardado correctamente';
     fb.className = 'save-feedback ok';
-
-    clearForm();
+    
+    // Esperar un momento para que el usuario vea el mensaje
+    setTimeout(() => {
+    
+        window.location.href = "./gestor.html";
+    
+    }, 1200);
 
   } catch (err) {
 
@@ -1236,7 +1237,7 @@ async function saveReport() {
 }
 
 function clearForm() {
-  if (!confirm('¿Desea limpiar todos los campos del formulario?')) return;
+
   document.getElementById('lugar').value       = '';
   document.getElementById('direccion').value   = '';
   document.getElementById('latitud').value     = '';
