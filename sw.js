@@ -4,7 +4,7 @@
    y sea instalable como PWA.
 ======================================================================== */
 
-const SW_VERSION = 'v24'; // v22 -> v23: hora/fecha con formato local (no Intl/UTC) + mensajes de validación con el nombre del campo
+const SW_VERSION = 'v24'; // v23 -> v24: Centro de Gestión de Emergencias (mapa + estadísticas) — fuerza refresco de caché para que quede la versión nueva de modules/emergencia/*
 const STATIC_CACHE = `bomberos-static-${SW_VERSION}`;
 const DYNAMIC_CACHE = `bomberos-dynamic-${SW_VERSION}`;
 const CACHES_VIGENTES = [STATIC_CACHE, DYNAMIC_CACHE];
@@ -54,6 +54,20 @@ const FILES = [
     "./modules/inspecciones/utilidades.js",
     "./modules/inspecciones/validaciones.js",
 
+    "./modules/emergencia/index.html",
+    "./modules/emergencia/styles.css",
+    "./modules/emergencia/app.js",
+    "./modules/emergencia/certificados.js",
+    "./modules/emergencia/firebase.js",
+    "./modules/emergencia/formulario.js",
+    "./modules/emergencia/fotos.js",
+    "./modules/emergencia/gestor.js",
+    "./modules/emergencia/mapas.js",
+    "./modules/emergencia/tablas.js",
+    "./modules/emergencia/ui.js",
+    "./modules/emergencia/utils.js",
+    "./modules/emergencia/validaciones.js",
+
     "./icons/icon-192-v4.png",
     "./icons/icon-512-v4.png"
 ];
@@ -63,7 +77,9 @@ const FILES = [
 // haría fallar cache.addAll() para todo lo demás.
 const EXTERNOS = [
     "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css",
-    "https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"
+    "https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js",
+    "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css",
+    "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
 ];
 
 // Nunca cachear llamadas a Firebase (Firestore/Storage/Auth): deben ir
