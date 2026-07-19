@@ -15,7 +15,7 @@ window.addEventListener('load', async () => {
 
     await updatePendingBadge();
 
-    const registration = await navigator.serviceWorker.register('../../sw.js');
+    const registration = await navigator.serviceWorker.register('/Bomberos-V3/sw.js');
 
     console.log('SW registrado:', registration);
 
