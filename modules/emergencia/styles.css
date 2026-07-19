@@ -410,6 +410,19 @@ width:55px;
   padding: 28px 20px 60px;
 }
 
+/* Refuerzo defensivo: el Centro de Gestión de Emergencias debe verse solo
+   (formulario, víctimas, novedades, evidencia fotográfica y reportes
+   guardados viven dentro de #vistaFormularioEmergencia y solo deben
+   aparecer al pulsar "+ Nueva emergencia"). Esto garantiza el ocultamiento
+   incluso si algún otro selector con la misma especificidad que [hidden]
+   llegara a pisar el display por defecto. */
+#vistaFormularioEmergencia[hidden] {
+  display: none !important;
+}
+#gestorEmergenciasSection[hidden] {
+  display: none !important;
+}
+
 .form-container {
   background: var(--panel);
   border-radius: 12px;
