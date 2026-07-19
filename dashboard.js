@@ -66,7 +66,7 @@ function animarContadores(){
 =============================================*/
 
 function abrirEmergencias() {
-    location.href = "modules/emergencia/index.html";
+    location.href = "modules/emergencia/gestor.html";
 }
 
 function abrirAPH(){
