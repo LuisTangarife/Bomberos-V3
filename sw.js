@@ -4,7 +4,7 @@
    y sea instalable como PWA.
 ======================================================================== */
 
-const SW_VERSION = 'v24'; // v23 -> v24: Centro de Gestión de Emergencias (mapa + estadísticas) — fuerza refresco de caché para que quede la versión nueva de modules/emergencia/*
+const SW_VERSION = 'v25'; // v23 -> v25: Centro de Gestión de Emergencias (mapa + estadísticas) — fuerza refresco de caché para que quede la versión nueva de modules/emergencia/*
 const STATIC_CACHE = `bomberos-static-${SW_VERSION}`;
 const DYNAMIC_CACHE = `bomberos-dynamic-${SW_VERSION}`;
 const CACHES_VIGENTES = [STATIC_CACHE, DYNAMIC_CACHE];
