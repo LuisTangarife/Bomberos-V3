@@ -162,13 +162,10 @@ async function syncToCloud(data){
 }
 import("./certificados.js")
 .then(mod => {
-
     window.renderCertificate = mod.renderCertificate;
-
     window.printCertificate = mod.printCertificate;
-
     window.closeModal = mod.closeModal;
-
+    window.buildCertificateHTML = mod.buildCertificateHTML; // ← agregar esta línea
 })
 .catch(console.error);
 
