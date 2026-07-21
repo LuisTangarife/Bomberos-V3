@@ -17,6 +17,12 @@
 import { listarEmergencias, eliminarEmergencia } from "./firebase.js";
 import { inicializarMapa, renderizarMapa } from "./mapas.js";
 
+import { renderCertificate, printCertificate, closeModal } from "./certificados.js";
+
+window.renderCertificate = renderCertificate;
+window.printCertificate = printCertificate;
+window.closeModal = closeModal;
+
 let emergencias = [];
 let cargando = false;
 
