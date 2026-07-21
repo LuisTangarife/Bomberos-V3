@@ -160,6 +160,18 @@ async function syncToCloud(data){
     }
 
 }
+import("./certificados.js")
+.then(mod => {
+
+    window.renderCertificate = mod.renderCertificate;
+
+    window.printCertificate = mod.printCertificate;
+
+    window.closeModal = mod.closeModal;
+
+})
+.catch(console.error);
+
 // ── GESTOR DE EMERGENCIAS (CONSOLIDADO FIRESTORE) ────────────────────────
 // Copia liviana (sin fotos ni PDF en base64) que alimenta el "Gestor de
 // Emergencias": el listado que junta, en una sola vista, las emergencias
