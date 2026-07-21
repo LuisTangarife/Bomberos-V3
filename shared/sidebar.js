@@ -67,7 +67,7 @@ function renderSidebar(active = "") {
             </a>
 
             <a
-                href="${RAIZ_SITIO}modules/emergencia/index.html"
+                href="${RAIZ_SITIO}modules/emergencia/gestor.html"
                 class="${active === "emergencia" ? "active" : ""}">
 
                 <i class="fa-solid fa-fire-extinguisher"></i>
