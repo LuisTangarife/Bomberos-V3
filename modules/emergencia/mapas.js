@@ -32,7 +32,7 @@ export function inicializarMapa() {
 
     if (mapa || typeof window.L === "undefined") return;
 
-    const contenedor = document.getElementById("mapaEmergencias");
+    const contenedor = document.getElementById("mapaGestorEmergencias")
     if (!contenedor) return;
 
     mapa = window.L.map(contenedor, {
