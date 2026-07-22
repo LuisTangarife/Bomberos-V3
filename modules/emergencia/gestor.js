@@ -140,36 +140,6 @@ function esCritica(emergencia) {
     return (lesionados + victimas) > 0;
 }
 
-/* Prioridad visual de la tarjeta (barra + etiqueta).
-   Si en el futuro guardas un campo real "prioridad" ("alta"/"media"/"baja")
-   al registrar la emergencia, esta función lo respeta; mientras tanto la
-   deriva de la gravedad: con víctimas -> alta, sin víctimas -> media. */
-function obtenerPrioridad(emergencia) {
-
-    const declarada = String(emergencia?.prioridad || "").toLowerCase();
-    if (["alta", "media", "baja"].includes(declarada)) return declarada;
-
-    return esCritica(emergencia) ? "alta" : "media";
-
-}
-
-/* Foto de portada de la tarjeta. Prueba los campos más probables del
-   módulo de fotos (fotos[0], foto) en distintos formatos (string,
-   {url}, {dataUrl}, {base64}). Si no encuentra ninguna, la tarjeta se
-   muestra sin foto en vez de romperse. */
-function obtenerFotoPortada(emergencia) {
-
-    const candidato = Array.isArray(emergencia?.fotos)
-        ? emergencia.fotos[0]
-        : emergencia?.foto;
-
-    if (!candidato) return null;
-    if (typeof candidato === "string") return candidato;
-
-    return candidato.url || candidato.dataUrl || candidato.base64 || null;
-
-}
-
 function obtenerEmergenciasFiltradas() {
 
     const texto = (document.getElementById("buscarEmergenciaGestor")?.value || "")
@@ -300,17 +270,44 @@ function crearEstadoVacio() {
 
 }
 
+/* Busca una foto usable en varios nombres de campo posibles, ya que
+   este archivo no deja claro cuál usa el formulario. Acepta tanto un
+   array de fotos como un string único. Si no encuentra nada, devuelve
+   null y la tarjeta simplemente no muestra portada. */
+function obtenerFotoPrincipal(emergencia) {
+
+    const candidatos = [
+        emergencia?.fotos,
+        emergencia?.imagenes,
+        emergencia?.fotoPrincipal,
+        emergencia?.foto
+    ];
+
+    for (const candidato of candidatos) {
+
+        if (!candidato) continue;
+
+        if (Array.isArray(candidato) && candidato.length) {
+            const primera = candidato[0];
+            if (typeof primera === "string") return primera;
+            if (primera?.url) return primera.url;
+            if (primera?.dataUrl) return primera.dataUrl;
+        }
+
+        if (typeof candidato === "string") return candidato;
+
+    }
+
+    return null;
+
+}
+
 function crearTarjeta(emergencia) {
 
     const lugar = emergencia.lugar?.trim() || "Lugar sin especificar";
     const evento = emergencia.evento || "Sin tipo de evento";
     const direccion = emergencia.direccion?.trim() || "";
     const critica = esCritica(emergencia);
-
-    const prioridad = obtenerPrioridad(emergencia);
-    const prioridadLabel = { alta: "Alta", media: "Media", baja: "Baja" }[prioridad];
-
-    const fotoPortada = obtenerFotoPortada(emergencia);
 
     const vehiculos = Array.isArray(emergencia.vehiculos)
         ? emergencia.vehiculos.map(v => v.vehiculo).filter(Boolean).join(", ")
@@ -321,14 +318,21 @@ function crearTarjeta(emergencia) {
         : "";
 
     const fechaTexto = formatearFecha(emergencia.fecha);
+    const foto = obtenerFotoPrincipal(emergencia);
+
+    // Sin un campo de prioridad explícito en los datos, se deriva de la
+    // gravedad: con víctimas → Alta, sin víctimas → Media. Ajusta esto
+    // si el formulario llega a tener un campo de prioridad propio.
+    const prioridadNivel = critica ? "alta" : "media";
+    const prioridadTexto = critica ? "Alta" : "Media";
 
     const card = document.createElement("article");
     card.className = "emergencia-card";
 
     card.innerHTML = `
-        ${fotoPortada ? `
+        ${foto ? `
         <div class="emergencia-card-photo">
-            <img src="${escaparHTML(fotoPortada)}" alt="">
+            <img src="${escaparHTML(foto)}" alt="">
         </div>` : ""}
 
         <div class="emergencia-card-header">
@@ -341,8 +345,8 @@ function crearTarjeta(emergencia) {
 
         <div class="prioridad-row">
             <span>Prioridad:</span>
-            <div class="prioridad-bar ${prioridad}"><span></span></div>
-            <span class="prioridad-label ${prioridad}">${prioridadLabel}</span>
+            <div class="prioridad-bar ${prioridadNivel}"><span></span></div>
+            <span class="prioridad-label ${prioridadNivel}">${prioridadTexto}</span>
         </div>
 
         <div class="card-meta">
