@@ -1,31 +1,26 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
     <title>Centro de Gestión de Emergencias</title>
-
     <link rel="stylesheet" href="./styles.css">
     <link rel="stylesheet" href="./gestor.css">
-
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
-
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-
 </head>
 <body>
-
 <div class="gestion-emergencias-page">
-
 <header class="gestion-header">
     <div>
-        <h1>
-            <i class="fa-solid fa-fire-flame-curved"></i>
-            Centro de Gestión de Emergencias
-        </h1>
+        <div class="gestion-header-title-row">
+            <h1>
+                <i class="fa-solid fa-fire-flame-curved"></i>
+                Centro de Gestión de Emergencias
+            </h1>
+            <span class="gestion-live-chip">En línea</span>
+        </div>
         <p>Administre todas las emergencias registradas desde un único lugar.</p>
     </div>
     <button id="btnNuevaEmergencia">
@@ -33,28 +28,23 @@
         Nueva Emergencia
     </button>
 </header>
-
 <section class="gestion-toolbar">
     <div class="search-box">
         <i class="fa-solid fa-magnifying-glass"></i>
         <input id="buscarEmergenciaGestor" type="search" placeholder="Buscar emergencia...">
     </div>
-
     <select id="filtroEventoGestor">
         <option value="">Todos los eventos</option>
     </select>
-
     <select id="filtroGravedadGestor">
         <option value="">Todas</option>
         <option value="critica">Con víctimas</option>
         <option value="controlada">Sin víctimas</option>
     </select>
-
     <button id="btnRefrescarGestor">
         <i class="fa-solid fa-rotate"></i>
     </button>
 </section>
-
 <section class="stats-grid">
     <div class="stat-card">
         <span id="statTotal">0</span>
@@ -73,16 +63,12 @@
         <label>Geolocalizadas</label>
     </div>
 </section>
-
 <section class="map-card">
     <div id="mapaGestorEmergencias"></div>
     <div id="mapaMensaje" class="mapa-mensaje"></div>
 </section>
-
 <section id="gestorEmergenciasList" class="cards-grid"></section>
-
 </div>
-
 <!-- CERTIFICATE MODAL — mismos ids que espera certificados.js -->
 <div class="modal-overlay" id="certModal" style="display:none">
   <div class="modal">
@@ -98,8 +84,6 @@
     </div>
   </div>
 </div>
-
 <script type="module" src="./gestor.js"></script>
-
 </body>
 </html>
