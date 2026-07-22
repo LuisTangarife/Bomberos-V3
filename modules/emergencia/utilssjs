@@ -1,0 +1,43 @@
+export function formatDate(fecha){
+
+    if(!fecha) return "";
+
+    const [y,m,d]=fecha.split("-");
+
+    const meses=[
+
+        "Ene",
+
+        "Feb",
+
+        "Mar",
+
+        "Abr",
+
+        "May",
+
+        "Jun",
+
+        "Jul",
+
+        "Ago",
+
+        "Sep",
+
+        "Oct",
+
+        "Nov",
+
+        "Dic"
+
+    ];
+
+    return `${d} ${meses[m-1]} ${y}`;
+
+}
+
+export function generarID(){
+
+    return `CB-${Date.now()}`;
+
+}
