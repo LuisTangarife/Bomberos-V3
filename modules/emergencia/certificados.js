@@ -1,27 +1,56 @@
 /* ========================================================================
    CERTIFICADOS.JS
-   Módulo Emergencia — Generación y despliegue del certificado
+   Módulo Emergencia — Certificado basado en plantilla externa
 
-   Única fuente real de buildCertificateHTML / renderCertificate /
-   closeModal / printCertificate. Antes vivían duplicadas dentro de
-   app.js; ahora tanto index.html (vía el import() dinámico que ya
-   existe en app.js) como gestor.html (vía import estático en gestor.js)
-   cargan este mismo módulo.
+   La plantilla vive en modules/emergencia/plantillas/plantilla1.html y
+   contiene el diseño estático (logo, firma del comandante, layout) con
+   marcadores {{PLACEHOLDER}}. Este módulo solo carga esa plantilla y
+   reemplaza los marcadores con los datos del reporte — el mismo patrón
+   que ya usa el Apps Script (body.replaceText), aplicado en el cliente.
 
-   Requiere que la página que lo use tenga, con ESTOS ids exactos, el
-   modal de certificado: #certModal (contenedor) y #certContent (donde
-   se inyecta el HTML). Ver index.html o gestor.html.
+   Requiere que la página tenga, con ESTOS ids exactos, el modal de
+   certificado: #certModal (contenedor) y #certContent (donde se
+   inyecta el HTML). Ver index.html o gestor.html.
 ======================================================================== */
 
-// Pega aquí el string base64 COMPLETO que cortaste de index.html
-// (la constante IMG_LOGO).
-const IMG_LOGO = "PEGAR_AQUI_EL_BASE64_COMPLETO_DE_IMG_LOGO";
+const RUTA_PLANTILLA = "./plantillas/plantilla1.html";
 
-// Pega aquí el string base64 COMPLETO que vas a cortar de app.js
-// en la Parte 3 (la constante IMG_FIRMA, línea 34).
-const IMG_FIRMA = "PEGAR_AQUI_EL_BASE64_COMPLETO_DE_IMG_FIRMA";
+let _plantillaCache = null;
 
-let currentPrintHTML = '';
+async function cargarPlantilla() {
+  if (_plantillaCache) return _plantillaCache;
+  const respuesta = await fetch(RUTA_PLANTILLA);
+  if (!respuesta.ok) {
+    throw new Error(`No se pudo cargar ${RUTA_PLANTILLA} (HTTP ${respuesta.status})`);
+  }
+  _plantillaCache = await respuesta.text();
+  return _plantillaCache;
+}
+
+// Precarga apenas se evalúa el módulo, para que el primer certificado
+// del turno no espere el fetch completo.
+cargarPlantilla().catch(err =>
+  console.error("[certificados] No se pudo precargar la plantilla:", err)
+);
+
+// Reemplaza {{CLAVE}} → valor. Si una clave no está en `valores`, la
+// deja intacta a propósito — así un nombre mal escrito en la plantilla
+// se nota (queda visible el {{...}}) en vez de desaparecer en silencio.
+function reemplazarPlaceholders(html, valores) {
+  return html.replace(/\{\{(\w+)\}\}/g, (match, clave) =>
+    Object.prototype.hasOwnProperty.call(valores, clave)
+      ? String(valores[clave])
+      : match
+  );
+}
+
+// Conserva o borra un bloque <!--SECCION:X-->...<!--FIN:X--> completo
+// según si hay datos. mostrar=false borra el bloque entero (comentarios
+// incluidos); mostrar=true deja el contenido y quita solo los comentarios.
+function aplicarSeccion(html, nombre, mostrar) {
+  const patron = new RegExp(`<!--SECCION:${nombre}-->([\\s\\S]*?)<!--FIN:${nombre}-->`, "g");
+  return html.replace(patron, (_, contenido) => (mostrar ? contenido : ""));
+}
 
 function formatDate(d) {
   if (!d) return '';
@@ -34,7 +63,33 @@ function generateQRCode(text) {
   return `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(text)}`;
 }
 
-export function buildCertificateHTML(data){
+// HTML por persona afectada — mismo contenido que ya tenías, incluida
+// la firma individual si existe. A diferencia del .gs, esto es HTML
+// real, no una línea de texto.
+function renderAfectadosHTML(afectados) {
+  if (!afectados?.length) return "";
+  return afectados.map(a => `
+    <div class="affected-row">
+      <div><b>Nombre:</b> ${a.nombre}</div>
+      <div><b>DNI:</b> ${a.dni}</div>
+      <div><b>Edad:</b> ${a.edad}</div>
+      <div><b>Género:</b> ${a.genero}</div>
+      <div><b>Lesionado:</b> ${a.lesionado || 'No'}</div>
+      <div><b>Teléfono:</b> ${a.telefono}</div>
+      <div><b>Correo:</b> ${a.correo}</div>
+      ${a.firma ? `<img src="${a.firma}" class="affected-signature">` : ''}
+    </div>
+  `).join('');
+}
+
+function renderFotosHTML(photos) {
+  if (!photos?.length) return "";
+  return photos.map(photo => `<div class="cert-photo-card"><img src="${photo}"></div>`).join('');
+}
+
+export async function buildCertificateHTML(data) {
+
+  const plantilla = await cargarPlantilla();
 
   const emitted = new Date().toLocaleString('es-CO');
   const docNum = `CB-${Date.now()}`;
@@ -42,166 +97,50 @@ export function buildCertificateHTML(data){
     ? `${data.latitud}, ${data.longitud}`
     : 'No disponibles';
 
-  return `
+  const personalTexto = Array.isArray(data.personal) ? data.personal.join(', ') : '';
+  const vehiculosTexto = Array.isArray(data.vehiculos)
+    ? data.vehiculos.map(v => v.vehiculo).filter(Boolean).join(', ')
+    : '';
 
-<div class="cert-preview-wrapper">
-<div class="page">
+  let html = reemplazarPlaceholders(plantilla, {
+    REPORTE_ID: docNum,
+    EMITIDO: emitted,
+    FECHA: formatDate(data.fecha),
+    HORA_REPORTE: data.horaReporte || '',
+    HORA_LLEGADA: data.horaLlegada || '',
+    HORA_FINAL: data.horaFinal || '',
+    LUGAR: data.lugar || '',
+    DIRECCION: data.direccion || '',
+    COORDENADAS: coords,
+    EVENTO: data.evento || '',
+    PERSONAL: personalTexto,
+    VEHICULOS: vehiculosTexto,
+    DESCRIPCION: data.descripcion || '',
+    LESIONADOS: data.lesionados || 0,
+    VICTIMAS: data.victimas || 0,
+    NOVEDADES: data.novedades || '',
+    AFECTADOS: renderAfectadosHTML(data.afectados),
+    FOTOS: renderFotosHTML(data.photos),
+    QR: generateQRCode(docNum),
+    FIRMA_OFICIAL_NOMBRE: data.firmasBomberos?.[0]?.nombre || 'Oficial de Turno',
+    FIRMA_OFICIAL_IMG: data.firmasBomberos?.length && data.firmasBomberos[0]?.firma
+      ? `<img src="${data.firmasBomberos[0].firma}" class="cert-firma-bombero">`
+      : ''
+  });
 
-<img src="${IMG_LOGO}" class="watermark">
+  html = aplicarSeccion(html, 'NOVEDADES', Boolean(data.novedades));
+  html = aplicarSeccion(html, 'AFECTADOS', Boolean(data.afectados?.length));
+  html = aplicarSeccion(html, 'FOTOS', Boolean(data.photos?.length));
 
-<!-- BARRA SUPERIOR -->
-<div class="top-bar">
-  <span class="top-bar-text">BENEMÉRITO CUERPO DE BOMBEROS VOLUNTARIOS</span>
-</div>
+  return html;
 
-<!-- CABECERA -->
-<div class="cert-header">
-  <div class="cert-top">
-    <img src="${IMG_LOGO}" class="cert-logo-center">
-    <div class="cert-inst-name">
-      <h1>BENEMÉRITO CUERPO DE BOMBEROS VOLUNTARIOS<br>VILLAMARÍA CALDAS</h1>
-      <p>NIT. 890.804.607-0</p>
-    </div>
-    <div class="cert-doc-info">
-      <div class="cert-doc-num">DOC: ${docNum}</div>
-      <div class="cert-doc-date">Emitido: ${emitted}</div>
-    </div>
-  </div>
-</div>
-
-<!-- CUERPO -->
-<div class="cert-body">
-  <div class="cert-body-title">REPORTE DE INTERVENCIÓN</div>
-
-  <div class="cert-grid">
-    <div class="cert-field">
-      <span class="cert-label">Fecha</span>
-      <span class="cert-value">${formatDate(data.fecha)}</span>
-    </div>
-    <div class="cert-field">
-      <span class="cert-label">Hora Reporte</span>
-      <span class="cert-value">${data.horaReporte || ''}</span>
-    </div>
-    <div class="cert-field">
-      <span class="cert-label">Hora Llegada</span>
-      <span class="cert-value">${data.horaLlegada || ''}</span>
-    </div>
-    <div class="cert-field">
-      <span class="cert-label">Hora Final</span>
-      <span class="cert-value">${data.horaFinal || ''}</span>
-    </div>
-    <div class="cert-field">
-      <span class="cert-label">Lugar</span>
-      <span class="cert-value">${data.lugar || ''}</span>
-    </div>
-    <div class="cert-field">
-      <span class="cert-label">Dirección</span>
-      <span class="cert-value">${data.direccion || ''}</span>
-    </div>
-    <div class="cert-field">
-      <span class="cert-label">Coordenadas GPS</span>
-      <span class="cert-value">${coords}</span>
-    </div>
-    <div class="cert-field">
-      <span class="cert-label">Evento</span>
-      <span class="cert-value">${data.evento || ''}</span>
-    </div>
-  </div>
-
-  <div class="cert-field full">
-    <div class="cert-label">Descripción del incidente</div>
-    <div class="cert-desc-box">${data.descripcion || ''}</div>
-  </div>
-
-  <div class="cert-victims-bar">
-    <div class="cert-victim-box">
-      <div class="cert-victim-num">${data.lesionados || 0}</div>
-      <div class="cert-victim-label">Lesionados</div>
-    </div>
-    <div class="cert-victim-box">
-      <div class="cert-victim-num">${data.victimas || 0}</div>
-      <div class="cert-victim-label">Víctimas fatales</div>
-    </div>
-  </div>
-
-  ${data.novedades ? `
-  <div class="cert-field full">
-    <div class="cert-label">Novedades</div>
-    <div class="cert-desc-box">${data.novedades}</div>
-  </div>
-  ` : ''}
-
-  ${data.afectados?.length ? `
-  <div class="cert-affected-section">
-    <h2>Personas Afectadas</h2>
-    ${data.afectados.map(a => `
-      <div class="affected-row">
-        <div><b>Nombre:</b> ${a.nombre}</div>
-        <div><b>DNI:</b> ${a.dni}</div>
-        <div><b>Edad:</b> ${a.edad}</div>
-        <div><b>Género:</b> ${a.genero}</div>
-        <div><b>Lesionado:</b> ${a.lesionado || 'No'}</div>
-        <div><b>Teléfono:</b> ${a.telefono}</div>
-        <div><b>Correo:</b> ${a.correo}</div>
-        ${a.firma ? `<img src="${a.firma}" class="affected-signature">` : ''}
-      </div>
-    `).join('')}
-  </div>
-  ` : ''}
-
-  ${data.photos?.length ? `
-  <div class="cert-photo-section">
-    <div class="cert-photo-title">Evidencia Fotográfica</div>
-    <div class="cert-photo-grid">
-      ${data.photos.map(photo => `
-        <div class="cert-photo-card"><img src="${photo}"></div>
-      `).join('')}
-    </div>
-  </div>
-  ` : ''}
-
-</div>
-
-<!-- FIRMAS -->
-<div class="cert-footer">
-  <div class="cert-footer-left">
-    <div class="cert-signature">
-      <div class="cert-signature-img-wrap">
-        <img src="${IMG_FIRMA}" class="cert-firma-img">
-      </div>
-      <div class="cert-signature-line"></div>
-      <div class="cert-signature-role">Comandante de Unidad</div>
-    </div>
-    <div class="cert-signature">
-      <div class="cert-signature-img-wrap">
-        ${data.firmasBomberos?.length && data.firmasBomberos[0]?.firma
-          ? `<img src="${data.firmasBomberos[0].firma}" class="cert-firma-bombero">`
-          : ''}
-      </div>
-      <div class="cert-signature-line"></div>
-      <div class="cert-signature-role">${data.firmasBomberos?.[0]?.nombre || 'Oficial de Turno'}</div>
-    </div>
-  </div>
-
-  <div class="cert-footer-right">
-    <img src="${generateQRCode(docNum)}" class="cert-qr-img">
-    <div class="cert-qr-text">Verificación Digital<br>${docNum}</div>
-  </div>
-</div>
-
-<div class="cert-contact-footer">
-  Calle 19 N.° 9-52 • Villamaría, Caldas • Tel: (606) 8740000 • bomberosvvm@gmail.com • NIT. 890.804.607-0
-</div>
-
-</div>
-</div>
-
-`;
 }
 
-export function renderCertificate(data, id = null) {
+let currentPrintHTML = '';
 
-  const certHTML = buildCertificateHTML(data);
+export async function renderCertificate(data, id = null) {
+
+  const certHTML = await buildCertificateHTML(data);
 
   document.getElementById('certContent').innerHTML = certHTML;
 
@@ -266,10 +205,6 @@ export function printCertificate() {
 
 }
 
-// Cerrar con click fuera del modal o con Escape. Se registra una sola
-// vez al evaluarse este módulo — funciona igual sin importar si quien
-// lo cargó fue app.js (import() dinámico) o gestor.js (import estático),
-// porque cada página tiene su propia instancia del módulo.
 const _certModalEl = document.getElementById('certModal');
 
 if (_certModalEl) {
