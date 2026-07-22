@@ -1,0 +1,331 @@
+<style>
+
+  .reporte-carta{
+
+    font-family:"Century Gothic", "Segoe UI", sans-serif;
+    color:#222;
+    background:#fff;
+
+    width:794px;
+    min-height:1123px;
+
+    margin:40px auto;
+    padding:55px 60px 70px;
+
+    position:relative;
+    overflow:hidden;
+
+    box-shadow:0 4px 32px rgba(0,0,0,.18);
+
+  }
+
+  /* escudo grande como marca de agua, muy sutil, detrás del texto */
+  .reporte-carta::before{
+
+    content:"";
+    position:absolute;
+    top:120px;
+    right:-60px;
+
+    width:520px;
+    height:672px;
+
+    background-image:url("./assets/escudo-grande.jpg");
+    background-size:contain;
+    background-repeat:no-repeat;
+
+    opacity:.05;
+    pointer-events:none;
+
+  }
+
+  .reporte-header{
+
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:20px;
+    position:relative;
+    z-index:1;
+
+  }
+
+  .reporte-logo{
+
+    width:72px;
+    height:72px;
+    object-fit:contain;
+    flex-shrink:0;
+
+  }
+
+  .reporte-banner{
+
+    flex:1;
+    display:flex;
+    justify-content:center;
+
+  }
+
+  .reporte-banner img{
+
+    max-width:100%;
+    height:56px;
+    object-fit:contain;
+
+  }
+
+  /* recuadro fijo de firma autorizada — no cambia por reporte */
+  .reporte-firma-autorizada{
+
+    flex-shrink:0;
+    width:200px;
+    text-align:center;
+    font-size:11px;
+    line-height:1.5;
+    color:#222;
+    border-left:2px solid #e0262c;
+    padding-left:14px;
+
+  }
+
+  .reporte-firma-autorizada strong{
+
+    display:block;
+    font-size:12px;
+    margin-bottom:2px;
+
+  }
+
+  .reporte-divisor{
+
+    display:block;
+    height:6px;
+    margin:14px 0 26px;
+    background-image:url("./assets/figura-decorativa.gif");
+    background-repeat:repeat-x;
+    background-position:left center;
+    opacity:.8;
+
+  }
+
+  .reporte-cuerpo{
+
+    position:relative;
+    z-index:1;
+    font-size:13.5px;
+    line-height:1.6;
+
+  }
+
+  .reporte-cuerpo p{
+
+    margin:0 0 10px;
+
+  }
+
+  .reporte-cuerpo strong{
+
+    color:#a81d22;
+
+  }
+
+  .reporte-asunto{
+
+    margin:18px 0;
+
+  }
+
+  .reporte-campos p{
+
+    margin:0 0 6px;
+
+  }
+
+  .reporte-descripcion-wrap{
+
+    display:flex;
+    gap:14px;
+    align-items:flex-start;
+    margin:14px 0;
+
+  }
+
+  .reporte-descripcion-wrap img{
+
+    width:14px;
+    height:auto;
+    flex-shrink:0;
+    margin-top:2px;
+
+  }
+
+  .reporte-descripcion-texto{
+
+    flex:1;
+    white-space:pre-line;
+
+  }
+
+  .reporte-firmas-afectados{
+
+    display:grid;
+    grid-template-columns:repeat(auto-fill, minmax(220px, 1fr));
+    gap:14px;
+    margin:14px 0 20px;
+
+  }
+
+  .firma-afectado{
+
+    border:1px solid #e2c8c8;
+    border-radius:8px;
+    padding:10px 12px;
+    font-size:12px;
+    line-height:1.5;
+
+  }
+
+  .firma-afectado img{
+
+    display:block;
+    max-width:140px;
+    max-height:50px;
+    margin-top:6px;
+
+  }
+
+  .reporte-firmas-bomberos{
+
+    display:flex;
+    flex-wrap:wrap;
+    gap:26px;
+    margin:10px 0 20px;
+
+  }
+
+  .firma-bombero{
+
+    text-align:center;
+    font-size:12px;
+
+  }
+
+  .firma-bombero img{
+
+    display:block;
+    max-width:160px;
+    max-height:55px;
+    margin:0 auto 6px;
+
+  }
+
+  .firma-bombero .linea{
+
+    width:160px;
+    border-top:1px solid #444;
+    margin:0 auto 4px;
+
+  }
+
+  .reporte-sello{
+
+    text-align:center;
+    margin-top:30px;
+    position:relative;
+    z-index:1;
+
+  }
+
+  .reporte-sello img{
+
+    width:150px;
+    height:auto;
+
+  }
+
+</style>
+
+<div class="reporte-carta">
+
+  <div class="reporte-header">
+
+    <img class="reporte-logo" src="./assets/logo-institucional.png" alt="Logo Benemérito Cuerpo de Bomberos Voluntarios de Villamaría">
+
+    <div class="reporte-banner">
+      <img src="./assets/banner-superior.gif" alt="Benemérito Cuerpo de Bomberos Voluntarios">
+    </div>
+
+    <div class="reporte-firma-autorizada">
+      <strong>Ste. Juan Camilo Ocampo C.</strong>
+      Comandante y Representante Legal<br>
+      Benemérito Cuerpo de Bomberos Voluntarios Villamaría<br>
+      NIT. 890.804.607-0
+    </div>
+
+  </div>
+
+  <span class="reporte-divisor"></span>
+
+  <div class="reporte-cuerpo">
+
+    <p>Señores:</p>
+    <p><strong>Coordinación Operativa</strong><br>
+    Benemérito Cuerpo de Bomberos Voluntarios<br>
+    Villamaría – Caldas</p>
+
+    <p class="reporte-asunto"><strong>Asunto:</strong> Reporte de intervención No. {{REPORTE_ID}}</p>
+
+    <p>Cordial saludo,</p>
+
+    <p>El Benemérito Cuerpo de Bomberos Voluntarios de Villa María se permite presentar el siguiente reporte correspondiente a la atención de evento operativo desarrollado durante la jornada de servicio.</p>
+
+    <div class="reporte-campos">
+
+      <p><strong>Fecha:</strong> {{FECHA}}</p>
+      <p><strong>Hora Llegada:</strong> {{HORA_LLEGADA}}</p>
+      <p><strong>Hora Final:</strong> {{HORA_FINAL}}</p>
+      <p><strong>Latitud:</strong> {{LATITUD}}</p>
+      <p><strong>Longitud:</strong> {{LONGITUD}}</p>
+      <p><strong>Coordenadas:</strong> {{COORDENADAS}}</p>
+      <p><strong>Lugar del incidente:</strong> {{LUGAR}}</p>
+      <p><strong>Dirección:</strong> {{DIRECCION}}</p>
+      <p><strong>Tipo de evento:</strong> {{EVENTO}}</p>
+      <p><strong>Personal participante:</strong> {{PERSONAL}}</p>
+      <p><strong>Vehículos:</strong> {{VEHICULOS}}</p>
+
+    </div>
+
+    <p><strong>Descripción:</strong></p>
+    <div class="reporte-descripcion-wrap">
+      <img src="./assets/franja-vertical.png" alt="">
+      <div class="reporte-descripcion-texto">{{DESCRIPCION}}</div>
+    </div>
+
+    <p><strong>Lesionados:</strong> {{LESIONADOS}}</p>
+    <p><strong>Víctimas:</strong> {{VICTIMAS}}</p>
+    <p><strong>Afectados:</strong> {{AFECTADOS}}</p>
+
+    <!--SECCION:FIRMAS_AFECTADOS-->
+    <div class="reporte-firmas-afectados">
+      {{FIRMAS_AFECTADOS}}
+    </div>
+    <!--FIN:FIRMAS_AFECTADOS-->
+
+    <!--SECCION:NOVEDADES-->
+    <p><strong>Novedades:</strong></p>
+    <p>{{NOVEDADES}}</p>
+    <!--FIN:NOVEDADES-->
+
+    <p><strong>Firmas Bomberos:</strong></p>
+    <div class="reporte-firmas-bomberos">
+      {{FIRMAS_BOMBEROS}}
+    </div>
+
+  </div>
+
+  <div class="reporte-sello">
+    <img src="./assets/sello-oficial.gif" alt="Sello oficial Benemérito Cuerpo de Bomberos Voluntarios">
+  </div>
+
+</div>
