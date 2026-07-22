@@ -4,14 +4,11 @@
 <head>
 
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <title>Reporte de Intervención</title>
 
 <style>
-
-/*====================================================
-    CONFIGURACIÓN GENERAL
-====================================================*/
 
 *{
     margin:0;
@@ -19,191 +16,48 @@
     box-sizing:border-box;
 }
 
-html{
-    background:#d8d8d8;
-}
-
+html,
 body{
-
-    font-family:Calibri,Arial,sans-serif;
-    font-size:11pt;
-    color:#222;
-
     background:#d8d8d8;
-
-    padding:30px;
-
+    font-family:"Century Gothic","Segoe UI",Arial,sans-serif;
+    color:#000;
 }
 
-
-/*====================================================
-            HOJA TAMAÑO CARTA
-====================================================*/
-
-.reporte{
+.reporte-carta{
 
     position:relative;
 
-    width:215.9mm;
-    min-height:279.4mm;
+    width:210mm;
+    min-height:297mm;
 
-    margin:auto;
-
-    background:white;
-
-    padding:
-
-        22mm
-        20mm
-        18mm
-        20mm;
+    margin:20px auto;
+    background:#fff;
 
     overflow:hidden;
 
-    box-shadow:
-        0 0 18px rgba(0,0,0,.18);
+    box-shadow:0 0 18px rgba(0,0,0,.18);
 
 }
 
-/*====================================================
-        PAPELERÍA INSTITUCIONAL
-====================================================*/
+/*===============================
+  MARCA DE AGUA
+================================*/
 
-.franja-izquierda{
-
-    position:absolute;
-
-    left:0;
-    top:0;
-
-    width:18px;
-    height:100%;
-
-    background:#d6aa29;
-
-    z-index:2;
-
-}
-
-.franja-derecha{
-
-    position:absolute;
-
-    right:0;
-    top:0;
-
-    width:18px;
-    height:100%;
-
-    background:#d6aa29;
-
-    z-index:2;
-
-}
-
-.linea-superior{
-
-    position:absolute;
-
-    right:42px;
-
-    top:28px;
-
-    width:2px;
-    height:74px;
-
-    background:#222;
-
-    z-index:15;
-
-}
-
-.qr{
-
-    position:absolute;
-
-    right:32px;
-
-    bottom:55px;
-
-    width:82px;
-
-    z-index:20;
-
-}
-
-.qr img{
-
-    width:100%;
-
-}
-
-.sello{
-
-    position:absolute;
-
-    bottom:72px;
-
-    left:50%;
-
-    transform:translateX(-50%);
-
-    width:130px;
-
-    opacity:.96;
-
-    z-index:18;
-
-}
-
-.sello img{
-
-    width:100%;
-
-}
-
-.pie{
-
-    position:absolute;
-
-    left:0;
-    bottom:0;
-
-    width:100%;
-
-    z-index:5;
-
-}
-
-.pie img{
-
-    width:100%;
-    display:block;
-
-}
-
-
-/*====================================================
-            MARCA DE AGUA
-====================================================*/
-
-.reporte::before{
+.reporte-carta::before{
 
     content:"";
 
     position:absolute;
 
-    top:55mm;
-    left:32mm;
+    top:78mm;
+    left:50%;
+
+    transform:translateX(-50%);
 
     width:145mm;
-    height:145mm;
+    height:190mm;
 
-    background:url("./assets/escudo-grande.jpg")
-               center
-               center
-               no-repeat;
-
+    background:url("./assets/escudo-grande.jpg") center center no-repeat;
     background-size:contain;
 
     opacity:.045;
@@ -212,249 +66,299 @@ body{
 
 }
 
+/*===============================
+  CONTENIDO
+================================*/
 
-/*====================================================
-                CONTENIDO
-====================================================*/
-
-.contenido{
+.reporte-wrapper{
 
     position:relative;
+    z-index:5;
 
-    z-index:10;
-
-}
-
-
-/*====================================================
-                ENCABEZADO
-====================================================*/
-
-.header{
-
-    width:100%;
-
-    display:grid;
-
-    grid-template-columns:
-        92px
-        1fr
-        92px;
-
-    align-items:center;
-
-    margin-bottom:4px;
+    padding-left:22mm;
+    padding-right:22mm;
+    padding-top:18mm;
+    padding-bottom:18mm;
 
 }
 
+/*===============================
+  ENCABEZADO
+================================*/
 
-/*--------------------------------------------------*/
+.reporte-header{
 
-.logo-izq{
+    display:flex;
+    align-items:flex-start;
+    justify-content:space-between;
 
-    width:82px;
+}
 
+.logo-izquierdo{
+
+    width:74px;
+    flex-shrink:0;
+
+}
+
+.logo-izquierdo img{
+
+    width:74px;
     display:block;
 
-    margin:auto;
+}
+
+.banner-central{
+
+    flex:1;
+    padding:0 18px;
+
+    display:flex;
+    justify-content:center;
 
 }
 
+.banner-central img{
 
-/*--------------------------------------------------*/
+    width:100%;
+    max-width:420px;
 
-.titulo{
+}
+
+.firma-comandante{
+
+    width:205px;
 
     text-align:center;
 
-}
+    font-size:11px;
+    line-height:1.45;
 
-.titulo img{
-
-    width:100%;
-
-    max-width:455px;
+    color:#000;
 
 }
 
-/*--------------------------------------------------*/
-
-.logo-der{
-
-    width:82px;
+.firma-comandante strong{
 
     display:block;
 
-    margin:auto;
+    font-size:12px;
+
+    margin-bottom:3px;
+
+    color:#000;
 
 }
 
+/*===============================
+  DIVISOR
+================================*/
 
-/*====================================================
-                INFORMACIÓN
-====================================================*/
+.divisor{
 
-.info{
+    width:100%;
 
-    text-align:center;
-
-    margin-top:6px;
-
-    font-size:10.3pt;
-
-    line-height:1.25;
+    margin:12px 0 18px;
 
 }
 
-.info strong{
+.divisor img{
 
-    color:#981d22;
-
-    font-size:12pt;
-
-}
-
-
-/*====================================================
-                LÍNEA DORADA
-====================================================*/
-
-.linea{
-
-    height:8px;
-
-    margin-top:14px;
-
-    margin-bottom:22px;
-
-    background:
-
-        url("./assets/figura-decorativa.gif")
-
-        repeat-x
-
-        center;
+    width:100%;
+    display:block;
 
 }
 
-/*====================================================
-            TEXTO
-====================================================*/
+/*===============================
+  CUERPO
+================================*/
 
-p{
+.reporte-body{
+
+    font-size:13px;
+
+    line-height:1.65;
+
+    color:#000;
+
+}
+
+.reporte-body p{
 
     margin-bottom:8px;
 
+}
+
+.reporte-body strong{
+
+    font-weight:700;
+
+    color:#000;
+
+}
+
+.asunto{
+
+    margin-top:10px;
+    margin-bottom:16px;
+
+}
+
+.saludo{
+
+    margin-bottom:14px;
+
+}
+
+.introduccion{
+
     text-align:justify;
 
-    line-height:1.45;
+    margin-bottom:16px;
 
 }
+/*===============================
+  TABLA DE DATOS DEL REPORTE
+================================*/
 
-strong{
-
-    color:#991d22;
-
-}
-
-
-/*====================================================
-            CAMPOS
-====================================================*/
-
-.campo{
-
-    margin-bottom:5px;
-
-}
-
-/*======================================================
-            TABLAS
-======================================================*/
-
-table{
+.reporte-info{
 
     width:100%;
 
     border-collapse:collapse;
 
+    margin-top:8px;
+    margin-bottom:22px;
+
+    font-size:13px;
+
 }
 
-td{
+.reporte-info tr{
 
-    padding:4px 0;
+    border-bottom:1px solid #d8d8d8;
+
+}
+
+.reporte-info td{
+
+    padding:7px 6px;
 
     vertical-align:top;
 
 }
 
-/*======================================================
-            FIRMAS
-======================================================*/
+.reporte-info td.titulo{
 
-.reporte-firmas-bomberos{
+    width:165px;
+
+    font-weight:bold;
+
+    color:#000;
+
+    white-space:nowrap;
+
+}
+
+.reporte-info td.valor{
+
+    color:#000;
+
+}
+
+/*===============================
+  DESCRIPCIÓN
+================================*/
+
+.titulo-seccion{
+
+    font-size:14px;
+
+    font-weight:bold;
+
+    margin-top:8px;
+    margin-bottom:10px;
+
+    color:#000;
+
+}
+
+.descripcion{
 
     display:flex;
 
-    flex-wrap:wrap;
+    align-items:flex-start;
 
-    justify-content:flex-start;
+    gap:14px;
 
-    gap:28px;
-
-    margin-top:12px;
+    margin-bottom:22px;
 
 }
 
-.firma-bombero{
+.descripcion img{
 
-    width:180px;
+    width:14px;
 
-    text-align:center;
+    margin-top:2px;
 
-    font-size:10pt;
-
-}
-
-.firma-bombero img{
-
-    display:block;
-
-    margin:auto;
-
-    max-width:170px;
-
-    max-height:60px;
+    flex-shrink:0;
 
 }
 
-.firma-bombero .linea{
+.descripcion-texto{
 
-    width:170px;
+    flex:1;
 
-    margin:4px auto;
+    text-align:justify;
 
-    border-top:1px solid #444;
+    white-space:pre-wrap;
 
-    height:auto;
+    line-height:1.7;
 
-    background:none;
+    color:#000;
 
 }
 
-/*======================================================
-            AFECTADOS
-======================================================*/
+/*===============================
+  LESIONADOS
+================================*/
 
-.reporte-firmas-afectados{
+.resumen{
+
+    margin-top:8px;
+
+    margin-bottom:20px;
+
+}
+
+.resumen p{
+
+    margin-bottom:6px;
+
+}
+
+.resumen strong{
+
+    display:inline-block;
+
+    width:120px;
+
+}
+
+/*===============================
+  AFECTADOS
+================================*/
+
+.afectados{
 
     display:grid;
 
-    grid-template-columns:
+    grid-template-columns:repeat(2,1fr);
 
-        repeat(auto-fill,minmax(250px,1fr));
+    gap:14px;
 
-    gap:18px;
+    margin-top:12px;
+    margin-bottom:24px;
 
 }
 
@@ -462,39 +366,585 @@ td{
 
     border:1px solid #d7d7d7;
 
-    border-radius:6px;
+    border-radius:8px;
 
     padding:12px;
 
-    background:#fafafa;
+    font-size:12px;
+
+    line-height:1.55;
+
+}
+
+.firma-afectado strong{
+
+    display:block;
+
+    margin-bottom:5px;
 
 }
 
 .firma-afectado img{
 
+    display:block;
+
+    max-width:145px;
+
+    max-height:52px;
+
     margin-top:8px;
-
-    max-width:140px;
-
-    max-height:55px;
 
 }
 
-/*======================================================
-            IMPRESIÓN
-======================================================*/
+/*===============================
+  NOVEDADES
+================================*/
+
+.novedades{
+
+    margin-top:10px;
+
+    margin-bottom:22px;
+
+    text-align:justify;
+
+    line-height:1.7;
+
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="reporte-carta">
+
+    <div class="reporte-wrapper">
+
+        <!-- ===================================== -->
+        <!-- ENCABEZADO -->
+        <!-- ===================================== -->
+
+        <div class="reporte-header">
+
+            <div class="logo-izquierdo">
+                <img src="./assets/logo-institucional.png"
+                     alt="Logo Bomberos">
+            </div>
+
+            <div class="banner-central">
+                <img src="./assets/banner-superior.gif"
+                     alt="Benemérito Cuerpo de Bomberos">
+            </div>
+
+            <div class="firma-comandante">
+
+                <strong>
+                    Ste. Juan Camilo Ocampo C.
+                </strong>
+
+                Comandante y Representante Legal<br>
+
+                Benemérito Cuerpo de Bomberos
+                Voluntarios de Villamaría<br>
+
+                NIT. 890.804.607-0
+
+            </div>
+
+        </div>
+
+        <div class="divisor">
+
+            <img src="./assets/figura-decorativa.gif"
+                 alt="">
+
+        </div>
+
+        <!-- ===================================== -->
+        <!-- CUERPO -->
+        <!-- ===================================== -->
+
+        <div class="reporte-body">
+
+            <p>Señores</p>
+
+            <p>
+
+                <strong>
+                    Coordinación Operativa
+                </strong>
+
+                <br>
+
+                Benemérito Cuerpo de Bomberos
+                Voluntarios de Villamaría
+
+                <br>
+
+                Caldas
+
+            </p>
+
+            <p class="asunto">
+
+                <strong>
+
+                    Asunto:
+
+                </strong>
+
+                Reporte de intervención No.
+                {{REPORTE_ID}}
+
+            </p>
+
+            <p class="saludo">
+
+                Cordial saludo,
+
+            </p>
+
+            <p class="introduccion">
+
+                El Benemérito Cuerpo de Bomberos
+                Voluntarios de Villamaría presenta
+                el siguiente informe correspondiente
+                a la atención del evento operativo
+                realizado durante la jornada de servicio,
+                dejando constancia de las actividades
+                desarrolladas por el personal
+                participante.
+
+            </p>
+
+            <!-- ===================================== -->
+            <!-- TABLA DE INFORMACIÓN -->
+            <!-- ===================================== -->
+
+            <table class="reporte-info">
+
+                <tr>
+
+                    <td class="titulo">
+
+                        Fecha
+
+                    </td>
+
+                    <td class="valor">
+
+                        {{FECHA}}
+
+                    </td>
+
+                </tr>
+
+                <tr>
+
+                    <td class="titulo">
+
+                        Hora de llegada
+
+                    </td>
+
+                    <td class="valor">
+
+                        {{HORA_LLEGADA}}
+
+                    </td>
+
+                </tr>
+
+                <tr>
+
+                    <td class="titulo">
+
+                        Hora final
+
+                    </td>
+
+                    <td class="valor">
+
+                        {{HORA_FINAL}}
+
+                    </td>
+
+                </tr>
+
+                <tr>
+
+                    <td class="titulo">
+
+                        Lugar del incidente
+
+                    </td>
+
+                    <td class="valor">
+
+                        {{LUGAR}}
+
+                    </td>
+
+                </tr>
+
+                <tr>
+
+                    <td class="titulo">
+
+                        Dirección
+
+                    </td>
+
+                    <td class="valor">
+
+                        {{DIRECCION}}
+
+                    </td>
+
+                </tr>
+
+                <tr>
+
+                    <td class="titulo">
+
+                        Tipo de evento
+
+                    </td>
+
+                    <td class="valor">
+
+                        {{EVENTO}}
+
+                    </td>
+
+                </tr>
+
+                <tr>
+
+                    <td class="titulo">
+
+                        Coordenadas
+
+                    </td>
+
+                    <td class="valor">
+
+                        {{COORDENADAS}}
+
+                    </td>
+
+                </tr>
+
+                <tr>
+
+                    <td class="titulo">
+
+                        Personal participante
+
+                    </td>
+
+                    <td class="valor">
+
+                        {{PERSONAL}}
+
+                    </td>
+
+                </tr>
+
+                <tr>
+
+                    <td class="titulo">
+
+                        Vehículos
+
+                    </td>
+
+                    <td class="valor">
+
+                        {{VEHICULOS}}
+
+                    </td>
+
+                </tr>
+
+            </table>
+
+            <!-- ===================================== -->
+            <!-- DESCRIPCIÓN -->
+            <!-- ===================================== -->
+
+            <div class="titulo-seccion">
+
+                Descripción del evento
+
+            </div>
+
+            <div class="descripcion">
+
+                <img
+                    src="./assets/franja-vertical.png"
+                    alt=""
+                >
+
+                <div class="descripcion-texto">
+
+                    {{DESCRIPCION}}
+
+                </div>
+
+            </div>
+
+            <!-- ===================================== -->
+            <!-- RESUMEN -->
+            <!-- ===================================== -->
+
+            <div class="resumen">
+
+                <p>
+
+                    <strong>Lesionados:</strong>
+
+                    {{LESIONADOS}}
+
+                </p>
+
+                <p>
+
+                    <strong>Víctimas:</strong>
+
+                    {{VICTIMAS}}
+
+                </p>
+
+                <p>
+
+                    <strong>Afectados:</strong>
+
+                    {{AFECTADOS}}
+
+                </p>
+
+            </div>
+            <!--==========================================
+                    FIRMAS AFECTADOS
+            ===========================================-->
+
+            <!--SECCION:FIRMAS_AFECTADOS-->
+
+            <div class="titulo-seccion">
+
+                Personas involucradas
+
+            </div>
+
+            <div class="afectados">
+
+                {{FIRMAS_AFECTADOS}}
+
+            </div>
+
+            <!--FIN:FIRMAS_AFECTADOS-->
+
+
+
+            <!--==========================================
+                    NOVEDADES
+            ===========================================-->
+
+            <!--SECCION:NOVEDADES-->
+
+            <div class="titulo-seccion">
+
+                Novedades
+
+            </div>
+
+            <div class="novedades">
+
+                {{NOVEDADES}}
+
+            </div>
+
+            <!--FIN:NOVEDADES-->
+
+
+
+            <!--==========================================
+                    FIRMAS BOMBEROS
+            ===========================================-->
+
+            <div class="titulo-seccion">
+
+                Personal participante
+
+            </div>
+
+            <div class="reporte-firmas-bomberos">
+
+                {{FIRMAS_BOMBEROS}}
+
+            </div>
+
+
+
+            <br>
+            <br>
+            <br>
+
+            <p style="text-align:center;">
+
+                Sin otro particular,
+
+            </p>
+
+            <br>
+            <br>
+
+            <p style="text-align:center;">
+
+                Benemérito Cuerpo de Bomberos
+                Voluntarios de Villamaría
+
+            </p>
+
+            <br>
+
+            <div style="text-align:center;">
+
+                <img
+
+                    src="./assets/sello-oficial.gif"
+
+                    alt="Sello"
+
+                    style="width:150px;">
+
+            </div>
+
+            <br>
+
+            <p
+                style="
+                text-align:center;
+                font-size:11px;
+                line-height:1.6;
+                ">
+
+                Carrera 5 No. 10-45
+
+                <br>
+
+                Villamaría - Caldas
+
+                <br>
+
+                Teléfono (606) XXX XX XX
+
+                <br>
+
+                www.bomberosvillamaria.gov.co
+
+            </p>
+
+        </div>
+
+    </div>
+
+</div>
+<!--==================================================
+        IMPRESIÓN
+===================================================-->
+
+<style>
+
+@page{
+
+    size:A4 portrait;
+
+    margin:0;
+
+}
 
 @media print{
 
+    html,
     body{
+
+        width:210mm;
+        height:297mm;
+
+        margin:0;
+        padding:0;
 
         background:white;
 
-        padding:0;
+        -webkit-print-color-adjust:exact;
+        print-color-adjust:exact;
 
     }
 
-    .reporte{
+    .reporte-carta{
+
+        width:210mm;
+        min-height:297mm;
+
+        margin:0;
+
+        box-shadow:none;
+
+        overflow:hidden;
+
+        page-break-after:always;
+
+    }
+
+    .reporte-wrapper{
+
+        padding-left:22mm;
+        padding-right:22mm;
+        padding-top:18mm;
+        padding-bottom:18mm;
+
+    }
+
+    img{
+
+        max-width:100%;
+
+        page-break-inside:avoid;
+
+    }
+
+    table{
+
+        page-break-inside:avoid;
+
+    }
+
+    .firma-afectado,
+    .firma-bombero{
+
+        page-break-inside:avoid;
+
+    }
+
+}
+
+/*==========================================
+        RESPONSIVE
+==========================================*/
+
+@media screen and (max-width:900px){
+
+    body{
+
+        background:#ececec;
+
+    }
+
+    .reporte-carta{
 
         width:100%;
 
@@ -504,592 +954,76 @@ td{
 
         box-shadow:none;
 
-        page-break-after:always;
+    }
+
+    .reporte-wrapper{
+
+        padding:22px;
+
+    }
+
+    .reporte-header{
+
+        flex-direction:column;
+
+        align-items:center;
+
+        text-align:center;
+
+        gap:18px;
+
+    }
+
+    .banner-central{
+
+        padding:0;
+
+    }
+
+    .firma-comandante{
+
+        width:100%;
+
+    }
+
+    .reporte-info td{
+
+        display:block;
+
+        width:100%;
+
+    }
+
+    .reporte-info tr{
+
+        display:block;
+
+        margin-bottom:10px;
+
+    }
+
+    .descripcion{
+
+        flex-direction:column;
+
+    }
+
+    .afectados{
+
+        grid-template-columns:1fr;
+
+    }
+
+    .reporte-firmas-bomberos{
+
+        justify-content:center;
 
     }
 
 }
+
 </style>
-
-</head>
-
-<body>
-
-<div class="reporte">
-
-<div class="franja-izquierda"></div>
-
-<div class="franja-derecha"></div>
-
-<div class="linea-superior"></div>
-
-<div class="contenido">
-
-<!--=========================================
-                ENCABEZADO
-==========================================-->
-
-<div class="header">
-
-    <img
-        class="logo-izq"
-        src="./assets/logo-institucional.png">
-
-    <div class="titulo">
-
-        <img
-            src="./assets/banner-superior.gif">
-
-    </div>
-
-    <img
-        class="logo-der"
-        src="./assets/logo-colombia.png">
-
-</div>
-
-<div class="info">
-
-    <strong>
-
-        Benemérito Cuerpo de Bomberos Voluntarios de Villamaría
-
-    </strong>
-
-    <br>
-
-    NIT. 890.804.607-0
-
-</div>
-
-<div class="linea"></div>
-<!--====================================================
-                DESTINATARIO
-=====================================================-->
-
-<p>Señores:</p>
-
-<p>
-
-<strong>Coordinación Operativa</strong><br>
-
-Benemérito Cuerpo de Bomberos Voluntarios<br>
-
-Villamaría – Caldas
-
-</p>
-
-<br>
-
-<!--====================================================
-                    ASUNTO
-=====================================================-->
-
-<p>
-
-<strong>Asunto:</strong>
-
-Reporte de intervención No.
-
-<strong>{{REPORTE_ID}}</strong>
-
-</p>
-
-<br>
-
-<p>
-
-Cordial saludo,
-
-</p>
-
-<p>
-
-El Benemérito Cuerpo de Bomberos Voluntarios de Villamaría se permite
-presentar el siguiente reporte correspondiente a la atención del evento
-operativo desarrollado durante la jornada de servicio.
-
-</p>
-
-<br>
-
-<!--====================================================
-                INFORMACIÓN GENERAL
-=====================================================-->
-
-<table
-style="
-width:100%;
-border-collapse:collapse;
-font-size:11pt;
-">
-
-<tr>
-
-<td style="padding:4px 0;width:170px;">
-
-<strong>Fecha:</strong>
-
-</td>
-
-<td>
-
-{{FECHA}}
-
-</td>
-
-</tr>
-
-<tr>
-
-<td style="padding:4px 0;">
-
-<strong>Hora Llegada:</strong>
-
-</td>
-
-<td>
-
-{{HORA_LLEGADA}}
-
-</td>
-
-</tr>
-
-<tr>
-
-<td style="padding:4px 0;">
-
-<strong>Hora Final:</strong>
-
-</td>
-
-<td>
-
-{{HORA_FINAL}}
-
-</td>
-
-</tr>
-
-<tr>
-
-<td style="padding:4px 0;">
-
-<strong>Latitud:</strong>
-
-</td>
-
-<td>
-
-{{LATITUD}}
-
-</td>
-
-</tr>
-
-<tr>
-
-<td style="padding:4px 0;">
-
-<strong>Longitud:</strong>
-
-</td>
-
-<td>
-
-{{LONGITUD}}
-
-</td>
-
-</tr>
-
-<tr>
-
-<td style="padding:4px 0;">
-
-<strong>Coordenadas:</strong>
-
-</td>
-
-<td>
-
-{{COORDENADAS}}
-
-</td>
-
-</tr>
-
-<tr>
-
-<td style="padding:4px 0;">
-
-<strong>Lugar del incidente:</strong>
-
-</td>
-
-<td>
-
-{{LUGAR}}
-
-</td>
-
-</tr>
-
-<tr>
-
-<td style="padding:4px 0;">
-
-<strong>Dirección:</strong>
-
-</td>
-
-<td>
-
-{{DIRECCION}}
-
-</td>
-
-</tr>
-
-<tr>
-
-<td style="padding:4px 0;">
-
-<strong>Tipo de evento:</strong>
-
-</td>
-
-<td>
-
-{{EVENTO}}
-
-</td>
-
-</tr>
-
-<tr>
-
-<td style="padding:4px 0;vertical-align:top;">
-
-<strong>Personal participante:</strong>
-
-</td>
-
-<td>
-
-{{PERSONAL}}
-
-</td>
-
-</tr>
-
-<tr>
-
-<td style="padding:4px 0;vertical-align:top;">
-
-<strong>Vehículos:</strong>
-
-</td>
-
-<td>
-
-{{VEHICULOS}}
-
-</td>
-
-</tr>
-
-</table>
-
-<br>
-
-<!--====================================================
-                DESCRIPCIÓN
-=====================================================-->
-
-<p>
-
-<strong>Descripción:</strong>
-
-</p>
-
-<table
-style="
-width:100%;
-border-collapse:collapse;
-">
-
-<tr>
-
-<td
-style="
-width:14px;
-vertical-align:top;
-">
-
-<img
-
-src="./assets/franja-vertical.png"
-
-style="width:8px;">
-
-</td>
-
-<td
-style="
-padding-left:12px;
-text-align:justify;
-white-space:pre-line;
-line-height:1.6;
-">
-
-{{DESCRIPCION}}
-
-</td>
-
-</tr>
-
-</table>
-
-<br>
-
-<!--====================================================
-                RESULTADOS
-=====================================================-->
-
-<table
-style="
-width:100%;
-border-collapse:collapse;
-">
-
-<tr>
-
-<td>
-
-<strong>Lesionados:</strong>
-
-{{LESIONADOS}}
-
-</td>
-
-</tr>
-
-<tr>
-
-<td>
-
-<strong>Víctimas:</strong>
-
-{{VICTIMAS}}
-
-</td>
-
-</tr>
-
-<tr>
-
-<td>
-
-<strong>Afectados:</strong>
-
-{{AFECTADOS}}
-
-</td>
-
-</tr>
-
-</table>
-
-<br>
-<!--====================================================
-            FIRMAS DE AFECTADOS
-=====================================================-->
-
-<!--SECCION:FIRMAS_AFECTADOS-->
-
-<p style="margin-top:12px;">
-    <strong>Afectados:</strong>
-</p>
-
-<div
-style="
-display:grid;
-grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
-gap:16px;
-margin-top:10px;
-margin-bottom:25px;
-">
-
-{{FIRMAS_AFECTADOS}}
-
-</div>
-
-<!--FIN:FIRMAS_AFECTADOS-->
-
-
-
-<!--====================================================
-                NOVEDADES
-=====================================================-->
-
-<!--SECCION:NOVEDADES-->
-
-<p>
-
-<strong>Novedades:</strong>
-
-</p>
-
-<div
-style="
-border-left:4px solid #c42026;
-padding-left:12px;
-margin-top:8px;
-margin-bottom:22px;
-white-space:pre-line;
-line-height:1.55;
-">
-
-{{NOVEDADES}}
-
-</div>
-
-<!--FIN:NOVEDADES-->
-
-
-
-<!--====================================================
-            FIRMAS BOMBEROS
-=====================================================-->
-
-<p>
-
-<strong>Personal que atendió la emergencia</strong>
-
-</p>
-
-<div
-class="reporte-firmas-bomberos">
-
-{{FIRMAS_BOMBEROS}}
-
-</div>
-
-
-
-<!--====================================================
-                FIRMA COMANDANTE
-=====================================================-->
-
-<div
-style="
-margin-top:45px;
-display:flex;
-justify-content:flex-end;
-">
-
-<div
-style="
-width:260px;
-text-align:center;
-">
-
-<img
-
-src="./assets/firma-comandante.png"
-
-style="
-width:180px;
-display:block;
-margin:auto;
-margin-bottom:6px;
-">
-
-<div
-style="
-border-top:1px solid #444;
-margin-top:4px;
-padding-top:5px;
-font-size:10pt;
-">
-
-<strong>
-
-Ste. Juan Camilo Ocampo C.
-
-</strong>
-
-<br>
-
-Comandante
-
-<br>
-
-Representante Legal
-
-</div>
-
-</div>
-
-</div>
-
-
-
-<!--====================================================
-            SELLO OFICIAL
-=====================================================-->
-
-<div class="sello">
-
-<img
-
-src="./assets/sello-oficial.gif"
-
-alt="Sello Oficial">
-
-</div>
-
-
-
-<!--====================================================
-                QR
-=====================================================-->
-
-<div class="qr">
-
-<img
-
-src="./assets/qr.png"
-
-alt="QR">
-
-</div>
-
-
-
-<!--====================================================
-            PIE INSTITUCIONAL
-=====================================================-->
-
-<div class="pie">
-
-<img
-
-src="./assets/pie-pagina.png"
-
-alt="Pie">
-
-</div>
-
-
-
-</div>
-
-</div>
 
 </body>
 
 </html>
-
