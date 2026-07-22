@@ -16,6 +16,7 @@
 const RUTA_PLANTILLA = "./plantillas/plantilla1.html";
 
 let _plantillaCache = null;
+let currentPrintHTML = "";
 
 async function cargarPlantilla() {
   if (_plantillaCache) return _plantillaCache;
