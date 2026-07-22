@@ -104,7 +104,7 @@ function renderFirmasBomberosHTML(firmasBomberos) {
 
 export async function buildCertificateHTML(data) {
 
-  const plantilla = await cargarPlantilla();
+  let plantilla = await cargarPlantilla();
   // CORREGIR RUTAS DE LAS IMÁGENES
   plantilla = plantilla.replaceAll(
       './assets/',
