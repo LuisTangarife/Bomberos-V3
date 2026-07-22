@@ -105,6 +105,11 @@ function renderFirmasBomberosHTML(firmasBomberos) {
 export async function buildCertificateHTML(data) {
 
   const plantilla = await cargarPlantilla();
+  // CORREGIR RUTAS DE LAS IMÁGENES
+  plantilla = plantilla.replaceAll(
+      './assets/',
+      './plantillas/assets/'
+  );
 
   const docNum = `CB-${Date.now()}`;
 
@@ -148,9 +153,6 @@ export async function buildCertificateHTML(data) {
   return html;
 
 }
-const RUTA_ASSETS = "./plantillas/assets/";
-html = html.replaceAll("./assets/", RUTA_ASSETS);
-let currentPrintHTML = '';
 
 export async function renderCertificate(data, id = null) {
 
