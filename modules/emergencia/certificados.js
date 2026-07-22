@@ -148,7 +148,8 @@ export async function buildCertificateHTML(data) {
   return html;
 
 }
-
+const RUTA_ASSETS = "./plantillas/assets/";
+html = html.replaceAll("./assets/", RUTA_ASSETS);
 let currentPrintHTML = '';
 
 export async function renderCertificate(data, id = null) {
