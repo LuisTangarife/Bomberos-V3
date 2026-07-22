@@ -1,331 +1,789 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Reporte de Intervención</title>
+
 <style>
 
-  .reporte-carta{
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+}
 
-    font-family:"Century Gothic", "Segoe UI", sans-serif;
+body{
+
+    background:#ececec;
+    font-family:"Century Gothic","Segoe UI",sans-serif;
     color:#222;
+
+}
+
+.reporte-carta{
+
+    width:210mm;
+    min-height:297mm;
+
+    margin:25px auto;
+
     background:#fff;
 
-    width:794px;
-    min-height:1123px;
-
-    margin:40px auto;
-    padding:55px 60px 70px;
-
     position:relative;
+
     overflow:hidden;
 
-    box-shadow:0 4px 32px rgba(0,0,0,.18);
+    box-shadow:0 8px 35px rgba(0,0,0,.18);
 
-  }
+    padding:35px 45px 55px;
 
-  /* escudo grande como marca de agua, muy sutil, detrás del texto */
-  .reporte-carta::before{
+}
+
+/*==========================================
+=            Marca de agua                 =
+==========================================*/
+
+.reporte-carta::before{
 
     content:"";
+
     position:absolute;
-    top:120px;
-    right:-60px;
 
-    width:520px;
-    height:672px;
+    left:50%;
+    top:52%;
 
-    background-image:url("./assets/escudo-grande.jpg");
+    transform:translate(-50%,-50%);
+
+    width:540px;
+    height:540px;
+
+    background:url("./assets/escudo-grande.jpg") center center no-repeat;
     background-size:contain;
-    background-repeat:no-repeat;
 
-    opacity:.05;
+    opacity:.045;
+
     pointer-events:none;
 
-  }
+    z-index:0;
 
-  .reporte-header{
+}
 
-    display:flex;
+/*==========================================
+=            Encabezado                    =
+==========================================*/
+
+.reporte-header{
+
+    position:relative;
+
+    display:grid;
+
+    grid-template-columns:90px 1fr 230px;
+
     align-items:center;
-    justify-content:space-between;
-    gap:20px;
-    position:relative;
-    z-index:1;
 
-  }
+    gap:18px;
 
-  .reporte-logo{
+    z-index:2;
 
-    width:72px;
-    height:72px;
-    object-fit:contain;
-    flex-shrink:0;
+}
 
-  }
+.reporte-logo{
 
-  .reporte-banner{
+    width:74px;
+    height:74px;
 
-    flex:1;
-    display:flex;
-    justify-content:center;
-
-  }
-
-  .reporte-banner img{
-
-    max-width:100%;
-    height:56px;
     object-fit:contain;
 
-  }
+}
 
-  /* recuadro fijo de firma autorizada — no cambia por reporte */
-  .reporte-firma-autorizada{
+.reporte-banner{
 
-    flex-shrink:0;
-    width:200px;
     text-align:center;
+
+}
+
+.reporte-banner img{
+
+    width:100%;
+    max-width:420px;
+
+    height:auto;
+
+}
+
+.reporte-firma-autorizada{
+
+    border-left:3px solid #c62828;
+
+    padding-left:16px;
+
+    text-align:center;
+
     font-size:11px;
-    line-height:1.5;
-    color:#222;
-    border-left:2px solid #e0262c;
-    padding-left:14px;
 
-  }
+    line-height:1.45;
 
-  .reporte-firma-autorizada strong{
+}
+
+.reporte-firma-autorizada strong{
 
     display:block;
+
+    color:#b71c1c;
+
     font-size:12px;
-    margin-bottom:2px;
 
-  }
+    margin-bottom:4px;
 
-  .reporte-divisor{
+}
+
+/*==========================================
+=            Línea decorativa              =
+==========================================*/
+
+.reporte-divisor{
 
     display:block;
-    height:6px;
-    margin:14px 0 26px;
-    background-image:url("./assets/figura-decorativa.gif");
-    background-repeat:repeat-x;
-    background-position:left center;
-    opacity:.8;
 
-  }
+    width:100%;
 
-  .reporte-cuerpo{
+    height:8px;
+
+    margin:18px 0 28px;
+
+    background:url("./assets/figura-decorativa.gif")
+    repeat-x center;
+
+}
+
+/*==========================================
+=              Cuerpo                      =
+==========================================*/
+
+.reporte-cuerpo{
 
     position:relative;
-    z-index:1;
-    font-size:13.5px;
-    line-height:1.6;
 
-  }
+    z-index:2;
 
-  .reporte-cuerpo p{
+    font-size:13px;
 
-    margin:0 0 10px;
+    line-height:1.65;
 
-  }
+}
 
-  .reporte-cuerpo strong{
+.reporte-cuerpo p{
 
-    color:#a81d22;
+    margin-bottom:10px;
 
-  }
+}
 
-  .reporte-asunto{
+.reporte-cuerpo strong{
+
+    color:#b71c1c;
+
+}
+
+.reporte-asunto{
 
     margin:18px 0;
 
-  }
+    font-size:15px;
 
-  .reporte-campos p{
+}
 
-    margin:0 0 6px;
+.reporte-saludo{
 
-  }
+    margin-top:15px;
 
-  .reporte-descripcion-wrap{
+}
+
+.reporte-introduccion{
+
+    margin:18px 0 25px;
+
+    text-align:justify;
+
+}
+
+/*==========================================
+=           Tabla de información           =
+==========================================*/
+
+.reporte-tabla{
+
+    width:100%;
+
+    border-collapse:collapse;
+
+    margin:15px 0 28px;
+
+    font-size:12.5px;
+
+}
+
+.reporte-tabla td{
+
+    border:1px solid #d9d9d9;
+
+    padding:8px 10px;
+
+    vertical-align:top;
+
+}
+
+.reporte-tabla td.titulo{
+
+    width:170px;
+
+    background:#f7f7f7;
+
+    font-weight:bold;
+
+    color:#8d1a1a;
+
+}
+
+/*==========================================
+=        Descripción del evento            =
+==========================================*/
+
+.reporte-seccion{
+
+    margin-top:20px;
+
+}
+
+.reporte-seccion h3{
+
+    color:#b71c1c;
+
+    margin-bottom:10px;
+
+    font-size:15px;
+
+}
+
+.reporte-descripcion{
 
     display:flex;
-    gap:14px;
-    align-items:flex-start;
-    margin:14px 0;
 
-  }
+    align-items:stretch;
 
-  .reporte-descripcion-wrap img{
+    border:1px solid #dcdcdc;
+
+    border-radius:6px;
+
+    overflow:hidden;
+
+}
+
+.reporte-franja{
 
     width:14px;
-    height:auto;
+
+    background:url("./assets/franja-vertical.png")
+    repeat-y center;
+
     flex-shrink:0;
-    margin-top:2px;
 
-  }
+}
 
-  .reporte-descripcion-texto{
+.reporte-descripcion-texto{
 
     flex:1;
+
+    padding:16px;
+
     white-space:pre-line;
 
-  }
+    text-align:justify;
 
-  .reporte-firmas-afectados{
+    background:#fcfcfc;
 
-    display:grid;
-    grid-template-columns:repeat(auto-fill, minmax(220px, 1fr));
-    gap:14px;
-    margin:14px 0 20px;
+    min-height:120px;
 
-  }
-
-  .firma-afectado{
-
-    border:1px solid #e2c8c8;
-    border-radius:8px;
-    padding:10px 12px;
-    font-size:12px;
-    line-height:1.5;
-
-  }
-
-  .firma-afectado img{
-
-    display:block;
-    max-width:140px;
-    max-height:50px;
-    margin-top:6px;
-
-  }
-
-  .reporte-firmas-bomberos{
-
-    display:flex;
-    flex-wrap:wrap;
-    gap:26px;
-    margin:10px 0 20px;
-
-  }
-
-  .firma-bombero{
-
-    text-align:center;
-    font-size:12px;
-
-  }
-
-  .firma-bombero img{
-
-    display:block;
-    max-width:160px;
-    max-height:55px;
-    margin:0 auto 6px;
-
-  }
-
-  .firma-bombero .linea{
-
-    width:160px;
-    border-top:1px solid #444;
-    margin:0 auto 4px;
-
-  }
-
-  .reporte-sello{
-
-    text-align:center;
-    margin-top:30px;
-    position:relative;
-    z-index:1;
-
-  }
-
-  .reporte-sello img{
-
-    width:150px;
-    height:auto;
-
-  }
+}
 
 </style>
 
+</head>
+
+<body>
+
 <div class="reporte-carta">
 
-  <div class="reporte-header">
+<div class="reporte-header">
 
-    <img class="reporte-logo" src="./assets/logo-institucional.png" alt="Logo Benemérito Cuerpo de Bomberos Voluntarios de Villamaría">
+<img
+class="reporte-logo"
+src="./assets/logo-institucional.png"
+alt="Logo">
 
-    <div class="reporte-banner">
-      <img src="./assets/banner-superior.gif" alt="Benemérito Cuerpo de Bomberos Voluntarios">
-    </div>
+<div class="reporte-banner">
 
-    <div class="reporte-firma-autorizada">
-      <strong>Ste. Juan Camilo Ocampo C.</strong>
-      Comandante y Representante Legal<br>
-      Benemérito Cuerpo de Bomberos Voluntarios Villamaría<br>
-      NIT. 890.804.607-0
-    </div>
-
-  </div>
-
-  <span class="reporte-divisor"></span>
-
-  <div class="reporte-cuerpo">
-
-    <p>Señores:</p>
-    <p><strong>Coordinación Operativa</strong><br>
-    Benemérito Cuerpo de Bomberos Voluntarios<br>
-    Villamaría – Caldas</p>
-
-    <p class="reporte-asunto"><strong>Asunto:</strong> Reporte de intervención No. {{REPORTE_ID}}</p>
-
-    <p>Cordial saludo,</p>
-
-    <p>El Benemérito Cuerpo de Bomberos Voluntarios de Villa María se permite presentar el siguiente reporte correspondiente a la atención de evento operativo desarrollado durante la jornada de servicio.</p>
-
-    <div class="reporte-campos">
-
-      <p><strong>Fecha:</strong> {{FECHA}}</p>
-      <p><strong>Hora Llegada:</strong> {{HORA_LLEGADA}}</p>
-      <p><strong>Hora Final:</strong> {{HORA_FINAL}}</p>
-      <p><strong>Latitud:</strong> {{LATITUD}}</p>
-      <p><strong>Longitud:</strong> {{LONGITUD}}</p>
-      <p><strong>Coordenadas:</strong> {{COORDENADAS}}</p>
-      <p><strong>Lugar del incidente:</strong> {{LUGAR}}</p>
-      <p><strong>Dirección:</strong> {{DIRECCION}}</p>
-      <p><strong>Tipo de evento:</strong> {{EVENTO}}</p>
-      <p><strong>Personal participante:</strong> {{PERSONAL}}</p>
-      <p><strong>Vehículos:</strong> {{VEHICULOS}}</p>
-
-    </div>
-
-    <p><strong>Descripción:</strong></p>
-    <div class="reporte-descripcion-wrap">
-      <img src="./assets/franja-vertical.png" alt="">
-      <div class="reporte-descripcion-texto">{{DESCRIPCION}}</div>
-    </div>
-
-    <p><strong>Lesionados:</strong> {{LESIONADOS}}</p>
-    <p><strong>Víctimas:</strong> {{VICTIMAS}}</p>
-    <p><strong>Afectados:</strong> {{AFECTADOS}}</p>
-
-    <!--SECCION:FIRMAS_AFECTADOS-->
-    <div class="reporte-firmas-afectados">
-      {{FIRMAS_AFECTADOS}}
-    </div>
-    <!--FIN:FIRMAS_AFECTADOS-->
-
-    <!--SECCION:NOVEDADES-->
-    <p><strong>Novedades:</strong></p>
-    <p>{{NOVEDADES}}</p>
-    <!--FIN:NOVEDADES-->
-
-    <p><strong>Firmas Bomberos:</strong></p>
-    <div class="reporte-firmas-bomberos">
-      {{FIRMAS_BOMBEROS}}
-    </div>
-
-  </div>
-
-  <div class="reporte-sello">
-    <img src="./assets/sello-oficial.gif" alt="Sello oficial Benemérito Cuerpo de Bomberos Voluntarios">
-  </div>
+<img
+src="./assets/banner-superior.gif"
+alt="Bomberos">
 
 </div>
+
+<div class="reporte-firma-autorizada">
+
+<strong>Ste. Juan Camilo Ocampo C.</strong>
+
+Comandante y Representante Legal
+
+<br>
+
+Benemérito Cuerpo de Bomberos
+Voluntarios de Villamaría
+
+<br>
+
+NIT. 890.804.607-0
+
+</div>
+
+</div>
+
+<span class="reporte-divisor"></span>
+
+<div class="reporte-cuerpo">
+
+<p>Señores:</p>
+
+<p>
+
+<strong>Coordinación Operativa</strong>
+
+<br>
+
+Benemérito Cuerpo de Bomberos
+Voluntarios
+
+<br>
+
+Villamaría – Caldas
+
+</p>
+
+<p class="reporte-asunto">
+
+<strong>Asunto:</strong>
+
+Reporte de intervención No.
+
+<strong>{{REPORTE_ID}}</strong>
+
+</p>
+
+<p class="reporte-saludo">
+
+Cordial saludo,
+
+</p>
+
+<p class="reporte-introduccion">
+
+El Benemérito Cuerpo de Bomberos Voluntarios de Villamaría
+se permite presentar el siguiente reporte correspondiente
+a la atención del evento operativo desarrollado durante
+la jornada de servicio.
+
+</p>
+<!-- ==========================================================
+     INFORMACIÓN GENERAL DEL REPORTE
+=========================================================== -->
+
+<table class="reporte-tabla">
+
+    <tr>
+        <td class="titulo">Fecha</td>
+        <td>{{FECHA}}</td>
+
+        <td class="titulo">Hora Llegada</td>
+        <td>{{HORA_LLEGADA}}</td>
+    </tr>
+
+    <tr>
+        <td class="titulo">Hora Final</td>
+        <td>{{HORA_FINAL}}</td>
+
+        <td class="titulo">Tipo de Evento</td>
+        <td>{{EVENTO}}</td>
+    </tr>
+
+    <tr>
+        <td class="titulo">Lugar del Incidente</td>
+        <td colspan="3">
+            {{LUGAR}}
+        </td>
+    </tr>
+
+    <tr>
+        <td class="titulo">Dirección</td>
+        <td colspan="3">
+            {{DIRECCION}}
+        </td>
+    </tr>
+
+    <tr>
+        <td class="titulo">Latitud</td>
+        <td>{{LATITUD}}</td>
+
+        <td class="titulo">Longitud</td>
+        <td>{{LONGITUD}}</td>
+    </tr>
+
+    <tr>
+        <td class="titulo">Coordenadas</td>
+        <td colspan="3">
+            {{COORDENADAS}}
+        </td>
+    </tr>
+
+    <tr>
+        <td class="titulo">Personal Participante</td>
+        <td colspan="3">
+            {{PERSONAL}}
+        </td>
+    </tr>
+
+    <tr>
+        <td class="titulo">Vehículos Utilizados</td>
+        <td colspan="3">
+            {{VEHICULOS}}
+        </td>
+    </tr>
+
+</table>
+
+<!-- ==========================================================
+     DESCRIPCIÓN
+=========================================================== -->
+
+<div class="reporte-seccion">
+
+    <h3>Descripción del Evento</h3>
+
+    <div class="reporte-descripcion">
+
+        <div class="reporte-franja"></div>
+
+        <div class="reporte-descripcion-texto">
+
+{{DESCRIPCION}}
+
+        </div>
+
+    </div>
+
+</div>
+
+<!-- ==========================================================
+     AFECTACIÓN
+=========================================================== -->
+
+<div class="reporte-seccion">
+
+<h3>Información de la Emergencia</h3>
+
+<table class="reporte-tabla">
+
+<tr>
+
+<td class="titulo">
+Lesionados
+</td>
+
+<td style="text-align:center;font-weight:bold;">
+{{LESIONADOS}}
+</td>
+
+<td class="titulo">
+Víctimas
+</td>
+
+<td style="text-align:center;font-weight:bold;">
+{{VICTIMAS}}
+</td>
+
+</tr>
+
+<tr>
+
+<td class="titulo">
+Afectados
+</td>
+
+<td colspan="3">
+
+{{AFECTADOS}}
+
+</td>
+
+</tr>
+
+</table>
+
+</div>
+
+<!-- ==========================================================
+     FIRMAS AFECTADOS
+=========================================================== -->
+
+<!--SECCION:FIRMAS_AFECTADOS-->
+
+<div class="reporte-seccion">
+
+<h3>
+
+Registro de Afectados
+
+</h3>
+
+<div class="reporte-firmas-afectados">
+
+{{FIRMAS_AFECTADOS}}
+
+</div>
+
+</div>
+
+<!--FIN:FIRMAS_AFECTADOS-->
+
+<!-- ==========================================================
+     NOVEDADES
+=========================================================== -->
+
+<!--SECCION:NOVEDADES-->
+
+<div class="reporte-seccion">
+
+<h3>
+
+Novedades del Servicio
+
+</h3>
+
+<div class="reporte-descripcion">
+
+<div class="reporte-franja"></div>
+
+<div class="reporte-descripcion-texto">
+
+{{NOVEDADES}}
+
+</div>
+
+</div>
+
+</div>
+
+<!--FIN:FIRMAS_AFECTADOS-->
+<!-- ==========================================================
+     FIRMAS BOMBEROS
+=========================================================== -->
+
+<div class="reporte-seccion">
+
+    <h3>Firmas del Personal Participante</h3>
+
+    <div class="reporte-firmas-bomberos">
+
+        {{FIRMAS_BOMBEROS}}
+
+    </div>
+
+</div>
+
+<!-- ==========================================================
+     FIRMA INSTITUCIONAL
+=========================================================== -->
+
+<div style="margin-top:65px;position:relative;z-index:2;">
+
+    <table style="width:100%;border-collapse:collapse;">
+
+        <tr>
+
+            <td style="width:50%;text-align:center;vertical-align:top;">
+
+                <div style="margin-top:40px;border-top:1px solid #444;width:260px;margin-left:auto;margin-right:auto;"></div>
+
+                <div style="margin-top:8px;font-size:13px;font-weight:bold;color:#a61f24;">
+                    Ste. Juan Camilo Ocampo C.
+                </div>
+
+                <div style="font-size:12px;">
+                    Comandante
+                </div>
+
+                <div style="font-size:12px;">
+                    Representante Legal
+                </div>
+
+                <div style="font-size:12px;">
+                    Benemérito Cuerpo de Bomberos
+                </div>
+
+                <div style="font-size:12px;">
+                    Voluntarios de Villamaría
+                </div>
+
+            </td>
+
+            <td style="width:50%;text-align:center;vertical-align:middle;">
+
+                <img
+                    src="./assets/sello-oficial.gif"
+                    style="width:170px;opacity:.95;"
+                    alt="Sello">
+
+            </td>
+
+        </tr>
+
+    </table>
+
+</div>
+
+<!-- ==========================================================
+     PIE DE PÁGINA
+=========================================================== -->
+
+<div style="margin-top:55px;">
+
+    <hr style="border:none;border-top:1px solid #d5d5d5;">
+
+    <table
+        style="
+        width:100%;
+        margin-top:10px;
+        font-size:11px;
+        color:#666;
+        border-collapse:collapse;
+        ">
+
+        <tr>
+
+            <td style="text-align:left;">
+
+                Benemérito Cuerpo de Bomberos Voluntarios de Villamaría
+
+            </td>
+
+            <td style="text-align:center;">
+
+                NIT. 890.804.607-0
+
+            </td>
+
+            <td style="text-align:right;">
+
+                Reporte No. {{REPORTE_ID}}
+
+            </td>
+
+        </tr>
+
+    </table>
+
+</div>
+
+</div>
+
+<style>
+
+/*======================================================
+=               IMPRESIÓN
+======================================================*/
+
+@page{
+
+    size:A4 portrait;
+
+    margin:10mm;
+
+}
+
+@media print{
+
+    html,
+    body{
+
+        margin:0;
+
+        padding:0;
+
+        background:white;
+
+    }
+
+    .reporte-carta{
+
+        width:100%;
+
+        min-height:auto;
+
+        margin:0;
+
+        padding:15mm;
+
+        box-shadow:none;
+
+        border:none;
+
+        page-break-after:always;
+
+    }
+
+    .reporte-carta::before{
+
+        opacity:.04;
+
+    }
+
+    .firma-afectado{
+
+        page-break-inside:avoid;
+
+    }
+
+    .firma-bombero{
+
+        page-break-inside:avoid;
+
+    }
+
+    table{
+
+        page-break-inside:auto;
+
+    }
+
+    tr{
+
+        page-break-inside:avoid;
+
+    }
+
+    img{
+
+        page-break-inside:avoid;
+
+    }
+
+}
+
+</style>
+
+</body>
+
+</html>
