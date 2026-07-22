@@ -140,6 +140,36 @@ function esCritica(emergencia) {
     return (lesionados + victimas) > 0;
 }
 
+/* Prioridad visual de la tarjeta (barra + etiqueta).
+   Si en el futuro guardas un campo real "prioridad" ("alta"/"media"/"baja")
+   al registrar la emergencia, esta función lo respeta; mientras tanto la
+   deriva de la gravedad: con víctimas -> alta, sin víctimas -> media. */
+function obtenerPrioridad(emergencia) {
+
+    const declarada = String(emergencia?.prioridad || "").toLowerCase();
+    if (["alta", "media", "baja"].includes(declarada)) return declarada;
+
+    return esCritica(emergencia) ? "alta" : "media";
+
+}
+
+/* Foto de portada de la tarjeta. Prueba los campos más probables del
+   módulo de fotos (fotos[0], foto) en distintos formatos (string,
+   {url}, {dataUrl}, {base64}). Si no encuentra ninguna, la tarjeta se
+   muestra sin foto en vez de romperse. */
+function obtenerFotoPortada(emergencia) {
+
+    const candidato = Array.isArray(emergencia?.fotos)
+        ? emergencia.fotos[0]
+        : emergencia?.foto;
+
+    if (!candidato) return null;
+    if (typeof candidato === "string") return candidato;
+
+    return candidato.url || candidato.dataUrl || candidato.base64 || null;
+
+}
+
 function obtenerEmergenciasFiltradas() {
 
     const texto = (document.getElementById("buscarEmergenciaGestor")?.value || "")
@@ -277,6 +307,11 @@ function crearTarjeta(emergencia) {
     const direccion = emergencia.direccion?.trim() || "";
     const critica = esCritica(emergencia);
 
+    const prioridad = obtenerPrioridad(emergencia);
+    const prioridadLabel = { alta: "Alta", media: "Media", baja: "Baja" }[prioridad];
+
+    const fotoPortada = obtenerFotoPortada(emergencia);
+
     const vehiculos = Array.isArray(emergencia.vehiculos)
         ? emergencia.vehiculos.map(v => v.vehiculo).filter(Boolean).join(", ")
         : "";
@@ -291,12 +326,23 @@ function crearTarjeta(emergencia) {
     card.className = "emergencia-card";
 
     card.innerHTML = `
+        ${fotoPortada ? `
+        <div class="emergencia-card-photo">
+            <img src="${escaparHTML(fotoPortada)}" alt="">
+        </div>` : ""}
+
         <div class="emergencia-card-header">
             <h3>${escaparHTML(lugar)}</h3>
             <span class="gravedad-badge ${critica ? "critica" : "controlada"}">
                 <i class="fa-solid ${critica ? "fa-truck-medical" : "fa-circle-check"}"></i>
                 ${critica ? "Con víctimas" : "Sin víctimas"}
             </span>
+        </div>
+
+        <div class="prioridad-row">
+            <span>Prioridad:</span>
+            <div class="prioridad-bar ${prioridad}"><span></span></div>
+            <span class="prioridad-label ${prioridad}">${prioridadLabel}</span>
         </div>
 
         <div class="card-meta">
