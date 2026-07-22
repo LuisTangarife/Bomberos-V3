@@ -1435,7 +1435,7 @@ async function buildHiddenCertificate(data) {
   temp.style.top = '0';
   temp.style.zIndex = '-1';
 
-  temp.innerHTML = buildCertificateHTML(data);
+  temp.innerHTML = await buildCertificateHTML(data);
 
   document.body.appendChild(temp);
 
