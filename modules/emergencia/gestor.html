@@ -46,29 +46,186 @@
         <i class="fa-solid fa-rotate"></i>
     </button>
 </section>
+
+<!-- STATS — cada tarjeta ahora trae su caja de icono; los ids que
+     llena gestor.js (statTotal, statCriticas, statMes, statUbicadas)
+     quedan intactos, solo cambiaron de contenedor -->
 <section class="stats-grid">
     <div class="stat-card">
-        <span id="statTotal">0</span>
-        <label>Total</label>
+        <div class="stat-icon-box"><i class="fa-solid fa-fire"></i></div>
+        <div class="stat-card-body">
+            <label>Total</label>
+            <span id="statTotal">0</span>
+        </div>
     </div>
     <div class="stat-card">
-        <span id="statCriticas">0</span>
-        <label>Con víctimas</label>
+        <div class="stat-icon-box"><i class="fa-solid fa-triangle-exclamation"></i></div>
+        <div class="stat-card-body">
+            <label>Con víctimas</label>
+            <span id="statCriticas">0</span>
+        </div>
     </div>
     <div class="stat-card">
-        <span id="statMes">0</span>
-        <label>Este mes</label>
+        <div class="stat-icon-box"><i class="fa-solid fa-calendar-days"></i></div>
+        <div class="stat-card-body">
+            <label>Este mes</label>
+            <span id="statMes">0</span>
+        </div>
     </div>
     <div class="stat-card">
-        <span id="statUbicadas">0</span>
-        <label>Geolocalizadas</label>
+        <div class="stat-icon-box"><i class="fa-solid fa-location-dot"></i></div>
+        <div class="stat-card-body">
+            <label>Geolocalizadas</label>
+            <span id="statUbicadas">0</span>
+        </div>
     </div>
 </section>
+
 <section class="map-card">
     <div id="mapaGestorEmergencias"></div>
     <div id="mapaMensaje" class="mapa-mensaje"></div>
 </section>
+
+<!-- PANELES LATERALES DEL MAPA — contenido de ejemplo; conecta
+     unidadesCercanasList / alertasSistemaList a tu propia fuente
+     de datos (Firebase) cuando quieras que sea dinámico -->
+<section class="map-side-grid">
+    <div class="map-side-panel">
+        <div class="map-side-panel-header">
+            <span><i class="fa-solid fa-truck"></i>Unidades cercanas</span>
+        </div>
+        <div id="unidadesCercanasList">
+            <div class="unidad-row">
+                <i class="fa-solid fa-truck-fire"></i>
+                <span class="unidad-codigo">B-01</span>
+                <span class="unidad-distancia">1.2 km</span>
+                <span class="unidad-estado disponible">Disponible</span>
+            </div>
+            <div class="unidad-row">
+                <i class="fa-solid fa-car-burst"></i>
+                <span class="unidad-codigo">R-03</span>
+                <span class="unidad-distancia">2.4 km</span>
+                <span class="unidad-estado en-mision">En misión</span>
+            </div>
+            <div class="unidad-row">
+                <i class="fa-solid fa-truck-medical"></i>
+                <span class="unidad-codigo">E-02</span>
+                <span class="unidad-distancia">3.1 km</span>
+                <span class="unidad-estado disponible">Disponible</span>
+            </div>
+            <div class="unidad-row">
+                <i class="fa-solid fa-truck-droplet"></i>
+                <span class="unidad-codigo">L-01</span>
+                <span class="unidad-distancia">4.7 km</span>
+                <span class="unidad-estado en-retorno">En retorno</span>
+            </div>
+        </div>
+    </div>
+    <div class="map-side-panel">
+        <div class="map-side-panel-header">
+            <span><i class="fa-solid fa-bell"></i>Alertas del sistema</span>
+            <a href="#">Ver todas</a>
+        </div>
+        <div id="alertasSistemaList">
+            <div class="alerta-row">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+                <span>Alta demanda en zona centro</span>
+                <span class="alerta-tiempo">Hace 5 min</span>
+            </div>
+            <div class="alerta-row">
+                <i class="fa-solid fa-car"></i>
+                <span>Tráfico denso en ruta 45</span>
+                <span class="alerta-tiempo">Hace 8 min</span>
+            </div>
+            <div class="alerta-row">
+                <i class="fa-solid fa-cloud-showers-heavy"></i>
+                <span>Clima extremo detectado</span>
+                <span class="alerta-tiempo">Hace 15 min</span>
+            </div>
+        </div>
+    </div>
+</section>
+
 <section id="gestorEmergenciasList" class="cards-grid"></section>
+
+<!-- FILA INFERIOR — contenido de ejemplo, conecta cada id a tu propia
+     fuente de datos cuando quieras hacerlo dinámico -->
+<section class="gestion-bottom-grid">
+    <div class="widget-card">
+        <h4><i class="fa-solid fa-clock-rotate-left"></i>Actividad reciente</h4>
+        <div id="actividadRecienteList">
+            <div class="actividad-item">
+                <span class="actividad-dot ok"></span>
+                <div class="actividad-texto">
+                    <strong>Unidad B-01 llegó al lugar</strong>
+                    <span>Incendio estructural · Centro</span>
+                </div>
+                <span class="actividad-hora">21:28</span>
+            </div>
+            <div class="actividad-item">
+                <span class="actividad-dot nueva"></span>
+                <div class="actividad-texto">
+                    <strong>Nueva emergencia reportada</strong>
+                    <span>Rescate vehicular · Autopista Norte</span>
+                </div>
+                <span class="actividad-hora">21:25</span>
+            </div>
+            <div class="actividad-item">
+                <span class="actividad-dot info"></span>
+                <div class="actividad-texto">
+                    <strong>Unidad R-02 disponible</strong>
+                    <span>Estación Central</span>
+                </div>
+                <span class="actividad-hora">21:20</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="widget-card">
+        <h4><i class="fa-solid fa-chart-column"></i>Estadísticas del día</h4>
+        <div class="mini-stats-row">
+            <div class="mini-stat up"><span>24</span><label>Emergencias</label></div>
+            <div class="mini-stat up"><span>18</span><label>Rescatados</label></div>
+            <div class="mini-stat up"><span>32</span><label>Atenciones</label></div>
+            <div class="mini-stat down"><span>04</span><label>Falsas alarmas</label></div>
+        </div>
+        <div class="dia-chart" id="diaChart">
+            <span style="height:35%"></span><span style="height:52%"></span><span style="height:40%"></span>
+            <span style="height:68%"></span><span style="height:80%"></span><span style="height:60%"></span>
+            <span style="height:90%"></span><span style="height:70%"></span><span style="height:55%"></span>
+            <span style="height:45%"></span><span style="height:30%"></span><span style="height:20%"></span>
+        </div>
+    </div>
+
+    <div class="widget-card">
+        <h4><i class="fa-solid fa-cloud-sun"></i>Clima actual</h4>
+        <div class="clima-actual">
+            <i class="fa-solid fa-cloud-rain clima-icono"></i>
+            <div>
+                <div class="clima-temp">22°C</div>
+                <div class="clima-condicion">Lluvia ligera</div>
+            </div>
+            <div class="clima-detalle">
+                <span><i class="fa-solid fa-droplet"></i>78% humedad</span>
+                <span><i class="fa-solid fa-wind"></i>12 km/h</span>
+                <span><i class="fa-solid fa-eye"></i>8 km visibilidad</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="widget-card">
+        <h4><i class="fa-solid fa-satellite-dish"></i>Comunicaciones</h4>
+        <div class="comunicaciones-canal">Canal principal</div>
+        <div class="comunicaciones-estado">Encriptado</div>
+        <div class="comunicaciones-onda">
+            <span style="height:8px"></span><span style="height:16px"></span><span style="height:10px"></span>
+            <span style="height:22px"></span><span style="height:14px"></span><span style="height:18px"></span>
+            <span style="height:9px"></span><span style="height:20px"></span><span style="height:12px"></span>
+            <span style="height:16px"></span>
+        </div>
+    </div>
+</section>
+
 </div>
 <!-- CERTIFICATE MODAL — mismos ids que espera certificados.js -->
 <div class="modal-overlay" id="certModal" style="display:none">
