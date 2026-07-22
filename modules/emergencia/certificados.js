@@ -160,31 +160,10 @@ export async function renderCertificate(data, id = null) {
   const certHTML = await buildCertificateHTML(data);
 
   document.getElementById('certContent').innerHTML = certHTML;
-
-  const styles = Array.from(document.styleSheets)
-    .map(sheet => {
-      try {
-        return Array.from(sheet.cssRules).map(rule => rule.cssText).join('');
-      } catch (e) {
-        return '';
-      }
-    })
-    .join('');
-
-  currentPrintHTML = `
-    <!DOCTYPE html>
-    <html lang="es">
-    <head>
-      <meta charset="UTF-8">
-      <title>Reporte Bomberos</title>
-      <style>${styles}</style>
-    </head>
-    <body class="print-mode">
-      ${certHTML}
-    </body>
-    </html>
-  `;
-
+  // Guardamos exactamente el HTML de la plantilla
+  // (incluye su propio CSS interno)
+      
+  currentPrintHTML = certHTML;
   document.getElementById('certModal').style.display = 'flex';
   document.body.style.overflow = 'hidden';
 
@@ -197,28 +176,41 @@ export function closeModal() {
 
 export function printCertificate() {
 
-  if (!currentPrintHTML) {
-    alert('Primero genera el certificado.');
-    return;
-  }
+    if (!currentPrintHTML) {
 
-  const printWindow = window.open('', '_blank');
+        alert("Primero genera el certificado.");
 
-  if (!printWindow) {
-    alert('El navegador bloqueó la ventana emergente.');
-    return;
-  }
+        return;
 
-  printWindow.document.open();
-  printWindow.document.write(currentPrintHTML);
-  printWindow.document.close();
+    }
 
-  printWindow.onload = () => {
-    setTimeout(() => {
-      printWindow.focus();
-      printWindow.print();
-    }, 500);
-  };
+    const ventana = window.open("", "_blank");
+
+    if (!ventana) {
+
+        alert("El navegador bloqueó la ventana.");
+
+        return;
+
+    }
+
+    ventana.document.open();
+
+    ventana.document.write(currentPrintHTML);
+
+    ventana.document.close();
+
+    ventana.focus();
+
+    ventana.onload = () => {
+
+        setTimeout(() => {
+
+            ventana.print();
+
+        }, 300);
+
+    };
 
 }
 
