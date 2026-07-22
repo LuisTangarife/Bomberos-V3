@@ -1,12 +1,12 @@
 /* ========================================================================
    CERTIFICADOS.JS
-   Módulo Emergencia — Certificado basado en plantilla externa
+   Módulo Emergencia — Reporte de intervención basado en plantilla externa
 
-   La plantilla vive en modules/emergencia/plantillas/plantilla1.html y
-   contiene el diseño estático (logo, firma del comandante, layout) con
-   marcadores {{PLACEHOLDER}}. Este módulo solo carga esa plantilla y
-   reemplaza los marcadores con los datos del reporte — el mismo patrón
-   que ya usa el Apps Script (body.replaceText), aplicado en el cliente.
+   La plantilla vive en modules/emergencia/plantillas/plantilla1.html
+   (más sus imágenes en modules/emergencia/plantillas/assets/) y contiene
+   el diseño de la carta oficial con marcadores {{PLACEHOLDER}} — el
+   mismo patrón que ya usa el Apps Script (body.replaceText), aplicado
+   en el cliente.
 
    Requiere que la página tenga, con ESTOS ids exactos, el modal de
    certificado: #certModal (contenedor) y #certContent (donde se
@@ -59,78 +59,91 @@ function formatDate(d) {
   return `${day} ${months[parseInt(m)-1]} ${y}`;
 }
 
-function generateQRCode(text) {
-  return `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(text)}`;
+// Mismo formato que afectadosTexto en el Apps Script — una línea por
+// afectado, unida con salto de línea (el CSS de la plantilla usa
+// white-space:pre-line en .reporte-descripcion-texto, pero aquí el
+// destino es un <p> normal, así que unimos con <br> en vez de \n).
+function renderAfectadosTexto(afectados) {
+  if (!afectados?.length) return 'Ninguno reportado';
+  return afectados
+    .map(a => `${a.nombre || ''} | DNI: ${a.dni || ''} | Edad: ${a.edad || ''} | Género: ${a.genero || ''} | Tel: ${a.telefono || ''}`)
+    .join('<br>');
 }
 
-// HTML por persona afectada — mismo contenido que ya tenías, incluida
-// la firma individual si existe. A diferencia del .gs, esto es HTML
-// real, no una línea de texto.
-function renderAfectadosHTML(afectados) {
-  if (!afectados?.length) return "";
+// Bloque HTML por afectado (nombre, datos, firma si tiene) para
+// {{FIRMAS_AFECTADOS}} — separado de {{AFECTADOS}} porque ese es solo
+// el resumen en texto.
+function renderFirmasAfectadosHTML(afectados) {
+  if (!afectados?.length) return '';
   return afectados.map(a => `
-    <div class="affected-row">
-      <div><b>Nombre:</b> ${a.nombre}</div>
-      <div><b>DNI:</b> ${a.dni}</div>
-      <div><b>Edad:</b> ${a.edad}</div>
-      <div><b>Género:</b> ${a.genero}</div>
-      <div><b>Lesionado:</b> ${a.lesionado || 'No'}</div>
-      <div><b>Teléfono:</b> ${a.telefono}</div>
-      <div><b>Correo:</b> ${a.correo}</div>
-      ${a.firma ? `<img src="${a.firma}" class="affected-signature">` : ''}
+    <div class="firma-afectado">
+      <strong>${a.nombre || ''}</strong><br>
+      DNI: ${a.dni || ''} · Edad: ${a.edad || ''} · Género: ${a.genero || ''}<br>
+      ${a.lesionado ? `Lesionado: ${a.lesionado}<br>` : ''}
+      ${a.telefono ? `Tel: ${a.telefono}<br>` : ''}
+      ${a.correo ? `Correo: ${a.correo}<br>` : ''}
+      ${a.firma && a.firma !== 'Sin firma' ? `<img src="${a.firma}" alt="Firma ${a.nombre || ''}">` : ''}
     </div>
   `).join('');
 }
 
-function renderFotosHTML(photos) {
-  if (!photos?.length) return "";
-  return photos.map(photo => `<div class="cert-photo-card"><img src="${photo}"></div>`).join('');
+// Bloque HTML por bombero firmante — mismo criterio que el Apps Script
+// (omite a quien no tenga firma real).
+function renderFirmasBomberosHTML(firmasBomberos) {
+  if (!firmasBomberos?.length) return '';
+  return firmasBomberos
+    .filter(b => b.firma && b.firma !== 'Sin firma')
+    .map(b => `
+      <div class="firma-bombero">
+        <img src="${b.firma}" alt="Firma ${b.nombre || ''}">
+        <div class="linea"></div>
+        ${b.nombre || ''}
+      </div>
+    `).join('');
 }
 
 export async function buildCertificateHTML(data) {
 
   const plantilla = await cargarPlantilla();
 
-  const emitted = new Date().toLocaleString('es-CO');
   const docNum = `CB-${Date.now()}`;
+
   const coords = data.latitud && data.longitud
     ? `${data.latitud}, ${data.longitud}`
     : 'No disponibles';
 
-  const personalTexto = Array.isArray(data.personal) ? data.personal.join(', ') : '';
-  const vehiculosTexto = Array.isArray(data.vehiculos)
+  const personalTexto = Array.isArray(data.personal) && data.personal.length
+    ? data.personal.join(', ')
+    : 'No reportado';
+
+  const vehiculosTexto = Array.isArray(data.vehiculos) && data.vehiculos.length
     ? data.vehiculos.map(v => v.vehiculo).filter(Boolean).join(', ')
-    : '';
+    : 'No reportados';
 
   let html = reemplazarPlaceholders(plantilla, {
     REPORTE_ID: docNum,
-    EMITIDO: emitted,
     FECHA: formatDate(data.fecha),
-    HORA_REPORTE: data.horaReporte || '',
     HORA_LLEGADA: data.horaLlegada || '',
     HORA_FINAL: data.horaFinal || '',
+    LATITUD: data.latitud || '',
+    LONGITUD: data.longitud || '',
+    COORDENADAS: coords,
     LUGAR: data.lugar || '',
     DIRECCION: data.direccion || '',
-    COORDENADAS: coords,
     EVENTO: data.evento || '',
     PERSONAL: personalTexto,
     VEHICULOS: vehiculosTexto,
     DESCRIPCION: data.descripcion || '',
     LESIONADOS: data.lesionados || 0,
     VICTIMAS: data.victimas || 0,
+    AFECTADOS: renderAfectadosTexto(data.afectados),
+    FIRMAS_AFECTADOS: renderFirmasAfectadosHTML(data.afectados),
     NOVEDADES: data.novedades || '',
-    AFECTADOS: renderAfectadosHTML(data.afectados),
-    FOTOS: renderFotosHTML(data.photos),
-    QR: generateQRCode(docNum),
-    FIRMA_OFICIAL_NOMBRE: data.firmasBomberos?.[0]?.nombre || 'Oficial de Turno',
-    FIRMA_OFICIAL_IMG: data.firmasBomberos?.length && data.firmasBomberos[0]?.firma
-      ? `<img src="${data.firmasBomberos[0].firma}" class="cert-firma-bombero">`
-      : ''
+    FIRMAS_BOMBEROS: renderFirmasBomberosHTML(data.firmasBomberos)
   });
 
+  html = aplicarSeccion(html, 'FIRMAS_AFECTADOS', Boolean(data.afectados?.length));
   html = aplicarSeccion(html, 'NOVEDADES', Boolean(data.novedades));
-  html = aplicarSeccion(html, 'AFECTADOS', Boolean(data.afectados?.length));
-  html = aplicarSeccion(html, 'FOTOS', Boolean(data.photos?.length));
 
   return html;
 
