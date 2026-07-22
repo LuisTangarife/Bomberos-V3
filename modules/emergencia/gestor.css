@@ -1,10 +1,11 @@
 /* ========================================================================
    GESTOR.CSS — Centro de Gestión de Emergencias
-   V3 — "panel de instrumentos de despacho": bisel metálico remachado en
-   cada panel (el elemento de firma), cinta de peligro reutilizada como
-   elemento estructural (header + tarjeta de mapa), cinta diagonal
-   "URGENTE" en emergencias con víctimas, barrido de arranque una sola
-   vez en el header. Misma base tipográfica y de color que la v1/v2.
+   V4 — sobre la base v3: se agregan cajas de icono en las stat cards,
+   foto de portada + barra de prioridad en las tarjetas de emergencia,
+   paneles laterales del mapa (unidades cercanas / alertas del sistema)
+   y la fila inferior de widgets (actividad, estadísticas del día,
+   clima, comunicaciones), para acercar el panel a la referencia visual
+   sin romper nada del v3.
 ======================================================================== */
 
 @import url('https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Barlow:wght@400;500;600&family=JetBrains+Mono:wght@500;700&display=swap');
@@ -476,7 +477,7 @@ body::after{
 }
 
 /* ========================================================================
-   STATS
+   STATS — v4: caja de icono + cuerpo (label / cifra / tendencia)
 ======================================================================== */
 
 .stats-grid{
@@ -491,6 +492,9 @@ body::after{
 .stat-card{
 
     position:relative;
+    display:flex;
+    align-items:center;
+    gap:18px;
     background-color:var(--panel);
     background-image:
         linear-gradient(160deg, var(--panel), var(--panel-2)),
@@ -509,7 +513,7 @@ body::after{
     border:1px solid var(--border);
     border-left:3px solid var(--border-strong);
     border-radius:14px;
-    padding:22px 25px 32px;
+    padding:22px 25px 26px;
     overflow:hidden;
     transition:border-color .2s ease, transform .2s ease, box-shadow .2s ease;
 
@@ -522,25 +526,61 @@ body::after{
 
 }
 
-.stat-card span{
+/* caja de icono — instrumento de lectura rápida, como un indicador de
+   tablero junto a la cifra que representa */
+.stat-icon-box{
+
+    flex:0 0 52px;
+    width:52px;
+    height:52px;
+    border-radius:12px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:19px;
+    background:var(--panel-2);
+    border:1px solid var(--border);
+    color:var(--text3);
+
+}
+
+.stat-card-body{
+
+    display:flex;
+    flex-direction:column;
+    gap:3px;
+    min-width:0;
+
+}
+
+.stat-card-body span{
 
     display:block;
     font-family:var(--font-mono);
     font-variant-numeric:tabular-nums;
-    font-size:36px;
+    font-size:32px;
     font-weight:700;
     line-height:1.1;
 
 }
 
-.stat-card label{
+.stat-card-body label{
 
     color:var(--text2);
-    font-size:12px;
+    font-size:11.5px;
     font-weight:600;
     text-transform:uppercase;
     letter-spacing:1px;
     font-family:var(--font-mono);
+    order:-1;
+
+}
+
+.stat-trend{
+
+    color:var(--text3);
+    font-family:var(--font-mono);
+    font-size:11px;
 
 }
 
@@ -551,7 +591,7 @@ body::after{
     position:absolute;
     left:25px;
     right:25px;
-    bottom:14px;
+    bottom:12px;
     height:4px;
     background:repeating-linear-gradient(90deg, var(--border-strong) 0 6px, transparent 6px 9px);
     opacity:.7;
@@ -559,15 +599,18 @@ body::after{
 }
 
 /* acento semántico por tarjeta, sin tocar el HTML */
-.stats-grid .stat-card:nth-child(1){ border-left-color:var(--text3); }
+.stats-grid .stat-card:nth-child(1) .stat-icon-box{ color:var(--text2); }
 .stats-grid .stat-card:nth-child(2){ border-left-color:var(--red); }
-.stats-grid .stat-card:nth-child(2) span{ color:var(--red); text-shadow:0 0 18px var(--red-glow); }
+.stats-grid .stat-card:nth-child(2) .stat-card-body span{ color:var(--red); text-shadow:0 0 18px var(--red-glow); }
+.stats-grid .stat-card:nth-child(2) .stat-icon-box{ background:var(--red-soft); border-color:rgba(224,38,44,.3); color:var(--red); }
 .stats-grid .stat-card:nth-child(2)::before{ background:repeating-linear-gradient(90deg, var(--red) 0 6px, transparent 6px 9px); }
 .stats-grid .stat-card:nth-child(3){ border-left-color:var(--amber); }
-.stats-grid .stat-card:nth-child(3) span{ color:var(--amber); text-shadow:0 0 18px var(--amber-soft); }
+.stats-grid .stat-card:nth-child(3) .stat-card-body span{ color:var(--amber); text-shadow:0 0 18px var(--amber-soft); }
+.stats-grid .stat-card:nth-child(3) .stat-icon-box{ background:var(--amber-soft); border-color:rgba(242,165,60,.3); color:var(--amber); }
 .stats-grid .stat-card:nth-child(3)::before{ background:repeating-linear-gradient(90deg, var(--amber) 0 6px, transparent 6px 9px); }
 .stats-grid .stat-card:nth-child(4){ border-left-color:var(--info); }
-.stats-grid .stat-card:nth-child(4) span{ color:var(--info); text-shadow:0 0 18px var(--info-soft); }
+.stats-grid .stat-card:nth-child(4) .stat-card-body span{ color:var(--info); text-shadow:0 0 18px var(--info-soft); }
+.stats-grid .stat-card:nth-child(4) .stat-icon-box{ background:var(--info-soft); border-color:rgba(58,160,201,.3); color:var(--info); }
 .stats-grid .stat-card:nth-child(4)::before{ background:repeating-linear-gradient(90deg, var(--info) 0 6px, transparent 6px 9px); }
 
 /* ========================================================================
@@ -589,7 +632,7 @@ body::after{
     border-radius:18px;
     border:1px solid var(--border);
     overflow:hidden;
-    margin-bottom:30px;
+    margin-bottom:18px;
 
 }
 
@@ -666,7 +709,113 @@ body::after{
 }
 
 /* ========================================================================
-   TARJETAS DE EMERGENCIA
+   PANELES LATERALES DEL MAPA — unidades cercanas / alertas del sistema
+======================================================================== */
+
+.map-side-grid{
+
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:18px;
+    margin-bottom:30px;
+
+}
+
+.map-side-panel{
+
+    background:var(--panel);
+    border:1px solid var(--border);
+    border-radius:14px;
+    padding:18px 20px 6px;
+
+}
+
+.map-side-panel-header{
+
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:6px;
+    font-family:var(--font-mono);
+    font-size:11.5px;
+    font-weight:700;
+    letter-spacing:1px;
+    text-transform:uppercase;
+    color:var(--text2);
+
+}
+
+.map-side-panel-header i{ color:var(--amber); margin-right:8px; }
+
+.map-side-panel-header a{
+
+    color:var(--red);
+    text-decoration:none;
+    font-size:11px;
+    letter-spacing:.5px;
+
+}
+
+.map-side-panel-header a:hover{ color:var(--red-hover); }
+
+.unidad-row,
+.alerta-row{
+
+    display:flex;
+    align-items:center;
+    gap:12px;
+    padding:11px 0;
+    border-bottom:1px solid var(--border);
+    font-size:13px;
+
+}
+
+.unidad-row:last-child,
+.alerta-row:last-child{ border-bottom:none; }
+
+.unidad-row i{ color:var(--text3); width:16px; text-align:center; }
+
+.unidad-codigo{ font-family:var(--font-mono); font-weight:700; }
+
+.unidad-distancia{
+
+    font-family:var(--font-mono);
+    color:var(--text3);
+    font-size:12px;
+
+}
+
+.unidad-estado{
+
+    margin-left:auto;
+    font-family:var(--font-mono);
+    font-size:10.5px;
+    font-weight:700;
+    letter-spacing:.3px;
+    padding:4px 10px;
+    border-radius:999px;
+    text-transform:uppercase;
+
+}
+
+.unidad-estado.disponible{ background:var(--success-soft); color:#7fe3a8; }
+.unidad-estado.en-mision{ background:var(--amber-soft); color:var(--amber); }
+.unidad-estado.en-retorno{ background:var(--info-soft); color:var(--info); }
+
+.alerta-row i{ color:var(--amber); width:16px; text-align:center; }
+
+.alerta-tiempo{
+
+    margin-left:auto;
+    color:var(--text3);
+    font-family:var(--font-mono);
+    font-size:11px;
+    white-space:nowrap;
+
+}
+
+/* ========================================================================
+   TARJETAS DE EMERGENCIA — v4: foto de portada + barra de prioridad
 ======================================================================== */
 
 .cards-grid{
@@ -711,6 +860,39 @@ body::after{
 
 }
 
+/* foto de portada — recorta al ancho de la tarjeta con margen negativo,
+   para que quede a sangre respetando el padding del cuerpo */
+.emergencia-card-photo{
+
+    position:relative;
+    height:150px;
+    margin:-22px -22px 18px;
+    overflow:hidden;
+
+}
+
+.emergencia-card-photo img{
+
+    width:100%;
+    height:100%;
+    object-fit:cover;
+    display:block;
+    filter:saturate(1.1) contrast(1.05);
+    transition:transform .4s ease;
+
+}
+
+.emergencia-card:hover .emergencia-card-photo img{ transform:scale(1.05); }
+
+.emergencia-card-photo::after{
+
+    content:"";
+    position:absolute;
+    inset:0;
+    background:linear-gradient(180deg, transparent 45%, rgba(11,13,18,.9) 100%);
+
+}
+
 /* cinta diagonal "URGENTE" — solo en emergencias con víctimas; es
    información de estado, no decoración de tarjeta */
 .emergencia-card:has(.gravedad-badge.critica)::after{
@@ -731,6 +913,7 @@ body::after{
     padding:3px 0;
     box-shadow:0 2px 6px rgba(0,0,0,.4);
     pointer-events:none;
+    z-index:2;
 
 }
 
@@ -811,12 +994,52 @@ body::after{
 
 }
 
+/* barra de prioridad — lectura instantánea de severidad, como el
+   indicador de nivel de un instrumento de tablero */
+.prioridad-row{
+
+    display:flex;
+    align-items:center;
+    gap:10px;
+    font-family:var(--font-mono);
+    font-size:12px;
+    color:var(--text2);
+    margin:14px 0 4px;
+
+}
+
+.prioridad-bar{
+
+    flex:1;
+    height:6px;
+    border-radius:3px;
+    background:var(--panel-2);
+    overflow:hidden;
+
+}
+
+.prioridad-bar span{
+
+    display:block;
+    height:100%;
+    border-radius:3px;
+
+}
+
+.prioridad-bar.alta span{ width:88%; background:linear-gradient(90deg, var(--red-dark), var(--red)); }
+.prioridad-bar.media span{ width:55%; background:var(--amber); }
+.prioridad-bar.baja span{ width:25%; background:var(--info); }
+
+.prioridad-label.alta{ color:var(--red); }
+.prioridad-label.media{ color:var(--amber); }
+.prioridad-label.baja{ color:var(--info); }
+
 .card-meta{
 
     display:flex;
     flex-direction:column;
     gap:11px;
-    margin:20px 0;
+    margin:16px 0;
     font-size:14px;
 
 }
@@ -958,6 +1181,229 @@ body::after{
 }
 
 /* ========================================================================
+   FILA INFERIOR DE WIDGETS — actividad reciente / estadísticas del día /
+   clima actual / comunicaciones
+======================================================================== */
+
+.gestion-bottom-grid{
+
+    display:grid;
+    grid-template-columns:1.2fr 1.2fr 1fr 1fr;
+    gap:18px;
+    margin-top:30px;
+
+}
+
+.widget-card{
+
+    background:var(--panel);
+    border:1px solid var(--border);
+    border-radius:14px;
+    padding:20px 22px;
+
+}
+
+.widget-card h4{
+
+    margin:0 0 14px;
+    font-family:var(--font-mono);
+    font-size:11.5px;
+    font-weight:700;
+    letter-spacing:1px;
+    text-transform:uppercase;
+    color:var(--text2);
+    display:flex;
+    align-items:center;
+    gap:8px;
+
+}
+
+.widget-card h4 i{ color:var(--amber); }
+
+/* actividad reciente */
+.actividad-item{
+
+    display:flex;
+    gap:12px;
+    align-items:flex-start;
+    padding:9px 0;
+    border-bottom:1px solid var(--border);
+    font-size:13px;
+
+}
+
+.actividad-item:last-child{ border-bottom:none; }
+
+.actividad-dot{
+
+    width:8px;
+    height:8px;
+    border-radius:50%;
+    margin-top:6px;
+    flex-shrink:0;
+
+}
+
+.actividad-dot.ok{ background:var(--success); }
+.actividad-dot.nueva{ background:var(--red); }
+.actividad-dot.info{ background:var(--info); }
+
+.actividad-texto{ display:flex; flex-direction:column; gap:2px; }
+.actividad-texto strong{ font-weight:600; }
+.actividad-texto span{ color:var(--text3); font-size:12px; font-family:var(--font-mono); }
+
+.actividad-hora{
+
+    margin-left:auto;
+    color:var(--text3);
+    font-family:var(--font-mono);
+    font-size:11px;
+    white-space:nowrap;
+
+}
+
+/* estadísticas del día */
+.mini-stats-row{
+
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:10px;
+    margin-bottom:16px;
+
+}
+
+.mini-stat span{
+
+    display:block;
+    font-family:var(--font-mono);
+    font-size:22px;
+    font-weight:700;
+
+}
+
+.mini-stat label{
+
+    display:block;
+    font-size:10px;
+    color:var(--text3);
+    text-transform:uppercase;
+    letter-spacing:.5px;
+    font-family:var(--font-mono);
+    margin-top:2px;
+
+}
+
+.mini-stat.up span::after{
+
+    content:" ▲";
+    font-size:11px;
+    color:var(--success);
+
+}
+
+.mini-stat.down span::after{
+
+    content:" ▼";
+    font-size:11px;
+    color:var(--red);
+
+}
+
+.dia-chart{
+
+    display:flex;
+    align-items:flex-end;
+    gap:4px;
+    height:60px;
+
+}
+
+.dia-chart span{
+
+    flex:1;
+    background:linear-gradient(180deg, var(--red), var(--red-dark));
+    border-radius:2px 2px 0 0;
+    opacity:.85;
+
+}
+
+/* clima actual */
+.clima-actual{
+
+    display:flex;
+    align-items:center;
+    gap:16px;
+
+}
+
+.clima-icono{ font-size:34px; color:var(--info); }
+
+.clima-temp{
+
+    font-family:var(--font-mono);
+    font-size:32px;
+    font-weight:700;
+    line-height:1;
+
+}
+
+.clima-condicion{ color:var(--text2); font-size:12.5px; margin-top:4px; }
+
+.clima-detalle{
+
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+    margin-left:auto;
+    font-size:11.5px;
+    color:var(--text2);
+    font-family:var(--font-mono);
+
+}
+
+.clima-detalle span i{ color:var(--text3); width:14px; text-align:center; margin-right:6px; }
+
+/* comunicaciones */
+.comunicaciones-canal{
+
+    font-size:11px;
+    color:var(--text3);
+    text-transform:uppercase;
+    letter-spacing:1px;
+    font-family:var(--font-mono);
+    margin-bottom:4px;
+
+}
+
+.comunicaciones-estado{
+
+    font-weight:600;
+    font-family:var(--font-display);
+    font-size:17px;
+    letter-spacing:.2px;
+
+}
+
+.comunicaciones-onda{
+
+    display:flex;
+    align-items:center;
+    gap:2px;
+    height:24px;
+    margin-top:16px;
+
+}
+
+.comunicaciones-onda span{
+
+    width:3px;
+    background:var(--success);
+    border-radius:2px;
+    opacity:.8;
+
+}
+
+/* ========================================================================
    MOVIMIENTO — respeta preferencia de reducción de movimiento
 ======================================================================== */
 
@@ -977,16 +1423,24 @@ body::after{
    RESPONSIVE
 ======================================================================== */
 
+@media(max-width:1300px){
+
+    .gestion-bottom-grid{ grid-template-columns:1fr 1fr; }
+
+}
+
 @media(max-width:1200px){
 
     .stats-grid{ grid-template-columns:repeat(2,1fr); }
     .gestion-toolbar{ grid-template-columns:1fr; }
+    .map-side-grid{ grid-template-columns:1fr; }
 
 }
 
 @media(max-width:700px){
 
     .stats-grid{ grid-template-columns:1fr; }
+    .gestion-bottom-grid{ grid-template-columns:1fr; }
 
     .gestion-header{
 
