@@ -184,31 +184,33 @@
     <div class="widget-card">
         <h4><i class="fa-solid fa-chart-column"></i>Estadísticas del día</h4>
         <div class="mini-stats-row">
-            <div class="mini-stat up"><span>24</span><label>Emergencias</label></div>
-            <div class="mini-stat up"><span>18</span><label>Rescatados</label></div>
-            <div class="mini-stat up"><span>32</span><label>Atenciones</label></div>
-            <div class="mini-stat down"><span>04</span><label>Falsas alarmas</label></div>
+            <div class="mini-stat" id="miniStatEmergencias"><span>0</span><label>Emergencias</label></div>
+            <div class="mini-stat" id="miniStatVictimas"><span>0</span><label>Con víctimas</label></div>
+            <div class="mini-stat" id="miniStatLesionados"><span>0</span><label>Lesionados</label></div>
+            <div class="mini-stat" id="miniStatSinVictimas"><span>0</span><label>Sin víctimas</label></div>
         </div>
         <div class="dia-chart" id="diaChart">
-            <span style="height:35%"></span><span style="height:52%"></span><span style="height:40%"></span>
-            <span style="height:68%"></span><span style="height:80%"></span><span style="height:60%"></span>
-            <span style="height:90%"></span><span style="height:70%"></span><span style="height:55%"></span>
-            <span style="height:45%"></span><span style="height:30%"></span><span style="height:20%"></span>
+            <span style="height:4%" title=""></span><span style="height:4%" title=""></span>
+            <span style="height:4%" title=""></span><span style="height:4%" title=""></span>
+            <span style="height:4%" title=""></span><span style="height:4%" title=""></span>
+            <span style="height:4%" title=""></span><span style="height:4%" title=""></span>
+            <span style="height:4%" title=""></span><span style="height:4%" title=""></span>
+            <span style="height:4%" title=""></span><span style="height:4%" title=""></span>
         </div>
     </div>
 
     <div class="widget-card">
         <h4><i class="fa-solid fa-cloud-sun"></i>Clima actual</h4>
-        <div class="clima-actual">
-            <i class="fa-solid fa-cloud-rain clima-icono"></i>
+        <div class="clima-actual" id="climaActualBox">
+            <i class="fa-solid fa-spinner fa-spin clima-icono" id="climaIcono"></i>
             <div>
-                <div class="clima-temp">22°C</div>
-                <div class="clima-condicion">Lluvia ligera</div>
+                <div class="clima-temp" id="climaTemp">--°C</div>
+                <div class="clima-condicion" id="climaCondicion">Consultando...</div>
             </div>
             <div class="clima-detalle">
-                <span><i class="fa-solid fa-droplet"></i>78% humedad</span>
-                <span><i class="fa-solid fa-wind"></i>12 km/h</span>
-                <span><i class="fa-solid fa-eye"></i>8 km visibilidad</span>
+                <span><i class="fa-solid fa-droplet"></i><span id="climaHumedad">--%</span> humedad</span>
+                <span><i class="fa-solid fa-wind"></i><span id="climaViento">-- km/h</span></span>
+                <span><i class="fa-solid fa-eye"></i><span id="climaVisibilidad">-- km</span> visibilidad</span>
             </div>
         </div>
     </div>
@@ -228,13 +230,12 @@
 
 </div>
 
-<script src="libs/pizzip.min.js"></script>
-
-<script src="libs/docxtemplater.js"></script>
-
-<script src="libs/docxtemplater-image-module.js"></script>
-
-<script src="libs/FileSaver.min.js"></script>
+<!-- Librerías para generar el Word real (plantilla1.docx). No existe una
+     carpeta libs/ en este proyecto, por eso se cargan desde CDN — mismo
+     patrón que ya se usa arriba para Leaflet y Font Awesome. -->
+<script src="https://unpkg.com/pizzip@3.2.0/dist/pizzip.js"></script>
+<script src="https://unpkg.com/docxtemplater@3.69.3/build/docxtemplater.js"></script>
+<script src="https://unpkg.com/file-saver@1.3.8/FileSaver.js"></script>
 <!-- CERTIFICATE MODAL — mismos ids que espera certificados.js -->
 <div class="modal-overlay" id="certModal" style="display:none">
   <div class="modal">
@@ -246,6 +247,7 @@
     <div id="printCert" style="display:none;"></div>
     <div class="modal-actions">
       <button onclick="printCertificate()" class="btn-print">🖨 Imprimir / Guardar PDF</button>
+      <button onclick="descargarWord()" class="btn-word">📄 Descargar Word</button>
       <button onclick="closeModal()" class="btn-close-modal">Cerrar</button>
     </div>
   </div>

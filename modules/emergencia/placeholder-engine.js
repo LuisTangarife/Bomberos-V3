@@ -1,44 +1,91 @@
-export function crearContexto(data){
+/*=========================================================
+ PLACEHOLDER ENGINE
+ Construye el contexto de datos que docxtemplater usa para
+ rellenar plantilla1.docx.
 
-    return{
+ OJO con dos diferencias respecto a la vista HTML (certificados.js):
 
-        REPORTE_ID:data.id,
+ 1. FIRMAS_AFECTADOS y FIRMAS_BOMBEROS aquí son texto plano (solo
+    nombres), no bloques con <img>. Un documento .docx no puede
+    recibir HTML crudo en un tag de texto — docxtemplater lo
+    insertaría literalmente como la cadena "<img src=...>" visible
+    en el Word, no como una imagen real. Insertar las firmas como
+    imágenes de verdad requeriría el módulo de imágenes de
+    docxtemplater con un resolver de base64 a ArrayBuffer, que no
+    está incluido en este proyecto.
+ 2. El valor anterior de este archivo pasaba los campos "en crudo"
+    (sin formatear fecha, sin calcular coordenadas, sin convertir
+    arrays a texto), por lo que el Word generado habría mostrado
+    fechas ISO sin formato y "[object Object]" en personal/vehículos.
+=========================================================*/
 
-        FECHA:data.fecha,
+import {
+    formatDate,
+    calcularCoordenadas,
+    personalTexto,
+    vehiculosTexto,
+    renderAfectadosTexto,
+    generarDocNum
+} from "./report-helpers.js";
 
-        HORA_LLEGADA:data.horaLlegada,
+function nombresAfectadosTexto(afectados) {
+    if (!afectados?.length) return 'Ninguno';
+    const nombres = afectados.map(a => a.nombre).filter(Boolean);
+    return nombres.length ? nombres.join(', ') : 'Ninguno';
+}
 
-        HORA_FINAL:data.horaFinal,
+// Mismo criterio que renderFirmasBomberosHTML en certificados.js: solo
+// se listan bomberos que efectivamente firmaron.
+function nombresBomberosFirmantesTexto(firmasBomberos) {
+    if (!firmasBomberos?.length) return 'Sin firmas registradas';
+    const nombres = firmasBomberos
+        .filter(b => b.firma && b.firma !== 'Sin firma')
+        .map(b => b.nombre)
+        .filter(Boolean);
+    return nombres.length ? nombres.join(', ') : 'Sin firmas registradas';
+}
 
-        LATITUD:data.latitud,
+export function crearContexto(data, docNum) {
 
-        LONGITUD:data.longitud,
+    return {
 
-        COORDENADAS:data.coordenadas,
+        REPORTE_ID: docNum || generarDocNum(),
 
-        LUGAR:data.lugar,
+        FECHA: formatDate(data.fecha),
 
-        DIRECCION:data.direccion,
+        HORA_LLEGADA: data.horaLlegada || '',
 
-        EVENTO:data.evento,
+        HORA_FINAL: data.horaFinal || '',
 
-        PERSONAL:data.personal,
+        LATITUD: data.latitud || '',
 
-        VEHICULOS:data.vehiculos,
+        LONGITUD: data.longitud || '',
 
-        DESCRIPCION:data.descripcion,
+        COORDENADAS: calcularCoordenadas(data),
 
-        LESIONADOS:data.lesionados,
+        LUGAR: data.lugar || '',
 
-        VICTIMAS:data.victimas,
+        DIRECCION: data.direccion || '',
 
-        AFECTADOS:data.afectados,
+        EVENTO: data.evento || '',
 
-        NOVEDADES:data.novedades,
+        PERSONAL: personalTexto(data.personal),
 
-        FIRMAS_AFECTADOS:data.firmasAfectados,
+        VEHICULOS: vehiculosTexto(data.vehiculos),
 
-        FIRMAS_BOMBEROS:data.firmasBomberos
+        DESCRIPCION: data.descripcion || '',
+
+        LESIONADOS: data.lesionados || 0,
+
+        VICTIMAS: data.victimas || 0,
+
+        AFECTADOS: renderAfectadosTexto(data.afectados).replace(/<br>/g, '\n'),
+
+        NOVEDADES: data.novedades || '',
+
+        FIRMAS_AFECTADOS: nombresAfectadosTexto(data.afectados),
+
+        FIRMAS_BOMBEROS: nombresBomberosFirmantesTexto(data.firmasBomberos)
 
     };
 

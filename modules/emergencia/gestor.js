@@ -16,12 +16,14 @@
 
 import { listarEmergencias, eliminarEmergencia } from "./firebase.js";
 import { inicializarMapa, renderizarMapa } from "./mapas.js";
+import { actualizarClima } from "./clima.js";
 
-import { renderCertificate, printCertificate, closeModal } from "./certificados.js";
+import { renderCertificate, printCertificate, closeModal, descargarWord } from "./certificados.js";
 
 window.renderCertificate = renderCertificate;
 window.printCertificate = printCertificate;
 window.closeModal = closeModal;
+window.descargarWord = descargarWord;
 
 let emergencias = [];
 let cargando = false;
@@ -33,6 +35,13 @@ export function inicializarGestor() {
     cargarEmergencias();
 
     configurarBotones();
+
+    actualizarClima();
+    // Refresco periódico: el turno de un bombero dura horas, así que el
+    // clima consultado al abrir la página quedaría desactualizado si no
+    // se vuelve a pedir. 15 minutos es razonable para no saturar la API
+    // gratuita ni mostrar datos con horas de atraso.
+    setInterval(actualizarClima, 15 * 60 * 1000);
 
     const buscador = document.getElementById("buscarEmergenciaGestor");
     const filtroEvento = document.getElementById("filtroEventoGestor");
@@ -91,6 +100,7 @@ async function cargarEmergencias() {
         emergencias = await listarEmergencias();
         actualizarOpcionesFiltro();
         actualizarVista();
+        actualizarEstadisticasDelDia();
 
     } catch (error) {
 
@@ -229,6 +239,118 @@ function actualizarEstadisticas(filtradas) {
     }
 
 }
+
+function fechaISO(date) {
+    // yyyy-mm-dd en hora local, para poder comparar contra emergencia.fecha
+    // (que se guarda como string "yyyy-mm-dd", no como Date).
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, "0");
+    const d = String(date.getDate()).padStart(2, "0");
+    return `${y}-${m}-${d}`;
+}
+
+/* ========================================================================
+   ESTADÍSTICAS DEL DÍA (widget inferior "gestion-bottom-grid")
+   A diferencia de actualizarEstadisticas() (las 4 tarjetas superiores,
+   que respetan la búsqueda/filtros activos), este widget siempre usa el
+   total de emergencias sin filtrar: es un resumen del día, no de la
+   búsqueda actual, así que no debería cambiar mientras el usuario escribe
+   en el buscador.
+
+   Antes este bloque era HTML fijo (24 / 18 / 32 / 04 y una gráfica con
+   alturas hardcodeadas) sin ningún dato real detrás.
+======================================================================== */
+function actualizarEstadisticasDelDia() {
+
+    const statEmergencias = document.getElementById("miniStatEmergencias");
+    const statVictimas = document.getElementById("miniStatVictimas");
+    const statLesionados = document.getElementById("miniStatLesionados");
+    const statSinVictimas = document.getElementById("miniStatSinVictimas");
+    const chart = document.getElementById("diaChart");
+
+    if (!statEmergencias && !chart) return; // widget no está en esta página
+
+    const hoy = new Date();
+    const hoyStr = fechaISO(hoy);
+    const ayer = new Date(hoy);
+    ayer.setDate(ayer.getDate() - 1);
+    const ayerStr = fechaISO(ayer);
+
+    const emergenciasHoy = emergencias.filter(e => e.fecha === hoyStr);
+    const emergenciasAyer = emergencias.filter(e => e.fecha === ayerStr);
+
+    const totalHoy = emergenciasHoy.length;
+    const criticasHoy = emergenciasHoy.filter(esCritica).length;
+    const sinVictimasHoy = totalHoy - criticasHoy;
+    const lesionadosHoy = emergenciasHoy.reduce(
+        (suma, e) => suma + (parseInt(e.lesionados, 10) || 0),
+        0
+    );
+
+    const totalAyer = emergenciasAyer.length;
+    const criticasAyer = emergenciasAyer.filter(esCritica).length;
+    const sinVictimasAyer = totalAyer - criticasAyer;
+    const lesionadosAyer = emergenciasAyer.reduce(
+        (suma, e) => suma + (parseInt(e.lesionados, 10) || 0),
+        0
+    );
+
+    aplicarMiniStat(statEmergencias, totalHoy, totalAyer);
+    aplicarMiniStat(statVictimas, criticasHoy, criticasAyer);
+    aplicarMiniStat(statLesionados, lesionadosHoy, lesionadosAyer);
+    // Para "Sin víctimas" un aumento no es necesariamente "bueno" ni
+    // "malo" en el mismo sentido que las otras tres, pero se mantiene
+    // la misma lógica de tendencia por consistencia visual del widget.
+    aplicarMiniStat(statSinVictimas, sinVictimasHoy, sinVictimasAyer);
+
+    actualizarGraficoUltimosDias(chart);
+
+}
+
+function aplicarMiniStat(elemento, valorHoy, valorAyer) {
+    if (!elemento) return;
+
+    const span = elemento.querySelector("span");
+    if (span) span.textContent = valorHoy;
+
+    elemento.classList.remove("up", "down");
+    if (valorHoy > valorAyer) {
+        elemento.classList.add("up");
+    } else if (valorHoy < valorAyer) {
+        elemento.classList.add("down");
+    }
+}
+
+// Barras de los últimos 12 días (hoy = la última), cada una con el
+// conteo real de emergencias de ese día. La altura se escala contra el
+// día con más emergencias del rango para que la barra más alta llegue
+// al tope visual, igual que hacía el diseño original con datos fijos.
+function actualizarGraficoUltimosDias(chart) {
+    if (!chart) return;
+
+    const dias = [];
+    const hoy = new Date();
+
+    for (let i = 11; i >= 0; i--) {
+        const fecha = new Date(hoy);
+        fecha.setDate(fecha.getDate() - i);
+        const iso = fechaISO(fecha);
+        const total = emergencias.filter(e => e.fecha === iso).length;
+        dias.push({ iso, total });
+    }
+
+    const maximo = Math.max(1, ...dias.map(d => d.total));
+
+    chart.innerHTML = dias.map(({ iso, total }) => {
+        // Altura mínima del 4% para que un día en 0 siga siendo visible
+        // como barra (no desaparece del todo), igual que el resto de
+        // barras "vacías" del diseño original.
+        const alturaPct = total === 0 ? 4 : Math.max(8, Math.round((total / maximo) * 100));
+        return `<span style="height:${alturaPct}%" title="${escaparHTML(iso)}: ${total} emergencia(s)"></span>`;
+    }).join("");
+}
+
+
 
 function renderizarTarjetas(filtradas) {
 

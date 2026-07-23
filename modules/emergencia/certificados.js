@@ -13,10 +13,30 @@
    inyecta el HTML). Ver index.html o gestor.html.
 ======================================================================== */
 
+import {
+  formatDate,
+  calcularCoordenadas,
+  personalTexto as personalTextoHelper,
+  vehiculosTexto as vehiculosTextoHelper,
+  renderAfectadosTexto,
+  generarDocNum
+} from "./report-helpers.js";
+
+import { generarDocumentoWord } from "./docx-engine.js";
+
 const RUTA_PLANTILLA = "./plantillas/plantilla1.html";
 
 let _plantillaCache = null;
 let currentPrintHTML = "";
+
+// Datos y docNum del último certificado renderizado en pantalla, para
+// que "Descargar Word" pueda generar exactamente el mismo reporte sin
+// necesidad de que el usuario vuelva a diligenciar nada. Si se genera
+// un Word nuevo con un docNum distinto al que ve el usuario en la
+// pantalla, los dos documentos quedarían con números de reporte
+// distintos para la misma emergencia — por eso se reutiliza el mismo.
+let _ultimaCertData = null;
+let _ultimoDocNum = null;
 
 async function cargarPlantilla() {
   if (_plantillaCache) return _plantillaCache;
@@ -53,24 +73,6 @@ function aplicarSeccion(html, nombre, mostrar) {
   return html.replace(patron, (_, contenido) => (mostrar ? contenido : ""));
 }
 
-function formatDate(d) {
-  if (!d) return '';
-  const [y, m, day] = d.split('-');
-  const months = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
-  return `${day} ${months[parseInt(m)-1]} ${y}`;
-}
-
-// Mismo formato que afectadosTexto en el Apps Script — una línea por
-// afectado, unida con salto de línea (el CSS de la plantilla usa
-// white-space:pre-line en .reporte-descripcion-texto, pero aquí el
-// destino es un <p> normal, así que unimos con <br> en vez de \n).
-function renderAfectadosTexto(afectados) {
-  if (!afectados?.length) return 'Ninguno reportado';
-  return afectados
-    .map(a => `${a.nombre || ''} | DNI: ${a.dni || ''} | Edad: ${a.edad || ''} | Género: ${a.genero || ''} | Tel: ${a.telefono || ''}`)
-    .join('<br>');
-}
-
 // Bloque HTML por afectado (nombre, datos, firma si tiene) para
 // {{FIRMAS_AFECTADOS}} — separado de {{AFECTADOS}} porque ese es solo
 // el resumen en texto.
@@ -103,7 +105,7 @@ function renderFirmasBomberosHTML(firmasBomberos) {
     `).join('');
 }
 
-export async function buildCertificateHTML(data) {
+export async function buildCertificateHTML(data, docNum) {
 
   let plantilla = await cargarPlantilla();
   // CORREGIR RUTAS DE LAS IMÁGENES
@@ -112,33 +114,21 @@ export async function buildCertificateHTML(data) {
       './plantillas/assets/'
   );
 
-  const docNum = `CB-${Date.now()}`;
-
-  const coords = data.latitud && data.longitud
-    ? `${data.latitud}, ${data.longitud}`
-    : 'No disponibles';
-
-  const personalTexto = Array.isArray(data.personal) && data.personal.length
-    ? data.personal.join(', ')
-    : 'No reportado';
-
-  const vehiculosTexto = Array.isArray(data.vehiculos) && data.vehiculos.length
-    ? data.vehiculos.map(v => v.vehiculo).filter(Boolean).join(', ')
-    : 'No reportados';
+  const numeroReporte = docNum || generarDocNum();
 
   let html = reemplazarPlaceholders(plantilla, {
-    REPORTE_ID: docNum,
+    REPORTE_ID: numeroReporte,
     FECHA: formatDate(data.fecha),
     HORA_LLEGADA: data.horaLlegada || '',
     HORA_FINAL: data.horaFinal || '',
     LATITUD: data.latitud || '',
     LONGITUD: data.longitud || '',
-    COORDENADAS: coords,
+    COORDENADAS: calcularCoordenadas(data),
     LUGAR: data.lugar || '',
     DIRECCION: data.direccion || '',
     EVENTO: data.evento || '',
-    PERSONAL: personalTexto,
-    VEHICULOS: vehiculosTexto,
+    PERSONAL: personalTextoHelper(data.personal),
+    VEHICULOS: vehiculosTextoHelper(data.vehiculos),
     DESCRIPCION: data.descripcion || '',
     LESIONADOS: data.lesionados || 0,
     VICTIMAS: data.victimas || 0,
@@ -157,15 +147,49 @@ export async function buildCertificateHTML(data) {
 
 export async function renderCertificate(data, id = null) {
 
-  const certHTML = await buildCertificateHTML(data);
+  // Un solo docNum para todo el ciclo de vida de este reporte en
+  // pantalla: la vista HTML y el Word que se descargue después (si el
+  // usuario hace clic en "Descargar Word") deben mostrar el mismo
+  // número, no uno nuevo generado por separado en cada acción.
+  const docNum = generarDocNum();
+
+  const certHTML = await buildCertificateHTML(data, docNum);
 
   document.getElementById('certContent').innerHTML = certHTML;
   // Guardamos exactamente el HTML de la plantilla
   // (incluye su propio CSS interno)
-      
+
   currentPrintHTML = certHTML;
+  _ultimaCertData = data;
+  _ultimoDocNum = docNum;
+
   document.getElementById('certModal').style.display = 'flex';
   document.body.style.overflow = 'hidden';
+
+}
+
+/**
+ * Genera y descarga el Word oficial (plantilla1.docx diligenciada) del
+ * reporte que está actualmente abierto en el modal de certificado.
+ * Requiere haber llamado antes a renderCertificate/window.renderCertificate.
+ */
+export async function descargarWord() {
+
+  if (!_ultimaCertData) {
+    alert('Primero genera el certificado.');
+    return;
+  }
+
+  try {
+
+    await generarDocumentoWord(_ultimaCertData, _ultimoDocNum);
+
+  } catch (error) {
+
+    console.error('[certificados] No se pudo generar el Word:', error);
+    alert(error.message || 'No fue posible generar el documento Word.');
+
+  }
 
 }
 
