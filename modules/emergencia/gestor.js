@@ -18,12 +18,13 @@ import { listarEmergencias, eliminarEmergencia } from "./firebase.js";
 import { inicializarMapa, renderizarMapa } from "./mapas.js";
 import { actualizarClima } from "./clima.js";
 
-import { renderCertificate, printCertificate, closeModal, descargarWord } from "./certificados.js";
+import { renderCertificate, printCertificate, closeModal, descargarWord, descargarPDF } from "./certificados.js";
 
 window.renderCertificate = renderCertificate;
 window.printCertificate = printCertificate;
 window.closeModal = closeModal;
 window.descargarWord = descargarWord;
+window.descargarPDF = descargarPDF;
 
 let emergencias = [];
 let cargando = false;
@@ -495,19 +496,23 @@ function crearTarjeta(emergencia) {
     `;
 
     card.querySelector(".action-ver-em")
-        .addEventListener("click", () => {
+        .addEventListener("click", async () => {
             if (typeof window.renderCertificate === "function") {
-                window.renderCertificate(emergencia);
+                await window.renderCertificate(emergencia);
             }
         });
 
     card.querySelector(".action-pdf-em")
-        .addEventListener("click", () => {
+        .addEventListener("click", async () => {
             if (typeof window.renderCertificate === "function") {
-                window.renderCertificate(emergencia);
+                // Se espera a que el PDF real termine de generarse (ya no
+                // es HTML instantáneo) antes de disparar la descarga; el
+                // setTimeout fijo de 150ms que había antes asumía que
+                // mostrar el certificado era síncrono y ya no lo es.
+                await window.renderCertificate(emergencia);
             }
-            if (typeof window.printCertificate === "function") {
-                setTimeout(() => window.printCertificate(), 150);
+            if (typeof window.descargarPDF === "function") {
+                window.descargarPDF();
             }
         });
 

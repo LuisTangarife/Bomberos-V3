@@ -23,6 +23,7 @@ import {
 } from "./report-helpers.js";
 
 import { generarDocumentoWord } from "./docx-engine.js";
+import { generarPDFBlob } from "./pdf-engine.js";
 
 const RUTA_PLANTILLA = "./plantillas/plantilla1.html";
 
@@ -37,6 +38,12 @@ let currentPrintHTML = "";
 // distintos para la misma emergencia — por eso se reutiliza el mismo.
 let _ultimaCertData = null;
 let _ultimoDocNum = null;
+
+// PDF real (ya no HTML crudo) que se muestra dentro del modal vía
+// <iframe>. Se guarda el Blob y su URL de objeto para poder ofrecer
+// "Descargar PDF" e "Imprimir" sin tener que regenerarlo.
+let _ultimoPdfBlob = null;
+let _ultimoPdfUrl = null;
 
 async function cargarPlantilla() {
   if (_plantillaCache) return _plantillaCache;
@@ -148,23 +155,93 @@ export async function buildCertificateHTML(data, docNum) {
 export async function renderCertificate(data, id = null) {
 
   // Un solo docNum para todo el ciclo de vida de este reporte en
-  // pantalla: la vista HTML y el Word que se descargue después (si el
+  // pantalla: la vista en PDF y el Word que se descargue después (si el
   // usuario hace clic en "Descargar Word") deben mostrar el mismo
   // número, no uno nuevo generado por separado en cada acción.
   const docNum = generarDocNum();
 
   const certHTML = await buildCertificateHTML(data, docNum);
 
-  document.getElementById('certContent').innerHTML = certHTML;
-  // Guardamos exactamente el HTML de la plantilla
-  // (incluye su propio CSS interno)
+  const contenido = document.getElementById('certContent');
+  const modal = document.getElementById('certModal');
+
+  contenido.innerHTML = `
+    <div style="padding:40px;text-align:center;color:inherit;">
+      <i class="fa-solid fa-spinner fa-spin" style="font-size:1.4rem;"></i>
+      <p style="margin-top:12px;">Generando PDF del reporte...</p>
+    </div>
+  `;
+
+  modal.style.display = 'flex';
+  document.body.style.overflow = 'hidden';
 
   currentPrintHTML = certHTML;
   _ultimaCertData = data;
   _ultimoDocNum = docNum;
 
-  document.getElementById('certModal').style.display = 'flex';
-  document.body.style.overflow = 'hidden';
+  try {
+
+    const nombreArchivo = `Reporte_${docNum}.pdf`;
+    const blob = await generarPDFBlob(certHTML, nombreArchivo);
+
+    // Se libera la URL del PDF anterior antes de crear una nueva, para
+    // no acumular Blobs en memoria si el usuario abre varios reportes
+    // seguidos en la misma sesión.
+    if (_ultimoPdfUrl) {
+      URL.revokeObjectURL(_ultimoPdfUrl);
+    }
+
+    _ultimoPdfBlob = blob;
+    _ultimoPdfUrl = URL.createObjectURL(blob);
+
+    contenido.innerHTML = `
+      <iframe id="certPdfFrame" src="${_ultimoPdfUrl}"
+        title="Reporte de intervención"
+        style="width:100%;height:75vh;border:none;display:block;"></iframe>
+    `;
+
+  } catch (error) {
+
+    console.error('[certificados] No se pudo generar el PDF:', error);
+
+    _ultimoPdfBlob = null;
+
+    contenido.innerHTML = `
+      <div style="padding:40px;text-align:center;">
+        <i class="fa-solid fa-triangle-exclamation" style="font-size:1.4rem;color:#e67e22;"></i>
+        <p style="margin-top:12px;">No fue posible generar el PDF del reporte.</p>
+        <p style="opacity:.7;font-size:.85rem;">${error && error.message ? error.message : ''}</p>
+      </div>
+    `;
+
+  }
+
+}
+
+/**
+ * Descarga el PDF real del reporte actualmente abierto en el modal.
+ * Requiere haber llamado antes a renderCertificate/window.renderCertificate.
+ */
+export function descargarPDF() {
+
+  if (!_ultimoPdfBlob) {
+    alert('Primero genera el certificado.');
+    return;
+  }
+
+  const nombreArchivo = `Reporte_${_ultimoDocNum || 'certificado'}.pdf`;
+
+  if (typeof window.saveAs === 'function') {
+    window.saveAs(_ultimoPdfBlob, nombreArchivo);
+    return;
+  }
+
+  const enlace = document.createElement('a');
+  enlace.href = _ultimoPdfUrl;
+  enlace.download = nombreArchivo;
+  document.body.appendChild(enlace);
+  enlace.click();
+  document.body.removeChild(enlace);
 
 }
 
@@ -200,41 +277,28 @@ export function closeModal() {
 
 export function printCertificate() {
 
-    if (!currentPrintHTML) {
+    const iframe = document.getElementById('certPdfFrame');
 
-        alert("Primero genera el certificado.");
-
+    if (iframe && iframe.contentWindow) {
+        // El iframe ya muestra el PDF real (no HTML); dejamos que el
+        // propio visor de PDF del navegador maneje el diálogo de
+        // impresión, que sabe paginar correctamente un PDF de verdad
+        // — más confiable que reescribir el HTML en una ventana nueva
+        // y esperar a que "cargue" antes de llamar a print().
+        iframe.contentWindow.focus();
+        iframe.contentWindow.print();
         return;
-
     }
 
-    const ventana = window.open("", "_blank");
-
-    if (!ventana) {
-
-        alert("El navegador bloqueó la ventana.");
-
+    if (_ultimoPdfUrl) {
+        // Fallback si el iframe no está disponible por algún motivo:
+        // abrir el PDF en una pestaña nueva y dejar que el usuario
+        // use Ctrl+P desde el visor nativo del navegador.
+        window.open(_ultimoPdfUrl, '_blank');
         return;
-
     }
 
-    ventana.document.open();
-
-    ventana.document.write(currentPrintHTML);
-
-    ventana.document.close();
-
-    ventana.focus();
-
-    ventana.onload = () => {
-
-        setTimeout(() => {
-
-            ventana.print();
-
-        }, 300);
-
-    };
+    alert("Primero genera el certificado.");
 
 }
 

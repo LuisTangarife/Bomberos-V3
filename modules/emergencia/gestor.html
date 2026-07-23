@@ -230,6 +230,12 @@
 
 </div>
 
+<!-- Librerías para generar el PDF real del certificado (a partir de
+     plantilla1.html), usadas por pdf-engine.js. Mismas versiones que ya
+     usaba index.html en su propio flujo de generatePDFBase64(). -->
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <!-- Librerías para generar el Word real (plantilla1.docx). No existe una
      carpeta libs/ en este proyecto, por eso se cargan desde CDN — mismo
      patrón que ya se usa arriba para Leaflet y Font Awesome. -->
@@ -246,7 +252,8 @@
     <div class="cert-content" id="certContent"></div>
     <div id="printCert" style="display:none;"></div>
     <div class="modal-actions">
-      <button onclick="printCertificate()" class="btn-print">🖨 Imprimir / Guardar PDF</button>
+      <button onclick="printCertificate()" class="btn-print">🖨 Imprimir</button>
+      <button onclick="descargarPDF()" class="btn-pdf">📥 Descargar PDF</button>
       <button onclick="descargarWord()" class="btn-word">📄 Descargar Word</button>
       <button onclick="closeModal()" class="btn-close-modal">Cerrar</button>
     </div>
