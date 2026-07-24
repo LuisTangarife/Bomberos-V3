@@ -1,38 +1,27 @@
 /*=========================================================
  PDF ENGINE
- Convierte el HTML del certificado (plantilla1.html ya
- diligenciada, misma vista que produce buildCertificateHTML
- en certificados.js) en un archivo PDF real, usando html2pdf
- (que internamente combina html2canvas + jsPDF).
+ Convierte el HTML del certificado en un PDF real usando
+ html2canvas + jsPDF DIRECTAMENTE (no a través del pipeline
+ .outputPdf() de html2pdf.js).
 
- Por qué no se genera el PDF directamente desde plantilla1.docx:
- no existe una librería gratuita client-side que convierta un
- .docx a PDF con fidelidad visual real (eso requiere un motor
- de renderizado de Word — LibreOffice headless, Google Drive
- API, etc. — es decir, un servidor, y este proyecto no tiene
- uno desplegado para eso). plantilla1.html es la réplica A4 de
- la misma carta oficial, así que el PDF resultante es visualmente
- igual al que produciría el Word, pero generado 100% en el
- navegador con lo que ya está cargado en la página.
+ POR QUÉ: html2pdf.js v0.10.1 (la versión cargada en
+ gestor.html/index.html vía cdnjs) tiene un bug conocido y
+ reconocido por los propios mantenedores («There have been
+ several issues reported in v0.10») donde .outputPdf('blob')
+ devuelve un PDF vacío pese a que html2canvas capturó todo
+ correctamente — lo confirmamos: canvas.toDataURL() daba
+ ~940KB de imagen real, pero el blob final de html2pdf
+ siempre salía en 3058 bytes (una página en blanco).
 
- NOTA: tras varias vueltas intentando ocultar el contenedor
- (fixed con z-index negativo, offsets negativos enormes,
- posicionarlo fuera del viewport con scroll) descubrimos que
- html2canvas calcula mal la región a capturar en TODOS esos
- casos (compensación de scroll interna, límites de canvas,
- etc.), produciendo capturas en blanco o con contenido mal
- recortado. La única forma que realmente funciona de manera
- confiable es renderizar el contenedor en (0,0), dentro del
- viewport real, por encima incluso del modal — a costa de un
- parpadeo visual breve mientras se captura.
+ html2canvas y jsPDF SÍ vienen empaquetados dentro de
+ html2pdf.bundle.min.js y quedan disponibles globalmente
+ (window.html2canvas y window.jspdf.jsPDF), así que no hace
+ falta agregar ningún <script> nuevo — solo dejamos de pasar
+ por el método roto de html2pdf.
 =========================================================*/
 
 // Espera a que todas las imágenes dentro del contenedor (firmas, fotos
 // adjuntas, QR de verificación) terminen de cargar antes de rasterizar.
-// Si html2canvas captura la vista antes de que una imagen cargue, esa
-// imagen sale en blanco en el PDF final — un bug silencioso y difícil
-// de detectar en pruebas rápidas porque casi siempre carga a tiempo en
-// conexiones rápidas.
 function esperarImagenes(contenedor) {
 
     const imagenes = Array.from(contenedor.querySelectorAll('img'));
@@ -55,73 +44,76 @@ function esperarImagenes(contenedor) {
 /**
  * Genera un PDF real a partir de un fragmento HTML.
  *
- * @param {string} html            HTML completo del certificado (con su
- *                                 propio <style> interno, tal como lo
- *                                 devuelve buildCertificateHTML).
+ * @param {string} html            HTML completo del certificado.
  * @param {string} [nombreArchivo] Nombre sugerido para el archivo.
  * @returns {Promise<Blob>} el PDF como Blob (application/pdf).
  */
 export async function generarPDFBlob(html, nombreArchivo = 'certificado.pdf') {
 
-    if (typeof window.html2pdf !== 'function') {
-        throw new Error('La librería html2pdf no está cargada en esta página.');
+    if (typeof window.html2canvas !== 'function') {
+        throw new Error('La librería html2canvas no está cargada en esta página.');
+    }
+
+    const JsPDFCtor = (window.jspdf && window.jspdf.jsPDF) || window.jsPDF;
+
+    if (typeof JsPDFCtor !== 'function') {
+        throw new Error('No se encontró el constructor de jsPDF en esta página.');
     }
 
     const contenedor = document.createElement('div');
 
-    // Se renderiza EN (0,0), dentro del viewport real, con un z-index
-    // por encima del modal (#certModal usa z-index:1000) para que
-    // html2canvas lo capture sin ningún cálculo especial de scroll u
-    // offset — es el único posicionamiento con el que html2canvas
-    // captura el contenido real de forma confiable. El costo es un
-    // parpadeo visual breve del certificado antes de que se muestre
-    // el modal con el PDF ya listo.
+    // (0,0), dentro del viewport real — la única forma con la que
+    // html2canvas capturó el contenido de manera confiable en nuestras
+    // pruebas. Implica un parpadeo visual breve del certificado.
     contenedor.style.position = 'fixed';
     contenedor.style.top = '0';
     contenedor.style.left = '0';
-    contenedor.style.zIndex = '2147483647'; // por encima de TODO, incluido el modal
+    contenedor.style.zIndex = '2147483647';
     contenedor.style.background = '#fff';
     contenedor.style.pointerEvents = 'none';
     contenedor.innerHTML = html;
 
     document.body.appendChild(contenedor);
 
-    const canvas = await window.html2canvas(contenedor, { scale: 2, useCORS: true });
-   
-    try {
-        const dataUrl = canvas.toDataURL('image/jpeg', 1.0);
-        console.log('[debug] toDataURL OK, longitud:', dataUrl.length);
-    } catch (err) {
-        console.error('[debug] toDataURL FALLÓ (canvas contaminado):', err);
-    }
-
     try {
 
         await esperarImagenes(contenedor);
 
-        const blob = await window.html2pdf()
-            .set({
+        const canvas = await window.html2canvas(contenedor, {
+            scale: 2,
+            useCORS: true
+        });
 
-                margin: 0,
-                filename: nombreArchivo,
-                image: { type: 'jpeg', quality: 1 },
+        const imgData = canvas.toDataURL('image/jpeg', 1.0);
 
-                html2canvas: {
-                    scale: 2,
-                    useCORS: true
-                    // sin x/y/windowWidth/windowHeight manuales: al estar
-                    // en (0,0) dentro del viewport real, html2canvas mide
-                    // y captura el contenedor correctamente por sí solo.
-                },
+        const pdf = new JsPDFCtor({
+            unit: 'mm',
+            format: 'a4',
+            orientation: 'portrait'
+        });
 
-                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+        const pageWidth = pdf.internal.pageSize.getWidth();
+        const pageHeight = pdf.internal.pageSize.getHeight();
 
-            })
-            .from(contenedor)
-            .outputPdf('blob');
+        const imgWidthMM = pageWidth;
+        const imgHeightMM = (canvas.height * imgWidthMM) / canvas.width;
 
-        console.log('[debug] blob size/type:', blob.size, blob.type);
-        return blob;
+        let alturaRestante = imgHeightMM;
+        let posicionY = 0;
+
+        // Primera página
+        pdf.addImage(imgData, 'JPEG', 0, posicionY, imgWidthMM, imgHeightMM);
+        alturaRestante -= pageHeight;
+
+        // Páginas adicionales si el certificado es más largo que una A4
+        while (alturaRestante > 0) {
+            posicionY = alturaRestante - imgHeightMM;
+            pdf.addPage();
+            pdf.addImage(imgData, 'JPEG', 0, posicionY, imgWidthMM, imgHeightMM);
+            alturaRestante -= pageHeight;
+        }
+
+        return pdf.output('blob');
 
     } finally {
 
