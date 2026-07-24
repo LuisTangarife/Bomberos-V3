@@ -73,12 +73,16 @@ export async function generarPDFBlob(html, nombreArchivo = 'certificado.pdf') {
     // lugar se posiciona en (0,0) pero detrás de todo el contenido
     // (z-index negativo); el propio modal ya cubre la pantalla con su
     // fondo oscuro, así que sigue siendo invisible para el usuario.
-    contenedor.style.position = 'absolute';  // no 'fixed'
-    contenedor.style.left = '0';
-    contenedor.style.top = document.documentElement.scrollHeight + 'px'; // debajo de todo el contenido actual
-    contenedor.style.pointerEvents = 'none';
-    contenedor.innerHTML = html;
-    
+   contenedor.style.position = "fixed";
+   contenedor.style.top = "0";
+   contenedor.style.left = "0";
+   contenedor.style.width = "210mm";
+   contenedor.style.background = "#fff";
+   contenedor.style.opacity = "0";
+   contenedor.style.pointerEvents = "none";
+   contenedor.style.zIndex = "-1";
+   
+   contenedor.innerHTML = html;    
     document.body.appendChild(contenedor);
 
     try {
