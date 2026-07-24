@@ -64,13 +64,20 @@ export async function generarPDFBlob(html, nombreArchivo = 'certificado.pdf') {
 
     const contenedor = document.createElement('div');
 
-    // Se renderiza fuera de la pantalla (no oculto con display:none,
-    // que impediría que html2canvas mida el layout real) mientras se
-    // genera el PDF, y se elimina del DOM al terminar.
+    // Se renderiza sin display:none (que impediría que html2canvas mida
+    // el layout real), pero SIN desplazarlo miles de píxeles fuera de
+    // la pantalla: un left tan grande (-99999px) obliga a html2canvas a
+    // intentar generar un canvas gigantesco para cubrir ese desplazamiento,
+    // lo cual excede el tamaño máximo de canvas del navegador y termina
+    // produciendo una captura en blanco (el bug del PDF vacío). En su
+    // lugar se posiciona en (0,0) pero detrás de todo el contenido
+    // (z-index negativo); el propio modal ya cubre la pantalla con su
+    // fondo oscuro, así que sigue siendo invisible para el usuario.
     contenedor.style.position = 'fixed';
-    contenedor.style.left = '-99999px';
+    contenedor.style.left = '0';
     contenedor.style.top = '0';
     contenedor.style.zIndex = '-1';
+    contenedor.style.pointerEvents = 'none';
     contenedor.innerHTML = html;
 
     document.body.appendChild(contenedor);

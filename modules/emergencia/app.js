@@ -1430,10 +1430,15 @@ async function buildHiddenCertificate(data) {
 
   const temp = document.createElement('div');
 
+  // Igual que en pdf-engine.js: no usar un left tan grande (-99999px),
+  // porque obliga a html2canvas a intentar crear un canvas gigantesco
+  // y termina capturando el certificado en blanco. Se coloca en (0,0)
+  // pero detrás de todo (z-index negativo), oculto por el propio modal.
   temp.style.position = 'fixed';
-  temp.style.left = '-99999px';
+  temp.style.left = '0';
   temp.style.top = '0';
   temp.style.zIndex = '-1';
+  temp.style.pointerEvents = 'none';
 
   temp.innerHTML = await buildCertificateHTML(data);
 
