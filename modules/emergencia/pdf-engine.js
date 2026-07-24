@@ -84,33 +84,30 @@ export async function generarPDFBlob(html, nombreArchivo = 'certificado.pdf') {
     console.log('[debug] contenedor width/height:', contenedor.offsetWidth, contenedor.offsetHeight);
     console.log('[debug] contenedor rect JSON:', JSON.stringify(contenedor.getBoundingClientRect()));
 
-    try {
-
-        await esperarImagenes(contenedor);
-
-        const blob = await window.html2pdf()
-            .set({
-
-                margin: 0,
-
-                filename: nombreArchivo,
-
-                image: { type: 'jpeg', quality: 1 },
-
-                html2canvas: { scale: 2, useCORS: true },
-
-                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-
-            })
-            .from(contenedor)
-            .outputPdf('blob');
-
-        return blob;
-
-    } finally {
-
-        contenedor.remove();
-
-    }
+    const rect = contenedor.getBoundingClientRect();
+    
+    const blob = await window.html2pdf()
+        .set({
+    
+            margin: 0,
+            filename: nombreArchivo,
+            image: { type: 'jpeg', quality: 1 },
+    
+            html2canvas: {
+                scale: 2,
+                useCORS: true,
+                x: 0,
+                y: rect.top,
+                width: rect.width,
+                height: rect.height,
+                windowWidth: document.documentElement.scrollWidth,
+                windowHeight: document.documentElement.scrollHeight
+            },
+    
+            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    
+        })
+        .from(contenedor)
+        .outputPdf('blob');
 
 }
