@@ -111,6 +111,7 @@ export async function generarPDFBlob(html, nombreArchivo = 'certificado.pdf') {
             .from(contenedor)
             .outputPdf('blob');
 
+        console.log('[debug] blob size/type:', blob.size, blob.type);
         return blob;
 
     } finally {
