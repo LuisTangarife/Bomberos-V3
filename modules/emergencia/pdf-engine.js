@@ -86,6 +86,15 @@ export async function generarPDFBlob(html, nombreArchivo = 'certificado.pdf') {
 
     document.body.appendChild(contenedor);
 
+    const canvas = await window.html2canvas(contenedor, { scale: 2, useCORS: true });
+   
+    try {
+        const dataUrl = canvas.toDataURL('image/jpeg', 1.0);
+        console.log('[debug] toDataURL OK, longitud:', dataUrl.length);
+    } catch (err) {
+        console.error('[debug] toDataURL FALLÓ (canvas contaminado):', err);
+    }
+
     try {
 
         await esperarImagenes(contenedor);
