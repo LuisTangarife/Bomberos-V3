@@ -74,10 +74,11 @@ export async function generarPDFBlob(html, nombreArchivo = 'certificado.pdf') {
     // (z-index negativo); el propio modal ya cubre la pantalla con su
     // fondo oscuro, así que sigue siendo invisible para el usuario.
     contenedor.style.position = 'fixed';
-    contenedor.style.left = '-3000px';   // fuera del viewport, pero acotado
+    contenedor.style.left = '-3000px';   // fuera del viewport, offset moderado
     contenedor.style.top = '0';
-    contenedor.style.zIndex = '1';       // ya no importa, no se solapa con nada
     contenedor.style.pointerEvents = 'none';
+    // ya no hace falta z-index: al no compartir coordenadas con #certModal,
+    // no hay nada que lo tape ni que lo cubra
     contenedor.innerHTML = html;
 
     document.body.appendChild(contenedor);
