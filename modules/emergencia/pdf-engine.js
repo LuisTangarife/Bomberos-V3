@@ -81,8 +81,8 @@ export async function generarPDFBlob(html, nombreArchivo = 'certificado.pdf') {
     
     document.body.appendChild(contenedor);
 
-    console.log('[debug] contenedor rect:', contenedor.getBoundingClientRect());
-    console.log('[debug] contenedor innerHTML length:', contenedor.innerHTML.length);
+    console.log('[debug] contenedor width/height:', contenedor.offsetWidth, contenedor.offsetHeight);
+    console.log('[debug] contenedor rect JSON:', JSON.stringify(contenedor.getBoundingClientRect()));
 
     try {
 
