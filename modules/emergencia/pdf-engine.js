@@ -15,19 +15,16 @@
  igual al que produciría el Word, pero generado 100% en el
  navegador con lo que ya está cargado en la página.
 
- Esta es la misma técnica que ya usaba app.js en
- generatePDFBase64() para adjuntar el PDF al guardar en
- Firestore — este archivo la generaliza para poder generar el
- PDF de CUALQUIER emergencia (no solo el formulario abierto) y
- devolver un Blob reutilizable para mostrar o descargar.
-
- === DIAGNÓSTICO TEMPORAL ===
- Mientras depuramos el bug del PDF en blanco, esta versión NO
- genera el PDF final: captura con html2canvas y muestra el
- canvas resultante directamente en pantalla (borde rojo), para
- ver a simple vista si html2canvas está capturando el contenido
- real o algo en blanco. Una vez resuelto, hay que restaurar el
- flujo normal con html2pdf().
+ NOTA: tras varias vueltas intentando ocultar el contenedor
+ (fixed con z-index negativo, offsets negativos enormes,
+ posicionarlo fuera del viewport con scroll) descubrimos que
+ html2canvas calcula mal la región a capturar en TODOS esos
+ casos (compensación de scroll interna, límites de canvas,
+ etc.), produciendo capturas en blanco o con contenido mal
+ recortado. La única forma que realmente funciona de manera
+ confiable es renderizar el contenedor en (0,0), dentro del
+ viewport real, por encima incluso del modal — a costa de un
+ parpadeo visual breve mientras se captura.
 =========================================================*/
 
 // Espera a que todas las imágenes dentro del contenedor (firmas, fotos
@@ -72,52 +69,27 @@ export async function generarPDFBlob(html, nombreArchivo = 'certificado.pdf') {
 
     const contenedor = document.createElement('div');
 
-    contenedor.style.position = 'absolute';
+    // Se renderiza EN (0,0), dentro del viewport real, con un z-index
+    // por encima del modal (#certModal usa z-index:1000) para que
+    // html2canvas lo capture sin ningún cálculo especial de scroll u
+    // offset — es el único posicionamiento con el que html2canvas
+    // captura el contenido real de forma confiable. El costo es un
+    // parpadeo visual breve del certificado antes de que se muestre
+    // el modal con el PDF ya listo.
+    contenedor.style.position = 'fixed';
+    contenedor.style.top = '0';
     contenedor.style.left = '0';
-    contenedor.style.top = document.documentElement.scrollHeight + 'px'; // debajo de todo el contenido actual
+    contenedor.style.zIndex = '2147483647'; // por encima de TODO, incluido el modal
+    contenedor.style.background = '#fff';
     contenedor.style.pointerEvents = 'none';
     contenedor.innerHTML = html;
 
     document.body.appendChild(contenedor);
 
-    console.log('[debug] contenedor width/height:', contenedor.offsetWidth, contenedor.offsetHeight);
-    console.log('[debug] contenedor rect JSON:', JSON.stringify(contenedor.getBoundingClientRect()));
-
     try {
 
         await esperarImagenes(contenedor);
 
-        const rect = contenedor.getBoundingClientRect();
-
-        // ===== BLOQUE DE DIAGNÓSTICO TEMPORAL =====
-        // html2canvas está disponible como window.html2canvas porque
-        // html2pdf.js lo trae empaquetado internamente.
-        const canvas = await window.html2canvas(contenedor, {
-            scale: 2,
-            useCORS: true,
-            x: 0,
-            y: rect.top,
-            windowWidth: document.documentElement.scrollWidth,
-            windowHeight: rect.bottom + 50
-        });
-
-        console.log('[debug] canvas capturado:', canvas.width, canvas.height);
-
-        canvas.style.position = 'fixed';
-        canvas.style.top = '0';
-        canvas.style.left = '0';
-        canvas.style.zIndex = '999999';
-        canvas.style.border = '5px solid red';
-        canvas.style.maxWidth = '90vw';
-        canvas.style.maxHeight = '90vh';
-        canvas.style.background = '#fff';
-
-        document.body.appendChild(canvas);
-
-        return null; // corta aquí temporalmente — no se genera el PDF final todavía
-        // ===== FIN BLOQUE DE DIAGNÓSTICO =====
-
-        /* ===== FLUJO NORMAL (restaurar cuando terminemos el diagnóstico) =====
         const blob = await window.html2pdf()
             .set({
 
@@ -127,11 +99,10 @@ export async function generarPDFBlob(html, nombreArchivo = 'certificado.pdf') {
 
                 html2canvas: {
                     scale: 2,
-                    useCORS: true,
-                    x: 0,
-                    y: rect.top,
-                    windowWidth: document.documentElement.scrollWidth,
-                    windowHeight: rect.bottom + 50
+                    useCORS: true
+                    // sin x/y/windowWidth/windowHeight manuales: al estar
+                    // en (0,0) dentro del viewport real, html2canvas mide
+                    // y captura el contenedor correctamente por sí solo.
                 },
 
                 jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
@@ -141,7 +112,6 @@ export async function generarPDFBlob(html, nombreArchivo = 'certificado.pdf') {
             .outputPdf('blob');
 
         return blob;
-        ===== FIN FLUJO NORMAL ===== */
 
     } finally {
 
