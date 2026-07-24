@@ -74,9 +74,9 @@ export async function generarPDFBlob(html, nombreArchivo = 'certificado.pdf') {
     // (z-index negativo); el propio modal ya cubre la pantalla con su
     // fondo oscuro, así que sigue siendo invisible para el usuario.
     contenedor.style.position = 'fixed';
-    contenedor.style.left = '0';
+    contenedor.style.left = '-3000px';   // fuera del viewport, pero acotado
     contenedor.style.top = '0';
-    contenedor.style.zIndex = '-1';
+    contenedor.style.zIndex = '1';       // ya no importa, no se solapa con nada
     contenedor.style.pointerEvents = 'none';
     contenedor.innerHTML = html;
 
