@@ -18,13 +18,12 @@ import { listarEmergencias, eliminarEmergencia } from "./firebase.js";
 import { inicializarMapa, renderizarMapa } from "./mapas.js";
 import { actualizarClima } from "./clima.js";
 
-import { renderCertificate, printCertificate, closeModal, descargarWord, descargarPDF } from "./certificados.js";
+import { renderCertificate, printCertificate, closeModal, descargarWord } from "./certificados.js";
 
 window.renderCertificate = renderCertificate;
 window.printCertificate = printCertificate;
 window.closeModal = closeModal;
 window.descargarWord = descargarWord;
-window.descargarPDF = descargarPDF;
 
 let emergencias = [];
 let cargando = false;
@@ -486,8 +485,8 @@ function crearTarjeta(emergencia) {
             <button type="button" class="action-ver-em">
                 <i class="fa-solid fa-eye"></i> Ver
             </button>
-            <button type="button" class="action-pdf-em">
-                <i class="fa-solid fa-file-pdf"></i> PDF
+            <button type="button" class="action-word-em">
+                <i class="fa-solid fa-file-word"></i> Word
             </button>
             <button type="button" class="action-delete-em">
                 <i class="fa-solid fa-trash"></i>
@@ -502,17 +501,15 @@ function crearTarjeta(emergencia) {
             }
         });
 
-    card.querySelector(".action-pdf-em")
+    card.querySelector(".action-word-em")
         .addEventListener("click", async () => {
             if (typeof window.renderCertificate === "function") {
-                // Se espera a que el PDF real termine de generarse (ya no
-                // es HTML instantáneo) antes de disparar la descarga; el
-                // setTimeout fijo de 150ms que había antes asumía que
-                // mostrar el certificado era síncrono y ya no lo es.
+                // Se espera a que el documento termine de generarse (ya
+                // no es HTML instantáneo) antes de disparar la descarga.
                 await window.renderCertificate(emergencia);
             }
-            if (typeof window.descargarPDF === "function") {
-                window.descargarPDF();
+            if (typeof window.descargarWord === "function") {
+                window.descargarWord();
             }
         });
 

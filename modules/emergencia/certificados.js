@@ -22,28 +22,24 @@ import {
   generarDocNum
 } from "./report-helpers.js";
 
-import { generarDocumentoWord } from "./docx-engine.js";
-import { generarPDFBlob } from "./pdf-engine.js";
+import { generarDocumentoWordBlob, descargarBlobWord, renderizarDocxEnContenedor } from "./docx-engine.js";
 
 const RUTA_PLANTILLA = "./plantillas/plantilla1.html";
 
 let _plantillaCache = null;
 let currentPrintHTML = "";
 
-// Datos y docNum del último certificado renderizado en pantalla, para
-// que "Descargar Word" pueda generar exactamente el mismo reporte sin
-// necesidad de que el usuario vuelva a diligenciar nada. Si se genera
-// un Word nuevo con un docNum distinto al que ve el usuario en la
-// pantalla, los dos documentos quedarían con números de reporte
-// distintos para la misma emergencia — por eso se reutiliza el mismo.
+// Datos y docNum del último certificado renderizado en pantalla.
 let _ultimaCertData = null;
 let _ultimoDocNum = null;
 
-// PDF real (ya no HTML crudo) que se muestra dentro del modal vía
-// <iframe>. Se guarda el Blob y su URL de objeto para poder ofrecer
-// "Descargar PDF" e "Imprimir" sin tener que regenerarlo.
-let _ultimoPdfBlob = null;
-let _ultimoPdfUrl = null;
+// Blob del Word real (plantilla1.docx ya diligenciada) que se muestra
+// en el modal vía docx-preview Y que se descarga con "Descargar Word".
+// Es el MISMO Blob para ambas cosas — antes había un PDF generado por
+// separado (desde plantilla1.html) para la vista previa, y un Word
+// aparte para la descarga; ahora solo existe un documento.
+let _ultimoWordBlob = null;
+let _ultimoWordNombre = null;
 
 async function cargarPlantilla() {
   if (_plantillaCache) return _plantillaCache;
@@ -112,6 +108,15 @@ function renderFirmasBomberosHTML(firmasBomberos) {
     `).join('');
 }
 
+// ⚠️ OJO: buildCertificateHTML y sus helpers (cargarPlantilla,
+// reemplazarPlaceholders, aplicarSeccion, renderFirmasAfectadosHTML,
+// renderFirmasBomberosHTML) YA NO alimentan el modal de certificado —
+// eso ahora usa docx-preview sobre el .docx real (ver renderCertificate
+// más abajo). Se mantienen aquí sin tocar porque app.js todavía las usa
+// para armar el PDF que adjunta a Firestore al guardar un reporte
+// (generatePDFBase64 → buildHiddenCertificate → buildCertificateHTML).
+// Si algún día esa función también se migra al Word real, esto se
+// puede eliminar.
 export async function buildCertificateHTML(data, docNum) {
 
   let plantilla = await cargarPlantilla();
@@ -155,12 +160,10 @@ export async function buildCertificateHTML(data, docNum) {
 export async function renderCertificate(data, id = null) {
 
   // Un solo docNum para todo el ciclo de vida de este reporte en
-  // pantalla: la vista en PDF y el Word que se descargue después (si el
-  // usuario hace clic en "Descargar Word") deben mostrar el mismo
-  // número, no uno nuevo generado por separado en cada acción.
+  // pantalla: la vista en el modal y el archivo que se descargue con
+  // "Descargar Word" son AHORA el mismo documento, así que solo hace
+  // falta un docNum, generado una vez.
   const docNum = generarDocNum();
-
-  const certHTML = await buildCertificateHTML(data, docNum);
 
   const contenido = document.getElementById('certContent');
   const modal = document.getElementById('certModal');
@@ -168,48 +171,42 @@ export async function renderCertificate(data, id = null) {
   contenido.innerHTML = `
     <div style="padding:40px;text-align:center;color:inherit;">
       <i class="fa-solid fa-spinner fa-spin" style="font-size:1.4rem;"></i>
-      <p style="margin-top:12px;">Generando PDF del reporte...</p>
+      <p style="margin-top:12px;">Generando el documento oficial...</p>
     </div>
   `;
 
   modal.style.display = 'flex';
   document.body.style.overflow = 'hidden';
 
-  currentPrintHTML = certHTML;
   _ultimaCertData = data;
   _ultimoDocNum = docNum;
 
   try {
 
-    const nombreArchivo = `Reporte_${docNum}.pdf`;
-    const blob = await generarPDFBlob(certHTML, nombreArchivo);
+    // Genera el Word real (plantilla1.docx diligenciada) UNA sola vez;
+    // el mismo Blob sirve para mostrarlo aquí y para "Descargar Word".
+    const { blob, nombreArchivo } = await generarDocumentoWordBlob(data, docNum);
 
-    // Se libera la URL del PDF anterior antes de crear una nueva, para
-    // no acumular Blobs en memoria si el usuario abre varios reportes
-    // seguidos en la misma sesión.
-    if (_ultimoPdfUrl) {
-      URL.revokeObjectURL(_ultimoPdfUrl);
-    }
+    _ultimoWordBlob = blob;
+    _ultimoWordNombre = nombreArchivo;
 
-    _ultimoPdfBlob = blob;
-    _ultimoPdfUrl = URL.createObjectURL(blob);
+    contenido.innerHTML = '';
 
-    contenido.innerHTML = `
-      <iframe id="certPdfFrame" src="${_ultimoPdfUrl}"
-        title="Reporte de intervención"
-        style="width:100%;height:75vh;border:none;display:block;"></iframe>
-    `;
+    // docx-preview convierte el .docx real a HTML dentro de #certContent
+    // — es el documento oficial, no una réplica en HTML mantenida aparte.
+    await renderizarDocxEnContenedor(blob, contenido);
 
   } catch (error) {
 
-    console.error('[certificados] No se pudo generar el PDF:', error);
+    console.error('[certificados] No se pudo generar el documento del reporte:', error);
 
-    _ultimoPdfBlob = null;
+    _ultimoWordBlob = null;
+    _ultimoWordNombre = null;
 
     contenido.innerHTML = `
       <div style="padding:40px;text-align:center;">
         <i class="fa-solid fa-triangle-exclamation" style="font-size:1.4rem;color:#e67e22;"></i>
-        <p style="margin-top:12px;">No fue posible generar el PDF del reporte.</p>
+        <p style="margin-top:12px;">No fue posible generar el documento del reporte.</p>
         <p style="opacity:.7;font-size:.85rem;">${error && error.message ? error.message : ''}</p>
       </div>
     `;
@@ -219,54 +216,19 @@ export async function renderCertificate(data, id = null) {
 }
 
 /**
- * Descarga el PDF real del reporte actualmente abierto en el modal.
+ * Descarga el Word real del reporte actualmente abierto en el modal.
+ * Reutiliza el Blob que ya se generó para mostrarlo — no vuelve a
+ * renderizar el documento.
  * Requiere haber llamado antes a renderCertificate/window.renderCertificate.
  */
-export function descargarPDF() {
+export function descargarWord() {
 
-  if (!_ultimoPdfBlob) {
+  if (!_ultimoWordBlob) {
     alert('Primero genera el certificado.');
     return;
   }
 
-  const nombreArchivo = `Reporte_${_ultimoDocNum || 'certificado'}.pdf`;
-
-  if (typeof window.saveAs === 'function') {
-    window.saveAs(_ultimoPdfBlob, nombreArchivo);
-    return;
-  }
-
-  const enlace = document.createElement('a');
-  enlace.href = _ultimoPdfUrl;
-  enlace.download = nombreArchivo;
-  document.body.appendChild(enlace);
-  enlace.click();
-  document.body.removeChild(enlace);
-
-}
-
-/**
- * Genera y descarga el Word oficial (plantilla1.docx diligenciada) del
- * reporte que está actualmente abierto en el modal de certificado.
- * Requiere haber llamado antes a renderCertificate/window.renderCertificate.
- */
-export async function descargarWord() {
-
-  if (!_ultimaCertData) {
-    alert('Primero genera el certificado.');
-    return;
-  }
-
-  try {
-
-    await generarDocumentoWord(_ultimaCertData, _ultimoDocNum);
-
-  } catch (error) {
-
-    console.error('[certificados] No se pudo generar el Word:', error);
-    alert(error.message || 'No fue posible generar el documento Word.');
-
-  }
+  descargarBlobWord(_ultimoWordBlob, _ultimoWordNombre || 'certificado.docx');
 
 }
 
@@ -275,30 +237,22 @@ export function closeModal() {
   document.body.style.overflow = '';
 }
 
+/**
+ * Imprime el documento actualmente mostrado en el modal. #certContent
+ * ya contiene el Word real renderizado por docx-preview, así que basta
+ * con usar window.print() apoyado en una regla @media print (ver
+ * styles.css/gestor.css) que oculta todo lo demás de la página y deja
+ * visible solo ese contenedor — más simple y confiable que abrir una
+ * ventana nueva o depender de un iframe con un PDF aparte.
+ */
 export function printCertificate() {
 
-    const iframe = document.getElementById('certPdfFrame');
-
-    if (iframe && iframe.contentWindow) {
-        // El iframe ya muestra el PDF real (no HTML); dejamos que el
-        // propio visor de PDF del navegador maneje el diálogo de
-        // impresión, que sabe paginar correctamente un PDF de verdad
-        // — más confiable que reescribir el HTML en una ventana nueva
-        // y esperar a que "cargue" antes de llamar a print().
-        iframe.contentWindow.focus();
-        iframe.contentWindow.print();
+    if (!_ultimoWordBlob) {
+        alert("Primero genera el certificado.");
         return;
     }
 
-    if (_ultimoPdfUrl) {
-        // Fallback si el iframe no está disponible por algún motivo:
-        // abrir el PDF en una pestaña nueva y dejar que el usuario
-        // use Ctrl+P desde el visor nativo del navegador.
-        window.open(_ultimoPdfUrl, '_blank');
-        return;
-    }
-
-    alert("Primero genera el certificado.");
+    window.print();
 
 }
 

@@ -13,6 +13,10 @@
 <body>
 <div class="gestion-emergencias-page">
 <header class="gestion-header">
+    <button class="btn-volver-panel" onclick="location.href='../../index.html'">
+        <i class="fa-solid fa-arrow-left"></i>
+        Panel Principal
+    </button>
     <div>
         <span class="gestion-callsign">CBV // Centro de Despacho</span>
         <div class="gestion-header-title-row">
@@ -90,37 +94,6 @@
      unidadesCercanasList / alertasSistemaList a tu propia fuente
      de datos (Firebase) cuando quieras que sea dinámico -->
 <section class="map-side-grid">
-    <div class="map-side-panel">
-        <div class="map-side-panel-header">
-            <span><i class="fa-solid fa-truck"></i>Unidades cercanas</span>
-        </div>
-        <div id="unidadesCercanasList">
-            <div class="unidad-row">
-                <i class="fa-solid fa-truck-fire"></i>
-                <span class="unidad-codigo">B-01</span>
-                <span class="unidad-distancia">1.2 km</span>
-                <span class="unidad-estado disponible">Disponible</span>
-            </div>
-            <div class="unidad-row">
-                <i class="fa-solid fa-car-burst"></i>
-                <span class="unidad-codigo">R-03</span>
-                <span class="unidad-distancia">2.4 km</span>
-                <span class="unidad-estado en-mision">En misión</span>
-            </div>
-            <div class="unidad-row">
-                <i class="fa-solid fa-truck-medical"></i>
-                <span class="unidad-codigo">E-02</span>
-                <span class="unidad-distancia">3.1 km</span>
-                <span class="unidad-estado disponible">Disponible</span>
-            </div>
-            <div class="unidad-row">
-                <i class="fa-solid fa-truck-droplet"></i>
-                <span class="unidad-codigo">L-01</span>
-                <span class="unidad-distancia">4.7 km</span>
-                <span class="unidad-estado en-retorno">En retorno</span>
-            </div>
-        </div>
-    </div>
     <div class="map-side-panel">
         <div class="map-side-panel-header">
             <span><i class="fa-solid fa-bell"></i>Alertas del sistema</span>
@@ -215,27 +188,15 @@
         </div>
     </div>
 
-    <div class="widget-card">
-        <h4><i class="fa-solid fa-satellite-dish"></i>Comunicaciones</h4>
-        <div class="comunicaciones-canal">Canal principal</div>
-        <div class="comunicaciones-estado">Encriptado</div>
-        <div class="comunicaciones-onda">
-            <span style="height:8px"></span><span style="height:16px"></span><span style="height:10px"></span>
-            <span style="height:22px"></span><span style="height:14px"></span><span style="height:18px"></span>
-            <span style="height:9px"></span><span style="height:20px"></span><span style="height:12px"></span>
-            <span style="height:16px"></span>
-        </div>
-    </div>
 </section>
 
 </div>
 
-<!-- Librerías para generar el PDF real del certificado (a partir de
-     plantilla1.html), usadas por pdf-engine.js. Mismas versiones que ya
-     usaba index.html en su propio flujo de generatePDFBase64(). -->
-<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<!-- Librería para mostrar el Word real (plantilla1.docx ya diligenciada)
+     directamente en el modal — reemplaza el flujo anterior que generaba
+     un PDF aparte desde plantilla1.html con html2pdf. -->
+<script src="https://unpkg.com/jszip@3.10.1/dist/jszip.min.js"></script>
+<script src="https://unpkg.com/docx-preview@0.3.7/dist/docx-preview.min.js"></script>
 <!-- Librerías para generar el Word real (plantilla1.docx). No existe una
      carpeta libs/ en este proyecto, por eso se cargan desde CDN — mismo
      patrón que ya se usa arriba para Leaflet y Font Awesome. -->
@@ -253,11 +214,11 @@
     <div id="printCert" style="display:none;"></div>
     <div class="modal-actions">
       <button onclick="printCertificate()" class="btn-print">🖨 Imprimir</button>
-      <button onclick="descargarPDF()" class="btn-pdf">📥 Descargar PDF</button>
       <button onclick="descargarWord()" class="btn-word">📄 Descargar Word</button>
       <button onclick="closeModal()" class="btn-close-modal">Cerrar</button>
     </div>
   </div>
+
 </div>
 <script type="module" src="./gestor.js"></script>
 </body>

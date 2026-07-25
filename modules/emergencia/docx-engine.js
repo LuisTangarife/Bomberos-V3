@@ -46,20 +46,20 @@ export function cerrarDocumento(){
 }
 
 /**
- * Genera el Word oficial (plantilla1.docx ya diligenciada) y dispara
- * su descarga en el navegador.
+ * Genera el Word oficial (plantilla1.docx ya diligenciada) y devuelve
+ * el Blob resultante, SIN descargarlo. Separado de la descarga para
+ * poder reutilizar el mismo Blob tanto para mostrarlo en el modal
+ * (docx-preview) como para el botón "Descargar Word" — antes cada uno
+ * generaba su propio documento por separado (uno en HTML, otro en
+ * Word real), lo cual es exactamente lo que se quería dejar de hacer:
+ * ahora hay un solo documento generado, mostrado y descargado.
  *
- * @param {object} data    Mismos datos de la emergencia que usa el
- *                         certificado HTML (buildCertificateHTML).
+ * @param {object} data     Mismos datos de la emergencia.
  * @param {string} [docNum] Identificador del reporte. Si no se pasa,
- *                         se genera uno nuevo — pero para que el número
- *                         que ve el usuario en pantalla coincida con el
- *                         del archivo descargado, quien llama a esta
- *                         función debería reutilizar el mismo docNum
- *                         que ya se usó para el certificado en HTML.
- * @returns {Promise<string>} el nombre de archivo generado.
+ *                          se genera uno nuevo.
+ * @returns {Promise<{blob: Blob, nombreArchivo: string}>}
  */
-export async function generarDocumentoWord(data, docNum) {
+export async function generarDocumentoWordBlob(data, docNum) {
 
     const contexto = crearContexto(data, docNum);
 
@@ -97,23 +97,72 @@ export async function generarDocumentoWord(data, docNum) {
 
     const nombreArchivo = `Reporte_${contexto.REPORTE_ID}.docx`;
 
-    if (typeof window.saveAs === 'function') {
-        window.saveAs(blob, nombreArchivo);
-    } else {
-        // Alternativa sin depender de FileSaver.js, por si esa librería
-        // no llegó a cargar en la página.
-        const url = URL.createObjectURL(blob);
-        const enlace = document.createElement('a');
-        enlace.href = url;
-        enlace.download = nombreArchivo;
-        document.body.appendChild(enlace);
-        enlace.click();
-        document.body.removeChild(enlace);
-        URL.revokeObjectURL(url);
-    }
-
     cerrarDocumento();
 
+    return { blob, nombreArchivo };
+
+}
+
+/**
+ * Dispara la descarga de un Blob ya generado (por generarDocumentoWordBlob).
+ */
+export function descargarBlobWord(blob, nombreArchivo) {
+
+    if (typeof window.saveAs === 'function') {
+        window.saveAs(blob, nombreArchivo);
+        return;
+    }
+
+    // Alternativa sin depender de FileSaver.js, por si esa librería no
+    // llegó a cargar en la página.
+    const url = URL.createObjectURL(blob);
+    const enlace = document.createElement('a');
+    enlace.href = url;
+    enlace.download = nombreArchivo;
+    document.body.appendChild(enlace);
+    enlace.click();
+    document.body.removeChild(enlace);
+    URL.revokeObjectURL(url);
+
+}
+
+/**
+ * Atajo de compatibilidad: genera Y descarga en un solo paso, por si
+ * algo necesita el comportamiento anterior sin mostrar el documento
+ * primero en pantalla.
+ */
+export async function generarDocumentoWord(data, docNum) {
+    const { blob, nombreArchivo } = await generarDocumentoWordBlob(data, docNum);
+    descargarBlobWord(blob, nombreArchivo);
     return nombreArchivo;
+}
+
+/**
+ * Renderiza un Blob .docx dentro de un contenedor del DOM usando
+ * docx-preview (librería externa, global `window.docx`). Esto es lo
+ * que permite que el modal muestre el MISMO documento Word que se
+ * descarga — no una réplica en HTML mantenida por separado.
+ *
+ * @param {Blob} blob
+ * @param {HTMLElement} contenedor  Elemento donde se inserta el HTML
+ *                                  generado a partir del .docx.
+ */
+export async function renderizarDocxEnContenedor(blob, contenedor) {
+
+    if (typeof window.docx === 'undefined' || typeof window.docx.renderAsync !== 'function') {
+        throw new Error('La librería docx-preview no está cargada en esta página.');
+    }
+
+    contenedor.innerHTML = '';
+
+    await window.docx.renderAsync(blob, contenedor, contenedor, {
+        className: 'docx-preview',
+        inWrapper: true,
+        ignoreWidth: false,
+        ignoreHeight: false,
+        breakPages: true,
+        experimental: true,
+        useBase64URL: true
+    });
 
 }
