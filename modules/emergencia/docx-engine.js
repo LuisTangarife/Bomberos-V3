@@ -147,6 +147,69 @@ export async function generarDocumentoWord(data, docNum) {
  * @param {HTMLElement} contenedor  Elemento donde se inserta el HTML
  *                                  generado a partir del .docx.
  */
+/**
+ * Prepara una COPIA del .docx exclusivamente para mostrarla con
+ * docx-preview — nunca se usa para el archivo que se descarga.
+ *
+ * Por qué existe: al inspeccionar plantilla1.docx se confirmó que la
+ * sección tiene tres referencias de encabezado/pie (default/first/even
+ * — Word las escribe siempre) pero NO tiene activado <w:titlePg/> ni
+ * <w:evenAndOddHeaders/>. Eso significa que Word, al abrir el archivo,
+ * usa ÚNICAMENTE el encabezado/pie "default" (que además es el que
+ * contiene los logos — su header2.xml pesa ~12 KB contra ~3 KB de los
+ * otros dos). docx-preview no parece aplicar esa misma regla: puede
+ * terminar usando el encabezado "first" (sin logos) y/o generando
+ * páginas de más a partir de esas referencias que Word ignora.
+ *
+ * La solución es quitar las referencias "first" y "even" de esta copia
+ * antes de pasarla a docx-preview, para que no quede ambigüedad posible
+ * sobre qué encabezado usar — exactamente el comportamiento real de
+ * Word para este documento. El .docx descargable NO se toca: conserva
+ * las tres variantes intactas por si algún día se activa esa opción
+ * en Word.
+ *
+ * @param {Blob} blob  El .docx ya generado (sin modificar).
+ * @returns {Promise<Blob>} copia normalizada para la vista previa.
+ */
+export async function prepararBlobParaVistaPrevia(blob) {
+
+    try {
+
+        const buffer = await blob.arrayBuffer();
+        const zip = new PizZip(buffer);
+
+        const rutaDocumento = 'word/document.xml';
+        const parte = zip.file(rutaDocumento);
+
+        if (!parte) {
+            // Estructura inesperada: se devuelve el original sin tocar
+            // en vez de fallar la vista previa por completo.
+            return blob;
+        }
+
+        let xml = parte.asText();
+
+        xml = xml.replace(/<w:headerReference[^>]*w:type="(first|even)"[^>]*\/>/g, '');
+        xml = xml.replace(/<w:footerReference[^>]*w:type="(first|even)"[^>]*\/>/g, '');
+
+        zip.file(rutaDocumento, xml);
+
+        return zip.generate({
+            type: 'blob',
+            mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+        });
+
+    } catch (error) {
+
+        // Si algo sale mal normalizando, es mejor mostrar el original
+        // (con el posible problema de encabezados) que no mostrar nada.
+        console.error('[docx-engine] No se pudo normalizar el docx para la vista previa, se usa el original:', error);
+        return blob;
+
+    }
+
+}
+
 export async function renderizarDocxEnContenedor(blob, contenedor) {
 
     if (typeof window.docx === 'undefined' || typeof window.docx.renderAsync !== 'function') {
@@ -162,7 +225,14 @@ export async function renderizarDocxEnContenedor(blob, contenedor) {
         ignoreHeight: false,
         breakPages: true,
         experimental: true,
-        useBase64URL: true
+        useBase64URL: true,
+        renderHeaders: true,
+        renderFooters: true,
+        // <w:lastRenderedPageBreak/> refleja cómo se veía el documento
+        // la última vez que se abrió en Word, no cómo se ve aquí — si
+        // se respeta, puede introducir saltos de página que no
+        // corresponden a un salto real, generando páginas de más.
+        ignoreLastRenderedPageBreak: true
     });
 
 }

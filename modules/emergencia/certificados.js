@@ -22,7 +22,7 @@ import {
   generarDocNum
 } from "./report-helpers.js";
 
-import { generarDocumentoWordBlob, descargarBlobWord, renderizarDocxEnContenedor } from "./docx-engine.js";
+import { generarDocumentoWordBlob, descargarBlobWord, renderizarDocxEnContenedor, prepararBlobParaVistaPrevia } from "./docx-engine.js";
 
 const RUTA_PLANTILLA = "./plantillas/plantilla1.html";
 
@@ -35,7 +35,10 @@ let _ultimoDocNum = null;
 
 // Blob del Word real (plantilla1.docx ya diligenciada) que se muestra
 // en el modal vía docx-preview Y que se descarga con "Descargar Word".
-// Es el MISMO Blob para ambas cosas — antes había un PDF generado por
+// Es la fuente de la descarga ("Descargar Word") y, salvo una
+// normalización de encabezados/pies (ver prepararBlobParaVistaPrevia
+// en docx-engine.js), también de lo que se muestra en el modal — antes
+// había un PDF generado por
 // separado (desde plantilla1.html) para la vista previa, y un Word
 // aparte para la descarga; ahora solo existe un documento.
 let _ultimoWordBlob = null;
@@ -184,7 +187,8 @@ export async function renderCertificate(data, id = null) {
   try {
 
     // Genera el Word real (plantilla1.docx diligenciada) UNA sola vez;
-    // el mismo Blob sirve para mostrarlo aquí y para "Descargar Word".
+    // el mismo Blob es el que se descarga con "Descargar Word" — no se
+    // toca para nada.
     const { blob, nombreArchivo } = await generarDocumentoWordBlob(data, docNum);
 
     _ultimoWordBlob = blob;
@@ -192,9 +196,18 @@ export async function renderCertificate(data, id = null) {
 
     contenido.innerHTML = '';
 
+    // La plantilla trae encabezados/pies "first" y "even" que Word
+    // escribe siempre pero que este documento en particular no usa
+    // (no tiene activado "primera página diferente" ni "pares e
+    // impares diferentes"). docx-preview no distingue eso y puede
+    // mostrar el encabezado equivocado (sin logos) o páginas de más.
+    // Se genera una copia SOLO para mostrar aquí; el archivo que se
+    // descarga sigue siendo el original completo.
+    const blobParaVista = await prepararBlobParaVistaPrevia(blob);
+
     // docx-preview convierte el .docx real a HTML dentro de #certContent
     // — es el documento oficial, no una réplica en HTML mantenida aparte.
-    await renderizarDocxEnContenedor(blob, contenido);
+    await renderizarDocxEnContenedor(blobParaVista, contenido);
 
   } catch (error) {
 
