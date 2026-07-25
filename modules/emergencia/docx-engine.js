@@ -151,30 +151,25 @@ export async function generarDocumentoWord(data, docNum) {
  * Prepara una COPIA del .docx exclusivamente para mostrarla con
  * docx-preview — nunca se usa para el archivo que se descarga.
  *
- * Por qué existe: los logos están en el encabezado (header2.xml, el de
- * tipo "default") con SUS PROPIAS imágenes, distintas a las del cuerpo
- * (image2.png/image3.jpg/image7.png/image8.png en el encabezado, contra
- * image1.png/image9.png/image4.png en el cuerpo — solo image4.png se
- * repite). docx-preview no dibuja de forma confiable imágenes que vienen
- * de un encabezado, sin importar cuál esté activo — es una limitación
- * conocida de la librería, no un problema de "encabezado equivocado".
+ * Por qué existe: al inspeccionar plantilla1.docx se confirmó que la
+ * sección tiene tres referencias de encabezado/pie (default/first/even
+ * — Word las escribe siempre) pero NO tiene activado <w:titlePg/> ni
+ * <w:evenAndOddHeaders/>. Eso significa que Word, al abrir el archivo,
+ * usa ÚNICAMENTE el encabezado/pie "default" (que además es el que
+ * contiene los logos — su header2.xml pesa ~12 KB contra ~3 KB de los
+ * otros dos). docx-preview no parece aplicar esa misma regla: puede
+ * terminar usando el encabezado "first" (sin logos) y/o generando
+ * páginas de más a partir de esas referencias que Word ignora.
  *
- * La solución: tomar el contenido del encabezado "default" (los
- * párrafos con los logos) y copiarlo al PRINCIPIO del cuerpo de esta
- * copia, remapeando las relaciones r:embed a nuevos ids agregados a
- * document.xml.rels — así docx-preview las trata como imágenes
- * normales del cuerpo, que sí renderiza bien. El .docx que se descarga
- * NO se toca: sigue teniendo el encabezado real de Word, repetido en
- * cada página, tal como debe ser un documento oficial.
- *
- * Limitación conocida: si el encabezado usa imágenes ancladas con
- * posición absoluta pensada para la zona de encabezado, puede que en
- * el cuerpo no queden centradas exactamente igual. Es una vista previa
- * aproximada, no un reemplazo pixel-perfecto del Word real.
+ * La solución es quitar las referencias "first" y "even" de esta copia
+ * antes de pasarla a docx-preview, para que no quede ambigüedad posible
+ * sobre qué encabezado usar — exactamente el comportamiento real de
+ * Word para este documento. El .docx descargable NO se toca: conserva
+ * las tres variantes intactas por si algún día se activa esa opción
+ * en Word.
  *
  * @param {Blob} blob  El .docx ya generado (sin modificar).
- * @returns {Promise<Blob>} copia con los logos movidos al cuerpo, para
- *                          usar SOLO en la vista previa.
+ * @returns {Promise<Blob>} copia normalizada para la vista previa.
  */
 export async function prepararBlobParaVistaPrevia(blob) {
 
@@ -183,131 +178,21 @@ export async function prepararBlobParaVistaPrevia(blob) {
         const buffer = await blob.arrayBuffer();
         const zip = new PizZip(buffer);
 
-        const parser = new DOMParser();
-        const serializer = new XMLSerializer();
-
         const rutaDocumento = 'word/document.xml';
-        const rutaRelsDocumento = 'word/_rels/document.xml.rels';
+        const parte = zip.file(rutaDocumento);
 
-        const parteDocumento = zip.file(rutaDocumento);
-        const parteRelsDocumento = zip.file(rutaRelsDocumento);
-
-        if (!parteDocumento || !parteRelsDocumento) {
-            return blob; // estructura inesperada: mostrar el original tal cual
+        if (!parte) {
+            // Estructura inesperada: se devuelve el original sin tocar
+            // en vez de fallar la vista previa por completo.
+            return blob;
         }
 
-        const xmlDocumento = parser.parseFromString(parteDocumento.asText(), 'application/xml');
-        const xmlRelsDocumento = parser.parseFromString(parteRelsDocumento.asText(), 'application/xml');
+        let xml = parte.asText();
 
-        // 1) Encontrar el r:id del encabezado "default" en la sección.
-        const refEncabezadoDefault = Array.from(
-            xmlDocumento.getElementsByTagNameNS('*', 'headerReference')
-        ).find(ref => ref.getAttributeNS(
-            'http://schemas.openxmlformats.org/wordprocessingml/2006/main', 'type'
-        ) === 'default');
+        xml = xml.replace(/<w:headerReference[^>]*w:type="(first|even)"[^>]*\/>/g, '');
+        xml = xml.replace(/<w:footerReference[^>]*w:type="(first|even)"[^>]*\/>/g, '');
 
-        if (!refEncabezadoDefault) {
-            return blob; // no hay encabezado default: nada que mover
-        }
-
-        const rIdEncabezado = refEncabezadoDefault.getAttributeNS(
-            'http://schemas.openxmlformats.org/officeDocument/2006/relationships', 'id'
-        );
-
-        // 2) De document.xml.rels, sacar a qué archivo (headerN.xml)
-        // apunta ese r:id.
-        const relEncabezado = Array.from(xmlRelsDocumento.getElementsByTagName('Relationship'))
-            .find(r => r.getAttribute('Id') === rIdEncabezado);
-
-        if (!relEncabezado) return blob;
-
-        const archivoEncabezado = 'word/' + relEncabezado.getAttribute('Target');
-        const nombreEncabezado = archivoEncabezado.split('/').pop();
-        const rutaRelsEncabezado = 'word/_rels/' + nombreEncabezado + '.rels';
-
-        const parteEncabezado = zip.file(archivoEncabezado);
-        const parteRelsEncabezado = zip.file(rutaRelsEncabezado);
-
-        if (!parteEncabezado) return blob;
-
-        const xmlEncabezado = parser.parseFromString(parteEncabezado.asText(), 'application/xml');
-
-        // 3) Mapa de relaciones DEL encabezado (rId local -> Target),
-        // para poder remapearlas a nuevas relaciones del documento.
-        const relsEncabezadoPorId = {};
-        if (parteRelsEncabezado) {
-            const xmlRelsEncabezado = parser.parseFromString(parteRelsEncabezado.asText(), 'application/xml');
-            Array.from(xmlRelsEncabezado.getElementsByTagName('Relationship')).forEach(r => {
-                relsEncabezadoPorId[r.getAttribute('Id')] = r;
-            });
-        }
-
-        // 4) Por cada imagen que use el encabezado, agregar una nueva
-        // relación en document.xml.rels con un id que no exista ya, y
-        // reescribir el r:embed correspondiente en los nodos clonados.
-        const idsYaUsados = new Set(
-            Array.from(xmlRelsDocumento.getElementsByTagName('Relationship'))
-                .map(r => r.getAttribute('Id'))
-        );
-
-        let siguienteId = 9001;
-        const mapaRemapeoIds = {}; // rId del encabezado -> rId nuevo en el documento
-
-        const nsRelationships = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships';
-        const embeds = xmlEncabezado.getElementsByTagNameNS('*', 'blip');
-
-        Array.from(embeds).forEach(blip => {
-            const rIdOriginal = blip.getAttributeNS(nsRelationships, 'embed');
-            if (!rIdOriginal || mapaRemapeoIds[rIdOriginal]) return;
-
-            const relOriginal = relsEncabezadoPorId[rIdOriginal];
-            if (!relOriginal) return;
-
-            let nuevoId = 'rId' + siguienteId;
-            while (idsYaUsados.has(nuevoId)) {
-                siguienteId++;
-                nuevoId = 'rId' + siguienteId;
-            }
-            idsYaUsados.add(nuevoId);
-            siguienteId++;
-
-            mapaRemapeoIds[rIdOriginal] = nuevoId;
-
-            const nuevaRelacion = xmlRelsDocumento.createElement('Relationship');
-            nuevaRelacion.setAttribute('Id', nuevoId);
-            nuevaRelacion.setAttribute('Type', relOriginal.getAttribute('Type'));
-            nuevaRelacion.setAttribute('Target', relOriginal.getAttribute('Target'));
-            xmlRelsDocumento.documentElement.appendChild(nuevaRelacion);
-        });
-
-        // 5) Aplicar el remapeo de ids sobre los <a:blip r:embed="..."/>
-        // sacados del encabezado.
-        Array.from(embeds).forEach(blip => {
-            const rIdOriginal = blip.getAttributeNS(nsRelationships, 'embed');
-            if (rIdOriginal && mapaRemapeoIds[rIdOriginal]) {
-                blip.setAttributeNS(nsRelationships, 'r:embed', mapaRemapeoIds[rIdOriginal]);
-            }
-        });
-
-        // 6) Clonar los párrafos del encabezado (con los logos ya
-        // remapeados) e insertarlos al principio del cuerpo del
-        // documento, antes del primer párrafo existente.
-        const parrafosEncabezado = Array.from(xmlEncabezado.documentElement.childNodes)
-            .filter(nodo => nodo.nodeType === 1); // solo elementos, sin texto/comentarios sueltos
-
-        if (parrafosEncabezado.length > 0) {
-            const cuerpo = xmlDocumento.getElementsByTagNameNS('*', 'body')[0];
-            const primerHijo = cuerpo.firstChild;
-
-            parrafosEncabezado.forEach(parrafo => {
-                const clon = xmlDocumento.importNode(parrafo, true);
-                cuerpo.insertBefore(clon, primerHijo);
-            });
-        }
-
-        // 7) Volver a guardar document.xml y document.xml.rels en el zip.
-        zip.file(rutaDocumento, serializer.serializeToString(xmlDocumento));
-        zip.file(rutaRelsDocumento, serializer.serializeToString(xmlRelsDocumento));
+        zip.file(rutaDocumento, xml);
 
         return zip.generate({
             type: 'blob',
@@ -316,9 +201,9 @@ export async function prepararBlobParaVistaPrevia(blob) {
 
     } catch (error) {
 
-        // Si algo sale mal moviendo los logos, es mejor mostrar el
-        // original (sin logos) que no mostrar nada.
-        console.error('[docx-engine] No se pudo mover el encabezado al cuerpo para la vista previa, se usa el original:', error);
+        // Si algo sale mal normalizando, es mejor mostrar el original
+        // (con el posible problema de encabezados) que no mostrar nada.
+        console.error('[docx-engine] No se pudo normalizar el docx para la vista previa, se usa el original:', error);
         return blob;
 
     }
@@ -349,12 +234,5 @@ export async function renderizarDocxEnContenedor(blob, contenedor) {
         // corresponden a un salto real, generando páginas de más.
         ignoreLastRenderedPageBreak: true
     });
-
-    // Diagnóstico: cuántas "páginas" quedaron realmente en el DOM.
-    // Si esto marca más de 1 para un certificado que debería ser de una
-    // sola página, el problema está en el render (o en la plantilla),
-    // no en la impresión — revisar en la consola del navegador.
-    const paginasRenderizadas = contenedor.querySelectorAll('.docx-preview > section, .docx-preview > .docx-page, [class*="page"]').length;
-    console.log('[docx-engine] Páginas renderizadas por docx-preview:', paginasRenderizadas);
 
 }
