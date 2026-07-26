@@ -580,28 +580,34 @@ export async function prepararBlobParaVistaPrevia(blob) {
                 // flip aunque su offset esté dentro del rango normal.
                 const LIMITE_EXTENT_EMU = 5000000; // ~5.47in — el escudo mide ~8.5x8.7in
 
-                headerXml = headerXml.replace(/<wp:anchor\b[^>]*behindDoc="1"[\s\S]*?<\/wp:anchor>/g, (anchorXml) => {
+                // CORRECCIÓN: behindDoc no tiene ningún efecto en cómo
+                // docx-preview renderiza — se confirmó leyendo el código
+                // fuente de la librería (se lee el atributo pero nunca
+                // se usa). Cambiarlo nunca iba a ocultar ni mostrar esta
+                // imagen. El escudo grande, además, tiene recorte
+                // (srcRect) que docx-preview traduce a clip-path +
+                // transform sobre un <img> de tamaño completo — y ese
+                // combo sí ocupa espacio real en el documento pese al
+                // contenedor de 0x0, empujando todo lo que viene
+                // después. La única forma de que no aparezca ni rompa el
+                // layout en esta copia de vista previa es eliminar su
+                // <w:drawing> por completo (no solo el atributo). El
+                // .docx descargable no se toca: conserva el escudo.
+                const LIMITE_EXTENT_EMU = 5000000; // ~5.47in — el escudo mide ~8.5x8.7in
 
-                    const mH = anchorXml.match(/<wp:positionH[^>]*><wp:posOffset>(-?\d+)<\/wp:posOffset>/);
-                    const mV = anchorXml.match(/<wp:positionV[^>]*><wp:posOffset>(-?\d+)<\/wp:posOffset>/);
-                    const mExt = anchorXml.match(/<wp:extent cx="(\d+)" cy="(\d+)"\/>/);
+                headerXml = headerXml.replace(/<w:drawing>[\s\S]*?<\/w:drawing>/g, (drawingXml) => {
 
-                    const offH = mH ? Math.abs(Number(mH[1])) : 0;
-                    const offV = mV ? Math.abs(Number(mV[1])) : 0;
+                    if (!drawingXml.includes('behindDoc="1"')) return drawingXml;
+
+                    const mExt = drawingXml.match(/<wp:extent cx="(\d+)" cy="(\d+)"\/>/);
                     const extCx = mExt ? Number(mExt[1]) : 0;
                     const extCy = mExt ? Number(mExt[2]) : 0;
 
-                    const LIMITE_EMU = 2000000; // ~2.19in
-
-                    if (offH > LIMITE_EMU || offV > LIMITE_EMU) {
-                        return anchorXml; // offset fuera de rango: se deja oculto tal cual
-                    }
-
                     if (extCx > LIMITE_EXTENT_EMU || extCy > LIMITE_EXTENT_EMU) {
-                        return anchorXml; // imagen tipo "escudo grande": se deja oculta tal cual
+                        return ''; // es el escudo grande: se quita por completo de esta copia
                     }
 
-                    return anchorXml.replace('behindDoc="1"', 'behindDoc="0"');
+                    return drawingXml;
 
                 });
                 // El banner y el logo institucional del encabezado
