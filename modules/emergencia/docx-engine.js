@@ -171,6 +171,46 @@ export async function generarDocumentoWord(data, docNum) {
  * @param {Blob} blob  El .docx ya generado (sin modificar).
  * @returns {Promise<Blob>} copia normalizada para la vista previa.
  */
+// Devuelve la ruta real (ej. "word/header2.xml") del header referenciado
+// como w:type="default" en document.xml, resolviéndola contra
+// word/_rels/document.xml.rels — así no se asume que siempre se llame
+// header2.xml, por si la plantilla se vuelve a guardar en Word y los
+// nombres de parte cambian.
+function obtenerRutaHeaderPorDefecto(zip, xmlDocumento) {
+
+    try {
+
+        const matchRef = xmlDocumento.match(
+            /<w:headerReference\b[^>]*w:type="default"[^>]*r:id="(rId\d+)"[^>]*\/>/
+        ) || xmlDocumento.match(
+            /<w:headerReference\b[^>]*r:id="(rId\d+)"[^>]*w:type="default"[^>]*\/>/
+        );
+
+        if (!matchRef) return null;
+
+        const rId = matchRef[1];
+        const parteRels = zip.file('word/_rels/document.xml.rels');
+
+        if (!parteRels) return null;
+
+        const xmlRels = parteRels.asText();
+        const matchTarget = xmlRels.match(
+            new RegExp(`<Relationship\\b[^>]*Id="${rId}"[^>]*Target="([^"]+)"`)
+        ) || xmlRels.match(
+            new RegExp(`<Relationship\\b[^>]*Target="([^"]+)"[^>]*Id="${rId}"`)
+        );
+
+        if (!matchTarget) return null;
+
+        return `word/${matchTarget[1]}`;
+
+    } catch (error) {
+        console.error('[docx-engine] No se pudo resolver el header por defecto:', error);
+        return null;
+    }
+
+}
+
 export async function prepararBlobParaVistaPrevia(blob) {
 
     try {
@@ -193,6 +233,26 @@ export async function prepararBlobParaVistaPrevia(blob) {
         xml = xml.replace(/<w:footerReference[^>]*w:type="(first|even)"[^>]*\/>/g, '');
 
         zip.file(rutaDocumento, xml);
+
+        // El banner y el escudo grande del encabezado están anclados en
+        // Word como "Detrás del texto" (behindDoc="1"). Word apila esa
+        // capa sin problema, pero docx-preview termina pintando esas
+        // imágenes por debajo del propio fondo del encabezado: quedan en
+        // el DOM (se pueden seleccionar/inspeccionar) pero invisibles.
+        // Se localiza el header "default" real vía document.xml.rels en
+        // vez de asumir el nombre de archivo (que Word puede renumerar
+        // si la plantilla se vuelve a guardar), y se le fuerza
+        // behindDoc="0" SOLO en esta copia de vista previa.
+        const rutaHeaderDefault = obtenerRutaHeaderPorDefecto(zip, xml);
+
+        if (rutaHeaderDefault) {
+            const parteHeader = zip.file(rutaHeaderDefault);
+            if (parteHeader) {
+                let headerXml = parteHeader.asText();
+                headerXml = headerXml.replace(/behindDoc="1"/g, 'behindDoc="0"');
+                zip.file(rutaHeaderDefault, headerXml);
+            }
+        }
 
         return zip.generate({
             type: 'blob',
