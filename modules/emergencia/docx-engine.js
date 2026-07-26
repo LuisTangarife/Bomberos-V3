@@ -211,6 +211,286 @@ function obtenerRutaHeaderPorDefecto(zip, xmlDocumento) {
 
 }
 
+/* =========================================================
+   DESAGRUPADO DE IMÁGENES AGRUPADAS (wpg:wgp)
+
+   El banner del encabezado y el sello de la firma están guardados
+   en plantilla1.docx como un GRUPO de imágenes (lo que en Word se ve
+   como una sola selección al agrupar varios objetos). Word y
+   LibreOffice lo muestran sin problema, pero se confirmó revisando
+   el código fuente de docx-preview que la librería NO tiene ningún
+   soporte para grupos (wpg:wgp/grpSp) — ninguna coincidencia en todo
+   el bundle. Por eso esas imágenes no aparecían en el modal aunque sí
+   existieran en el archivo.
+
+   Estas funciones "desarman" cada grupo en esta copia de vista previa:
+   calculan la posición absoluta real de cada imagen (hay hasta dos
+   niveles de anidamiento, wpg:wgp dentro de wpg:wgp) y las reinsertan
+   como imágenes sueltas — el mismo formato que las imágenes que SÍ
+   se veían bien (el escudo de fondo, el sello). El texto que pudiera
+   haber dentro de un cuadro de texto agrupado (como el nombre y NIT de
+   la firma del comandante) se rescata como texto plano: se pierde el
+   negrita/centrado de ese bloque puntual, pero deja de desaparecer.
+
+   Validado renderizando plantilla1.docx antes/después con LibreOffice
+   y comparando pixel a pixel: la diferencia en el banner del
+   encabezado es prácticamente cero.
+========================================================= */
+
+// Extrae "<etiqueta>...</etiqueta>" respetando anidamiento (una etiqueta
+// del mismo tipo puede aparecer dentro de sí misma, como wpg:grpSp
+// dentro de wpg:grpSp). Devuelve null si no hay cierre correspondiente.
+function extraerBloqueBalanceado(xml, indiceApertura, apertura, cierre) {
+
+    let profundidad = 0;
+    let i = indiceApertura;
+
+    while (i < xml.length) {
+
+        if (xml.startsWith(apertura, i)) {
+            profundidad++;
+            i += apertura.length;
+        } else if (xml.startsWith(cierre, i)) {
+            profundidad--;
+            i += cierre.length;
+            if (profundidad === 0) return xml.slice(indiceApertura, i);
+        } else {
+            i++;
+        }
+
+    }
+
+    return null;
+
+}
+
+// Lee el <a:xfrm> de un grupo o figura: posición/tamaño propios
+// (off/ext) y, si es un grupo, el sistema de coordenadas de sus hijos
+// (chOff/chExt). Si no trae chOff/chExt (una figura/imagen suelta, no
+// un grupo), se asume igual a off/ext (sin transformación adicional).
+function leerXfrmDeBloque(bloque) {
+
+    const m = bloque.match(
+        /<a:xfrm>\s*<a:off x="(-?\d+)" y="(-?\d+)"\/>\s*<a:ext cx="(\d+)" cy="(\d+)"\/>\s*(?:<a:chOff x="(-?\d+)" y="(-?\d+)"\/>\s*<a:chExt cx="(\d+)" cy="(\d+)"\/>)?/
+    );
+
+    if (!m) return null;
+
+    const off = { x: Number(m[1]), y: Number(m[2]) };
+    const ext = { cx: Number(m[3]), cy: Number(m[4]) };
+    const chOff = m[5] !== undefined ? { x: Number(m[5]), y: Number(m[6]) } : { ...off };
+    const chExt = m[7] !== undefined ? { cx: Number(m[7]), cy: Number(m[8]) } : { ...ext };
+
+    return { off, ext, chOff, chExt };
+
+}
+
+// Traduce un punto (x,y) del sistema de coordenadas "hijo" de un grupo
+// (chOff/chExt) al sistema de coordenadas de su padre (off/ext) —
+// fórmula estándar de transformación de grupos en DrawingML.
+function mapearPunto(xfrm, x, y) {
+
+    const escalaX = xfrm.chExt.cx ? xfrm.ext.cx / xfrm.chExt.cx : 1;
+    const escalaY = xfrm.chExt.cy ? xfrm.ext.cy / xfrm.chExt.cy : 1;
+
+    return {
+        x: xfrm.off.x + (x - xfrm.chOff.x) * escalaX,
+        y: xfrm.off.y + (y - xfrm.chOff.y) * escalaY
+    };
+
+}
+
+function mapearTamano(xfrm, cx, cy) {
+
+    const escalaX = xfrm.chExt.cx ? xfrm.ext.cx / xfrm.chExt.cx : 1;
+    const escalaY = xfrm.chExt.cy ? xfrm.ext.cy / xfrm.chExt.cy : 1;
+
+    return { cx: cx * escalaX, cy: cy * escalaY };
+
+}
+
+// Recorre un grupo (wpg:wgp o wpg:grpSp, con sus etiquetas incluidas)
+// y devuelve cada imagen (pic:pic) que encuentra dentro — recursivo,
+// para soportar un grupo dentro de otro grupo — YA reubicada en el
+// sistema de coordenadas que contiene a ESTE bloque (su padre
+// inmediato). Ignora figuras sin imagen (cuadros de texto vacíos,
+// formas decorativas sin relleno).
+function extraerImagenesDeGrupo(bloque) {
+
+    const xfrmPropio = leerXfrmDeBloque(bloque);
+    if (!xfrmPropio) return [];
+
+    const imagenes = [];
+
+    // Se arranca DESPUÉS de la propia etiqueta de apertura del bloque;
+    // si se empezara en 0 se volvería a encontrar a sí mismo como si
+    // fuera un hijo, y la recursión nunca terminaría.
+    let i = bloque.indexOf('>') + 1;
+
+    while (i < bloque.length) {
+
+        const idxGrpSp = bloque.indexOf('<wpg:grpSp>', i);
+        const idxPic = bloque.indexOf('<pic:pic>', i);
+
+        if (idxPic !== -1 && (idxGrpSp === -1 || idxPic < idxGrpSp)) {
+
+            const bloquePic = extraerBloqueBalanceado(bloque, idxPic, '<pic:pic>', '</pic:pic>');
+            if (!bloquePic) break;
+
+            const rIdMatch = bloquePic.match(/<a:blip r:embed="(rId\d+)"/);
+            const xfrmPic = leerXfrmDeBloque(bloquePic);
+
+            if (rIdMatch && xfrmPic) {
+                const punto = mapearPunto(xfrmPropio, xfrmPic.off.x, xfrmPic.off.y);
+                const tamano = mapearTamano(xfrmPropio, xfrmPic.ext.cx, xfrmPic.ext.cy);
+                imagenes.push({ rId: rIdMatch[1], x: punto.x, y: punto.y, cx: tamano.cx, cy: tamano.cy });
+            }
+
+            i = idxPic + bloquePic.length;
+
+        } else if (idxGrpSp !== -1) {
+
+            const bloqueGrpSp = extraerBloqueBalanceado(bloque, idxGrpSp, '<wpg:grpSp>', '</wpg:grpSp>');
+            if (!bloqueGrpSp) break;
+
+            extraerImagenesDeGrupo(bloqueGrpSp).forEach(img => {
+                const punto = mapearPunto(xfrmPropio, img.x, img.y);
+                const tamano = mapearTamano(xfrmPropio, img.cx, img.cy);
+                imagenes.push({ rId: img.rId, x: punto.x, y: punto.y, cx: tamano.cx, cy: tamano.cy });
+            });
+
+            i = idxGrpSp + bloqueGrpSp.length;
+
+        } else break;
+
+    }
+
+    return imagenes;
+
+}
+
+// Junta el texto plano (sin formato) de cualquier cuadro de texto
+// dentro del grupo — para no perder por completo, por ejemplo, el
+// nombre y NIT de la firma del comandante.
+function textoDeGrupo(bloque) {
+
+    const runs = [...bloque.matchAll(/<w:t[^>]*>([^<]*)<\/w:t>/g)].map(m => m[1]).filter(Boolean);
+    return runs.join(' ').trim();
+
+}
+
+let contadorIdDesagrupado = 90000;
+
+function nuevoDrawingAnchor({ x, y, cx, cy, rId, behindDoc }) {
+
+    const id = contadorIdDesagrupado++;
+
+    return `<w:drawing><wp:anchor behindDoc="${behindDoc}" distT="0" distB="0" distL="114300" distR="114300" simplePos="0" relativeHeight="${id}" locked="0" layoutInCell="1" allowOverlap="1" hidden="0"><wp:simplePos x="0" y="0"/><wp:positionH relativeFrom="column"><wp:posOffset>${Math.round(x)}</wp:posOffset></wp:positionH><wp:positionV relativeFrom="paragraph"><wp:posOffset>${Math.round(y)}</wp:posOffset></wp:positionV><wp:extent cx="${Math.round(cx)}" cy="${Math.round(cy)}"/><wp:effectExtent l="0" t="0" r="0" b="0"/><wp:wrapNone/><wp:docPr id="${id}" name="img-desagrupada-${id}"/><a:graphic xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:pic xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:nvPicPr><pic:cNvPr id="${id}" name="img-desagrupada-${id}"/><pic:cNvPicPr/></pic:nvPicPr><pic:blipFill><a:blip r:embed="${rId}"/><a:stretch><a:fillRect/></a:stretch></pic:blipFill><pic:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="${Math.round(cx)}" cy="${Math.round(cy)}"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></pic:spPr></pic:pic></a:graphicData></a:graphic></wp:anchor></w:drawing>`;
+
+}
+
+// Busca todos los <mc:AlternateContent> de esta parte (header o
+// document.xml) que envuelvan un grupo real (wpg:wgp) y los reemplaza
+// por imágenes sueltas ya posicionadas de forma absoluta. Cualquier
+// <mc:AlternateContent> que no traiga un grupo real dentro (hay otros
+// usos de esa envoltura sin relación con grupos) se deja intacto.
+function desagruparImagenesWpg(xmlParte) {
+
+    let resultado = xmlParte;
+    let indiceBusqueda = 0;
+
+    while (true) {
+
+        const idxAC = resultado.indexOf('<mc:AlternateContent>', indiceBusqueda);
+        if (idxAC === -1) break;
+
+        const bloqueAC = extraerBloqueBalanceado(resultado, idxAC, '<mc:AlternateContent>', '</mc:AlternateContent>');
+
+        if (!bloqueAC) { indiceBusqueda = idxAC + 20; continue; }
+
+        if (!bloqueAC.includes('Requires="wpg"')) {
+            indiceBusqueda = idxAC + bloqueAC.length;
+            continue;
+        }
+
+        const esAnchor = bloqueAC.includes('<wp:anchor');
+        const tagCierre = esAnchor ? '</wp:anchor>' : '</wp:inline>';
+        const idxWpStart = bloqueAC.indexOf(esAnchor ? '<wp:anchor' : '<wp:inline');
+        const idxWpEnd = bloqueAC.indexOf(tagCierre, idxWpStart) + tagCierre.length;
+        const bloqueWp = bloqueAC.slice(idxWpStart, idxWpEnd);
+
+        const behindDoc = (bloqueWp.match(/behindDoc="(\d)"/) || [, '0'])[1];
+
+        let baseX = 0, baseY = 0;
+        if (esAnchor) {
+            const mH = bloqueWp.match(/<wp:positionH[^>]*><wp:posOffset>(-?\d+)<\/wp:posOffset>/);
+            const mV = bloqueWp.match(/<wp:positionV[^>]*><wp:posOffset>(-?\d+)<\/wp:posOffset>/);
+            baseX = mH ? Number(mH[1]) : 0;
+            baseY = mV ? Number(mV[1]) : 0;
+        }
+
+        const mExt = bloqueWp.match(/<wp:extent cx="(\d+)" cy="(\d+)"\/>/);
+        const extentCx = mExt ? Number(mExt[1]) : null;
+        const extentCy = mExt ? Number(mExt[2]) : null;
+
+        const idxWgpStart = bloqueWp.indexOf('<wpg:wgp>');
+
+        if (idxWgpStart === -1) {
+            // Declara Requires="wpg" pero no trae un grupo de imágenes
+            // real dentro — se deja intacto.
+            indiceBusqueda = idxAC + bloqueAC.length;
+            continue;
+        }
+
+        const bloqueWgp = extraerBloqueBalanceado(bloqueWp, idxWgpStart, '<wpg:wgp>', '</wpg:wgp>');
+
+        if (!bloqueWgp) {
+            indiceBusqueda = idxAC + bloqueAC.length;
+            continue;
+        }
+
+        const xfrmOuter = leerXfrmDeBloque(bloqueWgp);
+
+        if (!xfrmOuter) {
+            indiceBusqueda = idxAC + bloqueAC.length;
+            continue;
+        }
+
+        const imagenesInternas = extraerImagenesDeGrupo(bloqueWgp);
+
+        // Último paso: del sistema de coordenadas propio del wpg:wgp
+        // exterior al sistema real del ancla (posOffset/extent),
+        // tratando su off/ext como si fueran el chOff/chExt de este
+        // último nivel.
+        const nivelFinal = {
+            off: { x: baseX, y: baseY },
+            ext: { cx: extentCx ?? xfrmOuter.ext.cx, cy: extentCy ?? xfrmOuter.ext.cy },
+            chOff: xfrmOuter.off,
+            chExt: xfrmOuter.ext
+        };
+
+        const drawings = imagenesInternas.map(img => {
+            const punto = mapearPunto(nivelFinal, img.x, img.y);
+            const tamano = mapearTamano(nivelFinal, img.cx, img.cy);
+            return nuevoDrawingAnchor({ x: punto.x, y: punto.y, cx: tamano.cx, cy: tamano.cy, rId: img.rId, behindDoc });
+        });
+
+        const texto = textoDeGrupo(bloqueWgp);
+        const parrafoTexto = texto
+            ? `<w:p><w:r><w:t xml:space="preserve">${texto}</w:t></w:r></w:p>`
+            : '';
+
+        const reemplazo = drawings.join('') + parrafoTexto;
+
+        resultado = resultado.slice(0, idxAC) + reemplazo + resultado.slice(idxAC + bloqueAC.length);
+        indiceBusqueda = idxAC + reemplazo.length;
+
+    }
+
+    return resultado;
+
+}
+
 export async function prepararBlobParaVistaPrevia(blob) {
 
     try {
@@ -232,6 +512,12 @@ export async function prepararBlobParaVistaPrevia(blob) {
         xml = xml.replace(/<w:headerReference[^>]*w:type="(first|even)"[^>]*\/>/g, '');
         xml = xml.replace(/<w:footerReference[^>]*w:type="(first|even)"[^>]*\/>/g, '');
 
+        // Desagrupar los grupos de imágenes (wpg:wgp) del cuerpo del
+        // documento — ej. el sello junto al nombre del comandante en
+        // la firma — antes de guardar el documento, para que
+        // docx-preview (que no soporta grupos) pueda mostrarlos.
+        xml = desagruparImagenesWpg(xml);
+
         zip.file(rutaDocumento, xml);
 
         // El banner y el escudo grande del encabezado están anclados en
@@ -250,6 +536,10 @@ export async function prepararBlobParaVistaPrevia(blob) {
             if (parteHeader) {
                 let headerXml = parteHeader.asText();
                 headerXml = headerXml.replace(/behindDoc="1"/g, 'behindDoc="0"');
+                // El banner y el logo institucional del encabezado
+                // también vienen como un grupo (wpg:wgp) — mismo
+                // problema y misma solución que en el cuerpo.
+                headerXml = desagruparImagenesWpg(headerXml);
                 zip.file(rutaHeaderDefault, headerXml);
             }
         }
