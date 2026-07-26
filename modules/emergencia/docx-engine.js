@@ -567,7 +567,38 @@ export async function prepararBlobParaVistaPrevia(blob) {
             const parteHeader = zip.file(rutaHeaderDefault);
             if (parteHeader) {
                 let headerXml = parteHeader.asText();
-                headerXml = headerXml.replace(/behindDoc="1"/g, 'behindDoc="0"');
+                // OJO: no todas las imágenes "detrás del texto" del
+                // encabezado deben pasar a "delante" por igual. Se
+                // detectó que el sello institucional pequeño tiene un
+                // wp:positionV de ~685pt respecto a su párrafo — un
+                // offset que solo tiene sentido en el modelo de anclaje
+                // real de Word, no en la aproximación simple de
+                // docx-preview (position:relative desde el punto de
+                // flujo del párrafo). Forzarlo a "delante" no lo pone en
+                // su sitio: lo vuelve visible pero mal ubicado, dejando
+                // un hueco enorme donde antes solo había una imagen
+                // invisible e inofensiva. Por eso el flip a
+                // behindDoc="0" se aplica SOLO a anclas cuyo offset es
+                // pequeño (dentro de ~50pt / 635000 EMU) — el rango en el
+                // que la aproximación de docx-preview sigue siendo
+                // razonablemente correcta.
+                headerXml = headerXml.replace(/<wp:anchor\b[^>]*behindDoc="1"[\s\S]*?<\/wp:anchor>/g, (anchorXml) => {
+
+                    const mH = anchorXml.match(/<wp:positionH[^>]*><wp:posOffset>(-?\d+)<\/wp:posOffset>/);
+                    const mV = anchorXml.match(/<wp:positionV[^>]*><wp:posOffset>(-?\d+)<\/wp:posOffset>/);
+
+                    const offH = mH ? Math.abs(Number(mH[1])) : 0;
+                    const offV = mV ? Math.abs(Number(mV[1])) : 0;
+
+                    const LIMITE_EMU = 2000000; // ~2.19in — separa el escudo (offset real ~1.17in) del sello descontrolado (~9.5in)
+
+                    if (offH > LIMITE_EMU || offV > LIMITE_EMU) {
+                        return anchorXml; // offset fuera de rango: se deja oculto tal cual
+                    }
+
+                    return anchorXml.replace('behindDoc="1"', 'behindDoc="0"');
+
+                });
                 // El banner y el logo institucional del encabezado
                 // también vienen como un grupo (wpg:wgp) — mismo
                 // problema y misma solución que en el cuerpo.
