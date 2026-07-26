@@ -567,33 +567,38 @@ export async function prepararBlobParaVistaPrevia(blob) {
             const parteHeader = zip.file(rutaHeaderDefault);
             if (parteHeader) {
                 let headerXml = parteHeader.asText();
-                // OJO: no todas las imágenes "detrás del texto" del
-                // encabezado deben pasar a "delante" por igual. Se
-                // detectó que el sello institucional pequeño tiene un
-                // wp:positionV de ~685pt respecto a su párrafo — un
-                // offset que solo tiene sentido en el modelo de anclaje
-                // real de Word, no en la aproximación simple de
-                // docx-preview (position:relative desde el punto de
-                // flujo del párrafo). Forzarlo a "delante" no lo pone en
-                // su sitio: lo vuelve visible pero mal ubicado, dejando
-                // un hueco enorme donde antes solo había una imagen
-                // invisible e inofensiva. Por eso el flip a
-                // behindDoc="0" se aplica SOLO a anclas cuyo offset es
-                // pequeño (dentro de ~50pt / 635000 EMU) — el rango en el
-                // que la aproximación de docx-preview sigue siendo
-                // razonablemente correcta.
+                // El escudo grande (behindDoc="1", ~8.5x8.7in) se probó
+                // forzado a "delante del texto" y el resultado fue peor
+                // que el problema original: docx-preview simula su
+                // recorte (srcRect) con clip-path + transform, y esa
+                // combinación termina empujando/tapando el contenido de
+                // abajo en vez de comportarse como una marca de agua de
+                // fondo. Se confirmó inspeccionando el elemento en el
+                // navegador. Mejor dejarlo oculto (como estaba
+                // originalmente) que visible y rompiendo el layout — se
+                // detecta por tamaño (extent grande) y se excluye del
+                // flip aunque su offset esté dentro del rango normal.
+                const LIMITE_EXTENT_EMU = 5000000; // ~5.47in — el escudo mide ~8.5x8.7in
+
                 headerXml = headerXml.replace(/<wp:anchor\b[^>]*behindDoc="1"[\s\S]*?<\/wp:anchor>/g, (anchorXml) => {
 
                     const mH = anchorXml.match(/<wp:positionH[^>]*><wp:posOffset>(-?\d+)<\/wp:posOffset>/);
                     const mV = anchorXml.match(/<wp:positionV[^>]*><wp:posOffset>(-?\d+)<\/wp:posOffset>/);
+                    const mExt = anchorXml.match(/<wp:extent cx="(\d+)" cy="(\d+)"\/>/);
 
                     const offH = mH ? Math.abs(Number(mH[1])) : 0;
                     const offV = mV ? Math.abs(Number(mV[1])) : 0;
+                    const extCx = mExt ? Number(mExt[1]) : 0;
+                    const extCy = mExt ? Number(mExt[2]) : 0;
 
-                    const LIMITE_EMU = 2000000; // ~2.19in — separa el escudo (offset real ~1.17in) del sello descontrolado (~9.5in)
+                    const LIMITE_EMU = 2000000; // ~2.19in
 
                     if (offH > LIMITE_EMU || offV > LIMITE_EMU) {
                         return anchorXml; // offset fuera de rango: se deja oculto tal cual
+                    }
+
+                    if (extCx > LIMITE_EXTENT_EMU || extCy > LIMITE_EXTENT_EMU) {
+                        return anchorXml; // imagen tipo "escudo grande": se deja oculta tal cual
                     }
 
                     return anchorXml.replace('behindDoc="1"', 'behindDoc="0"');
