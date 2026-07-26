@@ -4,7 +4,7 @@
    y sea instalable como PWA.
 ======================================================================== */
 
-const SW_VERSION = 'v31'; // v30 -> v31: módulo Emergencia completo (antes solo Inspecciones) + librerías CDN que usa, precacheados desde la instalación — antes dependían de haber visitado cada página online al menos una vez
+const SW_VERSION = 'v34'; // v30 -> v31: módulo Emergencia completo (antes solo Inspecciones) + librerías CDN que usa, precacheados desde la instalación — antes dependían de haber visitado cada página online al menos una vez
 const STATIC_CACHE = `bomberos-static-${SW_VERSION}`;
 const DYNAMIC_CACHE = `bomberos-dynamic-${SW_VERSION}`;
 const CACHES_VIGENTES = [STATIC_CACHE, DYNAMIC_CACHE];
