@@ -491,6 +491,36 @@ function desagruparImagenesWpg(xmlParte) {
 
 }
 
+// docx-preview no resuelve "positionH relativeFrom=column" igual que
+// Word cuando el párrafo que ancla la imagen está centrado
+// (<w:jc w:val="center"/>): en vez de medir desde el borde real de la
+// columna, mide desde donde cae el flujo de ESE párrafo — que en uno
+// centrado es el centro de la página, no el margen. Resultado: una
+// imagen anclada para quedar en el margen izquierdo termina flotando
+// sobre el contenido central (ej. la franja decorativa sobre la firma).
+//
+// Arreglo: en párrafos que SOLO contienen un ancla con
+// positionH relativeFrom="column" (sin texto real alrededor), se fuerza
+// su <w:jc> a "left" en esta copia de vista previa — no cambia nada
+// visible porque no hay texto en ese párrafo, pero alinea el punto de
+// referencia del ancla con lo que Word usa realmente.
+function corregirAnclasEnParrafosCentrados(xmlParte) {
+
+    return xmlParte.replace(/<w:p\b[^>]*>[\s\S]*?<\/w:p>/g, (parrafo) => {
+
+        if (!parrafo.includes('<wp:anchor') || !parrafo.includes('relativeFrom="column"')) {
+            return parrafo;
+        }
+
+        const tieneTextoVisible = /<w:t[ >][^<]*[^\s<][^<]*<\/w:t>/.test(parrafo);
+        if (tieneTextoVisible) return parrafo;
+
+        return parrafo.replace(/<w:jc w:val="center"\/>/g, '<w:jc w:val="left"/>');
+
+    });
+
+}
+
 export async function prepararBlobParaVistaPrevia(blob) {
 
     try {
@@ -517,6 +547,8 @@ export async function prepararBlobParaVistaPrevia(blob) {
         // la firma — antes de guardar el documento, para que
         // docx-preview (que no soporta grupos) pueda mostrarlos.
         xml = desagruparImagenesWpg(xml);
+
+        xml = corregirAnclasEnParrafosCentrados(xml);
 
         zip.file(rutaDocumento, xml);
 
