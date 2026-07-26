@@ -220,6 +220,28 @@
   </div>
 
 </div>
+
+<!-- GALERÍA DE FOTOS DE EVIDENCIA — aparte del certModal, no toca el
+     documento oficial, solo muestra las fotos tal cual se subieron. -->
+<div class="modal-overlay" id="fotosModal" style="display:none">
+  <div class="modal">
+    <div class="modal-header">
+      <span id="fotosModalTitulo">Evidencia fotográfica</span>
+      <button onclick="cerrarGaleriaFotos()" class="modal-close">✕</button>
+    </div>
+    <div class="fotos-modal-grid" id="fotosModalGrid"></div>
+    <div class="modal-actions">
+      <button onclick="cerrarGaleriaFotos()" class="btn-close-modal">Cerrar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Foto ampliada al hacer clic en una miniatura de la galería -->
+<div class="modal-overlay" id="fotoAmpliadaOverlay" style="display:none" onclick="if(event.target===this) cerrarFotoAmpliada()">
+  <img id="fotoAmpliadaImg" class="foto-ampliada-img" src="" alt="Evidencia fotográfica ampliada">
+  <button onclick="cerrarFotoAmpliada()" class="modal-close foto-ampliada-close">✕</button>
+</div>
+
 <script type="module" src="./gestor.js"></script>
 </body>
 </html>

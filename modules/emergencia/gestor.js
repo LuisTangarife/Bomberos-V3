@@ -28,6 +28,86 @@ window.descargarWord = descargarWord;
 let emergencias = [];
 let cargando = false;
 
+/* ========================================================================
+   GALERÍA DE FOTOS DE EVIDENCIA
+   Modal aparte del certificado (#certModal): este solo muestra las fotos
+   de evidencia (emergencia.fotos, URLs de Storage) en una cuadrícula con
+   vista ampliada, no interviene para nada en el documento oficial.
+======================================================================== */
+
+function abrirGaleriaFotos(fotos, lugar) {
+
+    const modal = document.getElementById("fotosModal");
+    const grid = document.getElementById("fotosModalGrid");
+    const titulo = document.getElementById("fotosModalTitulo");
+
+    if (!modal || !grid) return;
+
+    if (titulo) {
+        titulo.textContent = lugar
+            ? `Evidencia fotográfica — ${lugar}`
+            : "Evidencia fotográfica";
+    }
+
+    grid.innerHTML = fotos.map(url => `
+        <button type="button" class="foto-evidencia-thumb">
+            <img src="${escaparHTML(url)}" alt="Evidencia fotográfica" loading="lazy">
+        </button>
+    `).join("");
+
+    grid.querySelectorAll(".foto-evidencia-thumb").forEach((boton, indice) => {
+        boton.addEventListener("click", () => mostrarFotoAmpliada(fotos, indice));
+    });
+
+    modal.style.display = "flex";
+    document.body.style.overflow = "hidden";
+
+}
+
+function mostrarFotoAmpliada(fotos, indice) {
+
+    const visor = document.getElementById("fotoAmpliadaOverlay");
+    const img = document.getElementById("fotoAmpliadaImg");
+
+    if (!visor || !img) return;
+
+    img.src = fotos[indice];
+    visor.style.display = "flex";
+
+}
+
+function cerrarGaleriaFotos() {
+    const modal = document.getElementById("fotosModal");
+    if (modal) modal.style.display = "none";
+    cerrarFotoAmpliada();
+    document.body.style.overflow = "";
+}
+
+function cerrarFotoAmpliada() {
+    const visor = document.getElementById("fotoAmpliadaOverlay");
+    if (visor) visor.style.display = "none";
+}
+
+window.cerrarGaleriaFotos = cerrarGaleriaFotos;
+window.cerrarFotoAmpliada = cerrarFotoAmpliada;
+
+document.addEventListener("DOMContentLoaded", () => {
+
+    const fotosModalEl = document.getElementById("fotosModal");
+    if (fotosModalEl) {
+        fotosModalEl.addEventListener("click", (e) => {
+            if (e.target === fotosModalEl) cerrarGaleriaFotos();
+        });
+    }
+
+    document.addEventListener("keydown", (e) => {
+        if (e.key !== "Escape") return;
+        cerrarFotoAmpliada();
+        cerrarGaleriaFotos();
+    });
+
+});
+
 export function inicializarGestor() {
 
     inicializarMapa();
@@ -442,6 +522,10 @@ function crearTarjeta(emergencia) {
     const fechaTexto = formatearFecha(emergencia.fecha);
     const foto = obtenerFotoPrincipal(emergencia);
 
+    const fotosEvidencia = Array.isArray(emergencia.fotos)
+        ? emergencia.fotos.filter(Boolean)
+        : [];
+
     // Sin un campo de prioridad explícito en los datos, se deriva de la
     // gravedad: con víctimas → Alta, sin víctimas → Media. Ajusta esto
     // si el formulario llega a tener un campo de prioridad propio.
@@ -485,6 +569,10 @@ function crearTarjeta(emergencia) {
             <button type="button" class="action-ver-em">
                 <i class="fa-solid fa-eye"></i> Ver
             </button>
+            ${fotosEvidencia.length ? `
+            <button type="button" class="action-fotos-em">
+                <i class="fa-solid fa-images"></i> Fotos (${fotosEvidencia.length})
+            </button>` : ""}
             <button type="button" class="action-word-em">
                 <i class="fa-solid fa-file-word"></i> Word
             </button>
@@ -493,6 +581,13 @@ function crearTarjeta(emergencia) {
             </button>
         </div>
     `;
+
+    const botonFotos = card.querySelector(".action-fotos-em");
+    if (botonFotos) {
+        botonFotos.addEventListener("click", () => {
+            abrirGaleriaFotos(fotosEvidencia, lugar);
+        });
+    }
 
     card.querySelector(".action-ver-em")
         .addEventListener("click", async () => {

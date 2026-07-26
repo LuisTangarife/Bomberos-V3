@@ -181,13 +181,32 @@ async function sincronizarEmergenciaConsolidado(data) {
 
   try {
 
-    const { guardarEmergencia } = await import('./firebase.js');
+    const { guardarEmergencia, subirFotosEmergencia } = await import('./firebase.js');
 
     const { photos, pdfBase64, pending, synced, id, ...datosLivianos } = data;
 
-    await guardarEmergencia(crypto.randomUUID(), {
+    const idConsolidado = crypto.randomUUID();
+
+    // Subir fotos a Storage es best-effort: si falla (sin internet,
+    // fotos muy pesadas, etc.) el reporte igual se sincroniza al
+    // consolidado, solo que sin fotos visibles en el Gestor — no debe
+    // impedir que el resto del reporte se sincronice.
+    let fotosURLs = [];
+
+    try {
+      fotosURLs = await subirFotosEmergencia(idConsolidado, photos);
+    } catch (errorFotos) {
+      console.error(
+        '[gestor emergencias] No se pudieron subir las fotos a Storage:',
+        errorFotos
+      );
+    }
+
+    await guardarEmergencia(idConsolidado, {
 
       ...datosLivianos,
+
+      fotos: fotosURLs,
 
       numFotos: Array.isArray(photos) ? photos.length : 0,
 
