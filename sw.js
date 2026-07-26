@@ -4,7 +4,7 @@
    y sea instalable como PWA.
 ======================================================================== */
 
-const SW_VERSION = 'v33'; // v23 -> v24: Centro de Gestión de Emergencias como vista por defecto (con mapa de puntos críticos)
+const SW_VERSION = 'v31'; // v30 -> v31: módulo Emergencia completo (antes solo Inspecciones) + librerías CDN que usa, precacheados desde la instalación — antes dependían de haber visitado cada página online al menos una vez
 const STATIC_CACHE = `bomberos-static-${SW_VERSION}`;
 const DYNAMIC_CACHE = `bomberos-dynamic-${SW_VERSION}`;
 const CACHES_VIGENTES = [STATIC_CACHE, DYNAMIC_CACHE];
@@ -54,6 +54,42 @@ const FILES = [
     "./modules/inspecciones/utilidades.js",
     "./modules/inspecciones/validaciones.js",
 
+    "./modules/emergencia/index.html",
+    "./modules/emergencia/gestor.html",
+    "./modules/emergencia/styles.css",
+    "./modules/emergencia/gestor.css",
+    "./modules/emergencia/app.js",
+    "./modules/emergencia/gestor.js",
+    "./modules/emergencia/firebase.js",
+    "./modules/emergencia/certificados.js",
+    "./modules/emergencia/clima.js",
+    "./modules/emergencia/docx-engine.js",
+    "./modules/emergencia/formulario.js",
+    "./modules/emergencia/fotos.js",
+    "./modules/emergencia/image-engine.js",
+    "./modules/emergencia/mapas.js",
+    "./modules/emergencia/pdf-engine.js",
+    "./modules/emergencia/placeholder-engine.js",
+    "./modules/emergencia/report-helpers.js",
+    "./modules/emergencia/tablas.js",
+    "./modules/emergencia/template-loader.js",
+    "./modules/emergencia/ui.js",
+    "./modules/emergencia/utils.js",
+    "./modules/emergencia/validaciones.js",
+
+    // Plantilla del certificado oficial (Word real + su versión HTML
+    // para el PDF que se adjunta) y las imágenes que usa: sin esto,
+    // ver o descargar el certificado sin conexión fallaba siempre,
+    // sin importar qué tan bien cacheado estuviera el resto del módulo.
+    "./modules/emergencia/plantillas/plantilla1.docx",
+    "./modules/emergencia/plantillas/plantilla1.html",
+    "./modules/emergencia/plantillas/assets/banner-superior.gif",
+    "./modules/emergencia/plantillas/assets/escudo-grande.jpg",
+    "./modules/emergencia/plantillas/assets/figura-decorativa.gif",
+    "./modules/emergencia/plantillas/assets/franja-vertical.png",
+    "./modules/emergencia/plantillas/assets/logo-institucional.png",
+    "./modules/emergencia/plantillas/assets/sello-oficial.gif",
+
     "./icons/icon-192-v4.png",
     "./icons/icon-512-v4.png"
 ];
@@ -61,9 +97,33 @@ const FILES = [
 // Recursos externos (CDN). Se cachean aparte y en modo "no-cors" porque
 // muchos de estos no responden con cabeceras CORS explícitas y eso
 // haría fallar cache.addAll() para todo lo demás.
+//
+// Antes solo estaban font-awesome y jsPDF: todo lo demás que usan
+// index.html/gestor.html (leaflet, docx-preview, jszip, pizzip,
+// docxtemplater, file-saver, html2canvas, tom-select, html2pdf) dependía
+// de que el navegador ya los hubiera pedido una vez online — si nunca
+// había pasado, se rompían apenas se abría la app sin conexión.
 const EXTERNOS = [
     "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css",
-    "https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"
+    "https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js",
+
+    "https://unpkg.com/leaflet/dist/leaflet.css",
+    "https://unpkg.com/leaflet/dist/leaflet.js",
+    "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css",
+    "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js",
+
+    "https://unpkg.com/jszip@3.10.1/dist/jszip.min.js",
+    "https://unpkg.com/docx-preview@0.3.7/dist/docx-preview.min.js",
+    "https://unpkg.com/pizzip@3.2.0/dist/pizzip.js",
+    "https://unpkg.com/docxtemplater@3.69.3/build/docxtemplater.js",
+    "https://unpkg.com/file-saver@1.3.8/FileSaver.js",
+
+    "https://cdn.jsdelivr.net/npm/tom-select/dist/css/tom-select.css",
+    "https://cdn.jsdelivr.net/npm/tom-select/dist/js/tom-select.complete.min.js",
+    "https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js",
+    "https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js",
+
+    "https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"
 ];
 
 // Nunca cachear llamadas a Firebase (Firestore/Storage/Auth): deben ir
@@ -187,21 +247,51 @@ self.addEventListener('fetch', event => {
 
             const cacheado = await caches.match(request);
 
-            const actualizarEnSegundoPlano = fetch(request)
-                .then(async response => {
+            if (cacheado) {
 
-                    if (response && response.ok) {
-                        const cache = await caches.open(DYNAMIC_CACHE);
-                        cache.put(request, response.clone());
-                        limitarTamanoCache(DYNAMIC_CACHE, LIMITE_CACHE_DINAMICA);
-                    }
+                // Responde ya con lo cacheado; la actualización en
+                // segundo plano no bloquea esta respuesta ni se espera.
+                fetch(request)
+                    .then(async response => {
 
-                    return response;
+                        if (response && response.ok) {
+                            const cache = await caches.open(DYNAMIC_CACHE);
+                            cache.put(request, response.clone());
+                            limitarTamanoCache(DYNAMIC_CACHE, LIMITE_CACHE_DINAMICA);
+                        }
 
-                })
-                .catch(() => null);
+                    })
+                    .catch(() => null);
 
-            return cacheado || actualizarEnSegundoPlano || fetch(request);
+                return cacheado;
+
+            }
+
+            // Nada en caché: hay que esperar sí o sí la red. Si también
+            // falla (sin conexión), antes esto devolvía la promesa ya
+            // fallida "cruda" (resuelve a null), lo que el navegador
+            // reporta como un error de red genérico en vez de dejar
+            // fallar la petición de forma clara.
+            try {
+
+                const response = await fetch(request);
+
+                if (response && response.ok) {
+                    const cache = await caches.open(DYNAMIC_CACHE);
+                    cache.put(request, response.clone());
+                    limitarTamanoCache(DYNAMIC_CACHE, LIMITE_CACHE_DINAMICA);
+                }
+
+                return response;
+
+            } catch (error) {
+
+                return new Response(
+                    "Sin conexión y sin copia en caché para este recurso.",
+                    { status: 503, statusText: "Offline" }
+                );
+
+            }
 
         })()
     );
