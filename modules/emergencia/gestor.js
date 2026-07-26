@@ -522,9 +522,10 @@ function crearTarjeta(emergencia) {
     const fechaTexto = formatearFecha(emergencia.fecha);
     const foto = obtenerFotoPrincipal(emergencia);
 
-    const fotosEvidencia = Array.isArray(emergencia.fotos)
-        ? emergencia.fotos.filter(Boolean)
-        : [];
+    // Las fotos NO viajan en el documento liviano del listado (viven en
+    // la subcolección emergencias/{id}/fotos) — solo se sabe cuántas hay.
+    // Se cargan de verdad únicamente al hacer clic en "Fotos".
+    const numFotos = Number(emergencia.numFotos) || 0;
 
     // Sin un campo de prioridad explícito en los datos, se deriva de la
     // gravedad: con víctimas → Alta, sin víctimas → Media. Ajusta esto
@@ -569,9 +570,9 @@ function crearTarjeta(emergencia) {
             <button type="button" class="action-ver-em">
                 <i class="fa-solid fa-eye"></i> Ver
             </button>
-            ${fotosEvidencia.length ? `
+            ${numFotos ? `
             <button type="button" class="action-fotos-em">
-                <i class="fa-solid fa-images"></i> Fotos (${fotosEvidencia.length})
+                <i class="fa-solid fa-images"></i> Fotos (${numFotos})
             </button>` : ""}
             <button type="button" class="action-word-em">
                 <i class="fa-solid fa-file-word"></i> Word
@@ -584,8 +585,35 @@ function crearTarjeta(emergencia) {
 
     const botonFotos = card.querySelector(".action-fotos-em");
     if (botonFotos) {
-        botonFotos.addEventListener("click", () => {
-            abrirGaleriaFotos(fotosEvidencia, lugar);
+        botonFotos.addEventListener("click", async () => {
+
+            const textoOriginal = botonFotos.innerHTML;
+            botonFotos.disabled = true;
+            botonFotos.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Cargando...`;
+
+            try {
+
+                const { obtenerFotosEmergencia } = await import("./firebase.js");
+                const fotos = await obtenerFotosEmergencia(emergencia.id);
+
+                if (!fotos.length) {
+                    alert("No se pudieron cargar las fotos de este reporte.");
+                } else {
+                    abrirGaleriaFotos(fotos, lugar);
+                }
+
+            } catch (error) {
+
+                console.error("[gestor emergencias] No se pudieron cargar las fotos:", error);
+                alert("No se pudieron cargar las fotos. Revisa tu conexión e intenta de nuevo.");
+
+            } finally {
+
+                botonFotos.disabled = false;
+                botonFotos.innerHTML = textoOriginal;
+
+            }
+
         });
     }
 

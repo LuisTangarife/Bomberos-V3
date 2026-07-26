@@ -181,38 +181,34 @@ async function sincronizarEmergenciaConsolidado(data) {
 
   try {
 
-    const { guardarEmergencia, subirFotosEmergencia } = await import('./firebase.js');
+    const { guardarEmergencia, guardarFotosEmergencia } = await import('./firebase.js');
 
     const { photos, pdfBase64, pending, synced, id, ...datosLivianos } = data;
 
     const idConsolidado = crypto.randomUUID();
 
-    // Subir fotos a Storage es best-effort: si falla (sin internet,
-    // fotos muy pesadas, etc.) el reporte igual se sincroniza al
-    // consolidado, solo que sin fotos visibles en el Gestor — no debe
-    // impedir que el resto del reporte se sincronice.
-    let fotosURLs = [];
-
-    try {
-      fotosURLs = await subirFotosEmergencia(idConsolidado, photos);
-    } catch (errorFotos) {
-      console.error(
-        '[gestor emergencias] No se pudieron subir las fotos a Storage:',
-        errorFotos
-      );
-    }
-
     await guardarEmergencia(idConsolidado, {
 
       ...datosLivianos,
-
-      fotos: fotosURLs,
 
       numFotos: Array.isArray(photos) ? photos.length : 0,
 
       dispositivo: navigator.userAgent
 
     });
+
+    // Guardar fotos es best-effort y va después del documento
+    // principal: si falla (sin internet, foto muy pesada, etc.)
+    // el reporte igual queda sincronizado en el consolidado, solo
+    // que sin fotos visibles en el Gestor.
+    try {
+      await guardarFotosEmergencia(idConsolidado, photos);
+    } catch (errorFotos) {
+      console.error(
+        '[gestor emergencias] No se pudieron guardar las fotos:',
+        errorFotos
+      );
+    }
 
   } catch (error) {
 
@@ -311,12 +307,16 @@ document.addEventListener('DOMContentLoaded', async () => {
             new FileReader();
     
             reader.onload = e => {
-    
-                window.uploadedPhotos.push(
-                    e.target.result
-                );
-    
-                renderPhotoPreview();
+
+                comprimirFoto(e.target.result).then(fotoComprimida => {
+
+                    window.uploadedPhotos.push(
+                        fotoComprimida
+                    );
+
+                    renderPhotoPreview();
+
+                });
     
             };
     
@@ -324,6 +324,46 @@ document.addEventListener('DOMContentLoaded', async () => {
     
         });
     
+    }
+
+    /**
+     * Redimensiona y comprime una foto (data URL) a JPEG antes de
+     * guardarla. Las fotos de cámara sin tocar pueden pesar varios
+     * MB, muy por encima del límite de 1MB por documento de
+     * Firestore (cada foto se guarda como su propio documento en
+     * emergencias/{id}/fotos). Con un ancho máximo de 1280px y
+     * calidad 0.7 quedan livianas sin verse mal en la evidencia.
+     */
+    function comprimirFoto(dataUrl, anchoMaximo = 1280, calidad = 0.7){
+
+        return new Promise(resolve => {
+
+            const imagen = new Image();
+
+            imagen.onload = () => {
+
+                const escala = Math.min(1, anchoMaximo / imagen.width);
+                const ancho = Math.round(imagen.width * escala);
+                const alto = Math.round(imagen.height * escala);
+
+                const canvas = document.createElement('canvas');
+                canvas.width = ancho;
+                canvas.height = alto;
+
+                canvas.getContext('2d').drawImage(imagen, 0, 0, ancho, alto);
+
+                resolve(canvas.toDataURL('image/jpeg', calidad));
+
+            };
+
+            // Si la imagen no carga por alguna razón, se guarda la
+            // original en vez de perder la foto por completo.
+            imagen.onerror = () => resolve(dataUrl);
+
+            imagen.src = dataUrl;
+
+        });
+
     }
     
     if(cameraInput){

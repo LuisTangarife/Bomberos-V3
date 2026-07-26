@@ -10,15 +10,15 @@
    Este archivo NO reemplaza el guardado local (IndexedDB) ni
    el envío al Google Apps Script existente: se suma como una
    tercera copia, pensada solo para alimentar el listado
-   consolidado. Por eso el documento que se guarda aquí es
-   liviano (sin fotos ni el PDF en base64): eso evita chocar
-   con el límite de 1MB por documento de Firestore y hace que
-   listar el consolidado sea rápido en cualquier dispositivo.
+   consolidado. Por eso el documento principal que se guarda
+   aquí es liviano (sin fotos ni el PDF en base64): eso evita
+   chocar con el límite de 1MB por documento de Firestore y
+   hace que listar el consolidado sea rápido en cualquier
+   dispositivo.
 ========================================================= */
 
 import {
-    db,
-    storage
+    db
 }
 from "../../firebase/config.js";
 
@@ -31,79 +31,110 @@ import {
     query,
     orderBy,
     getDocs,
+    writeBatch,
     serverTimestamp
 }
 from
 "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
 
-import {
-    ref,
-    uploadString,
-    getDownloadURL,
-    deleteObject
-}
-from
-"https://www.gstatic.com/firebasejs/11.9.1/firebase-storage.js";
-
 const COLECCION = "emergencias";
 
 /* =========================================================
-   FOTOS DE EVIDENCIA (STORAGE)
+   FOTOS DE EVIDENCIA (SUBCOLECCIÓN DE FIRESTORE)
 
-   Mismo patrón que modules/inspecciones/firebase.js
-   (subirFotoStorage): ahí las fotos ya llegan a Storage. Aquí
-   las fotos de emergencia llegan como data URLs base64 (así
-   las guarda app.js en window.uploadedPhotos), así que se usa
-   uploadString(..., 'data_url') en vez de uploadBytes — evita
-   tener que convertir manualmente a Blob.
+   No se usa Firebase Storage: en el plan gratuito (Spark) de
+   Firebase, Storage requiere pasar a plan de pago (Blaze) para
+   habilitar el bucket. Firestore sí funciona en el plan
+   gratuito, así que cada foto se guarda como un documento
+   aparte en emergencias/{id}/fotos/{n} — así el documento
+   principal (el que lista el Gestor) sigue liviano, y cada
+   foto individual queda muy por debajo del límite de 1MB por
+   documento de Firestore.
+
+   Las fotos se comprimen en el navegador (ver comprimirFoto()
+   en app.js) antes de llegar aquí, así que ya vienen livianas;
+   aun así cada una va en su propio documento por seguridad.
 ========================================================= */
 
 /**
- * Sube el arreglo de fotos (data URLs base64) de una emergencia
- * a Storage, bajo emergencias/{id}/foto_N, y devuelve el arreglo
- * de URLs públicas resultante. Best-effort: si una foto puntual
- * falla, se omite en vez de tumbar la subida completa (una foto
- * corrupta no debería impedir que el resto del reporte se vea en
- * el consolidado).
+ * Guarda el arreglo de fotos (data URLs base64, ya comprimidas)
+ * de una emergencia en la subcolección emergencias/{id}/fotos.
+ * Best-effort por foto: si una puntual falla (por peso u otra
+ * razón), se omite en vez de tumbar el guardado completo del
+ * reporte.
  */
-export async function subirFotosEmergencia(id, fotos) {
+export async function guardarFotosEmergencia(id, fotos) {
 
-    if (!Array.isArray(fotos) || !fotos.length) return [];
+    if (!Array.isArray(fotos) || !fotos.length) return;
 
-    const subidas = await Promise.allSettled(
-        fotos.map((fotoDataUrl, indice) => {
+    const lote = writeBatch(db);
 
-            const ruta = ref(
-                storage,
-                `emergencias/${id}/foto_${indice}.jpg`
-            );
+    fotos.forEach((fotoDataUrl, indice) => {
 
-            return uploadString(ruta, fotoDataUrl, "data_url")
-                .then(() => getDownloadURL(ruta));
+        lote.set(
+            doc(db, COLECCION, id, "fotos", String(indice)),
+            {
+                data: fotoDataUrl,
+                orden: indice
+            }
+        );
 
-        })
-    );
+    });
 
-    return subidas
-        .filter(resultado => resultado.status === "fulfilled")
-        .map(resultado => resultado.value);
+    try {
+
+        await lote.commit();
+
+    } catch (error) {
+
+        console.error(
+            "[emergencias] No se pudieron guardar las fotos en Firestore:",
+            error
+        );
+
+    }
 
 }
 
 /**
- * Borra todas las fotos de evidencia de una emergencia en Storage.
- * Se usa al eliminar la emergencia del consolidado para no dejar
- * archivos huérfanos. Best-effort por la misma razón que arriba.
+ * Trae las fotos de evidencia de una emergencia (se usa al abrir
+ * la galería desde el Gestor, no al listar — así el listado
+ * general no se pone lento cargando imágenes de reportes que
+ * nadie está mirando).
  */
-export async function eliminarFotosEmergencia(id, fotos) {
+export async function obtenerFotosEmergencia(id) {
 
-    if (!Array.isArray(fotos) || !fotos.length) return;
-
-    await Promise.allSettled(
-        fotos.map((_, indice) => deleteObject(
-            ref(storage, `emergencias/${id}/foto_${indice}.jpg`)
-        ))
+    const consulta = query(
+        collection(db, COLECCION, id, "fotos"),
+        orderBy("orden", "asc")
     );
+
+    const snapshot = await getDocs(consulta);
+
+    return snapshot.docs
+        .map(documento => documento.data().data)
+        .filter(Boolean);
+
+}
+
+/**
+ * Borra todas las fotos de evidencia de una emergencia. Se usa
+ * al eliminar la emergencia del consolidado para no dejar
+ * documentos huérfanos en la subcolección.
+ */
+export async function eliminarFotosEmergencia(id) {
+
+    const snapshot = await getDocs(
+        collection(db, COLECCION, id, "fotos")
+    );
+
+    if (snapshot.empty) return;
+
+    const lote = writeBatch(db);
+
+    snapshot.docs.forEach(documento => lote.delete(documento.ref));
+
+    await lote.commit();
 
 }
 
@@ -195,6 +226,11 @@ export async function obtenerEmergencia(id) {
  * Esto es lo que consolida el "Gestor de Emergencias": no
  * importa desde qué celular/computador se haya guardado cada
  * reporte, todas quedan en la misma colección de Firestore.
+ *
+ * OJO: esto NO trae las fotos (viven en la subcolección
+ * emergencias/{id}/fotos) — solo numFotos, para poder mostrar
+ * el botón "Fotos (n)" sin tener que descargar imágenes de
+ * todos los reportes con cada carga del listado.
  */
 export async function listarEmergencias() {
 
@@ -214,18 +250,16 @@ export async function listarEmergencias() {
 
 export async function eliminarEmergencia(id) {
 
-    // Se intenta borrar primero las fotos en Storage (necesita el
-    // documento aún vivo para saber cuántas hay); si eso falla no se
-    // bloquea el borrado del documento en sí.
+    // Se intenta borrar primero las fotos (subcolección); si eso
+    // falla no se bloquea el borrado del documento principal.
     try {
 
-        const emergencia = await obtenerEmergencia(id);
-        await eliminarFotosEmergencia(id, emergencia?.fotos);
+        await eliminarFotosEmergencia(id);
 
     } catch (error) {
 
         console.error(
-            "[emergencias] No se pudieron borrar las fotos en Storage:",
+            "[emergencias] No se pudieron borrar las fotos:",
             error
         );
 
