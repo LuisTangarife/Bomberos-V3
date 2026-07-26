@@ -225,7 +225,7 @@ export async function renderizarDocxEnContenedor(blob, contenedor) {
         ignoreHeight: false,
         breakPages: true,
         experimental: true,
-        useBase64URL: true,
+        useBase64URL: false,
         renderHeaders: true,
         renderFooters: true,
         // <w:lastRenderedPageBreak/> refleja cómo se veía el documento
