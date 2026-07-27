@@ -593,7 +593,6 @@ export async function prepararBlobParaVistaPrevia(blob) {
                 // layout en esta copia de vista previa es eliminar su
                 // <w:drawing> por completo (no solo el atributo). El
                 // .docx descargable no se toca: conserva el escudo.
-                const LIMITE_EXTENT_EMU = 5000000; // ~5.47in — el escudo mide ~8.5x8.7in
 
                 headerXml = headerXml.replace(/<w:drawing>[\s\S]*?<\/w:drawing>/g, (drawingXml) => {
 
