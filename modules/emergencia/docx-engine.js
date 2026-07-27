@@ -521,6 +521,53 @@ function corregirAnclasEnParrafosCentrados(xmlParte) {
 
 }
 
+// docx-preview no posiciona bien un ancla flotante (wrapNone) cuando
+// comparte el mismo párrafo con texto visible — ej. la imagen
+// "codigo-verificacion" junto al nombre del comandante ("Ste. JUAN
+// CAMILO OCAMPO C."): en vez de tratarla como overlay flotante sobre
+// el offset indicado, la trata como si formara parte del flujo de esa
+// misma línea, y termina apareciendo A UN COSTADO del texto en vez de
+// ENCIMA de él. En Word real (y al imprimir) esto no pasa porque el
+// ancla sí se resuelve como overlay independiente del flujo.
+//
+// Arreglo: en esta copia de vista previa, se saca el <w:r> que
+// contiene el <w:drawing> del párrafo con texto y se mueve a un
+// párrafo propio vacío justo antes, conservando su <w:pPr> (incluida
+// la alineación centrada). Así docx-preview la posiciona como su
+// propio bloque flotante en vez de mezclarla con el texto.
+// Asume un solo <w:drawing> por párrafo afectado; si en el futuro se
+// agregan más imágenes junto a texto en la misma plantilla, revisar
+// que sigan quedando bien separadas.
+function separarAnclaDeTexto(xmlParte) {
+
+    return xmlParte.replace(/<w:p\b[^>]*>[\s\S]*?<\/w:p>/g, (parrafo) => {
+
+        if (!parrafo.includes('<wp:anchor')) return parrafo;
+
+        const tieneTextoVisible = /<w:t[ >][^<]*[^\s<][^<]*<\/w:t>/.test(parrafo);
+        if (!tieneTextoVisible) return parrafo;
+
+        const pPrMatch = parrafo.match(/<w:pPr>[\s\S]*?<\/w:pPr>/);
+        const pPr = pPrMatch ? pPrMatch[0] : '';
+
+        let resultado = parrafo;
+        let parrafoImagen = '';
+
+        resultado = resultado.replace(/<w:r>[\s\S]*?<w:drawing>[\s\S]*?<\/w:drawing>[\s\S]*?<\/w:r>/g, (run) => {
+            parrafoImagen += run;
+            return '';
+        });
+
+        if (!parrafoImagen) return parrafo;
+
+        const nuevoParrafo = `<w:p>${pPr}${parrafoImagen}</w:p>`;
+
+        return nuevoParrafo + resultado;
+
+    });
+
+}
+
 export async function prepararBlobParaVistaPrevia(blob) {
 
     try {
@@ -549,6 +596,12 @@ export async function prepararBlobParaVistaPrevia(blob) {
         xml = desagruparImagenesWpg(xml);
 
         xml = corregirAnclasEnParrafosCentrados(xml);
+
+        // Separar el ancla flotante (ej. "codigo-verificacion") del
+        // texto con el que comparte párrafo, para que docx-preview la
+        // pinte como overlay independiente en vez de metida en la
+        // misma línea que el nombre del firmante.
+        xml = separarAnclaDeTexto(xml);
 
         zip.file(rutaDocumento, xml);
 
