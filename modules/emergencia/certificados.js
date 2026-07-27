@@ -160,6 +160,55 @@ export async function buildCertificateHTML(data, docNum) {
 
 }
 
+// docx-preview no soporta bien un ancla flotante que comparte párrafo
+// con texto centrado ("codigo-verificacion" junto al nombre del
+// comandante): la deja posicionada con transformaciones relativas
+// (position:relative + left/top) que dependen de dónde cayó en el
+// flujo de línea centrado, no del margen real. En vez de intentar
+// predecir esa matemática interna (dos intentos previos a nivel de
+// XML fallaron), se reposiciona en el DOM YA renderizado: se saca el
+// envoltorio de su flujo (position:absolute) y se centra respecto al
+// propio párrafo del nombre, que es la referencia visual que de
+// verdad importa.
+function corregirPosicionCodigoVerificacion(contenedor) {
+
+    const parrafos = contenedor.querySelectorAll('p');
+
+    for (const p of parrafos) {
+
+        if (!/JUAN\s+CAMILO\s+OCAMPO/i.test(p.textContent)) continue;
+
+        const img = p.querySelector('img');
+        if (!img) continue;
+
+        const envoltorio = img.parentElement;
+        if (!envoltorio) continue;
+
+        // El <p> debe ser el contenedor de referencia para el
+        // posicionamiento absoluto del ancla.
+        p.style.position = 'relative';
+
+        const ancho = img.style.width || `${img.width}px`;
+        const alto = img.style.height || `${img.height}px`;
+
+        envoltorio.style.position = 'absolute';
+        envoltorio.style.width = ancho;
+        envoltorio.style.height = alto;
+        envoltorio.style.left = '50%';
+        envoltorio.style.marginLeft = `-${parseFloat(ancho) / 2}${ancho.replace(/[\d.]/g, '')}`;
+        envoltorio.style.top = 'auto';
+        // 6pt de separación entre el borde inferior de la imagen y el
+        // inicio del texto; punto de partida a calibrar con captura.
+        envoltorio.style.bottom = 'calc(100% + 6pt)';
+
+        img.style.position = 'relative';
+        img.style.left = '0';
+        img.style.top = '0';
+
+    }
+
+}
+
 export async function renderCertificate(data, id = null) {
 
   // Un solo docNum para todo el ciclo de vida de este reporte en
@@ -208,6 +257,10 @@ export async function renderCertificate(data, id = null) {
     // docx-preview convierte el .docx real a HTML dentro de #certContent
     // — es el documento oficial, no una réplica en HTML mantenida aparte.
     await renderizarDocxEnContenedor(blobParaVista, contenido);
+
+    // Corrige en el DOM ya renderizado la posición del código de
+    // verificación junto al nombre del comandante (ver función arriba).
+    corregirPosicionCodigoVerificacion(contenido);
 
   } catch (error) {
 
