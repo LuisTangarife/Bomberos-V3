@@ -548,7 +548,7 @@ function separarAnclaDeTexto(xmlParte) {
         if (!tieneTextoVisible) return parrafo;
 
         const pPrMatch = parrafo.match(/<w:pPr>[\s\S]*?<\/w:pPr>/);
-        const pPr = pPrMatch ? pPrMatch[0] : '';
+        let pPr = pPrMatch ? pPrMatch[0] : '';
 
         let resultado = parrafo;
         let parrafoImagen = '';
@@ -559,6 +559,16 @@ function separarAnclaDeTexto(xmlParte) {
         });
 
         if (!parrafoImagen) return parrafo;
+
+        // El párrafo nuevo queda SOLO con el ancla, sin texto: mismo
+        // caso que corregirAnclasEnParrafosCentrados. docx-preview mide
+        // un párrafo centrado y vacío desde el centro de esa línea, no
+        // desde el margen real que usa relativeFrom="margin"/"column"
+        // en Word. Se fuerza "left" únicamente en ESTE párrafo nuevo
+        // (no se toca corregirAnclasEnParrafosCentrados en general,
+        // para no afectar otros anclajes centrados que sí funcionan,
+        // como sello-firma).
+        pPr = pPr.replace(/<w:jc w:val="center"\/>/, '<w:jc w:val="left"/>');
 
         const nuevoParrafo = `<w:p>${pPr}${parrafoImagen}</w:p>`;
 
