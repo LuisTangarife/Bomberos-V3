@@ -107,8 +107,8 @@ function renderSidebar(active = "") {
             </a>
 
             <a
-                href="#"
-                onclick="abrirEstadisticas(); return false;">
+                href="${RAIZ_SITIO}modules/estadisticas/index.html"
+                class="${active === "estadisticas" ? "active" : ""}">
 
                 <i class="fa-solid fa-chart-column"></i>
 
@@ -147,12 +147,6 @@ if (typeof window.abrirAPH !== "function") {
 
 if (typeof window.abrirAyudas !== "function") {
     window.abrirAyudas = function () {
-        alert("Próximamente");
-    };
-}
-
-if (typeof window.abrirEstadisticas !== "function") {
-    window.abrirEstadisticas = function () {
         alert("Próximamente");
     };
 }
