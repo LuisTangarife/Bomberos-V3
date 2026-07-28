@@ -22,10 +22,87 @@ document.addEventListener("DOMContentLoaded", async () => {
  CARGAR DATOS
 =============================================*/
 
-function cargarDashboard(){
+// APH, Ayudas y Censos no tienen todavía una colección real en
+// Firestore (los botones de esas secciones en el sidebar solo abren
+// un alert "Próximamente") — así que sus tarjetas se marcan como
+// "sin módulo activo" en vez de mostrar un número, real o inventado.
+// Antes esas tres tarjetas (y las otras dos) mostraban un número fijo
+// escrito directo en el HTML — nunca venía de ningún dato real.
+function marcarSinDatos(idContador, mensaje = "Módulo sin datos aún") {
 
-    // Temporal: mientras se conecta la fuente de datos real,
-    // se anima hacia los valores ya presentes en el HTML.
+    const el = document.getElementById(idContador);
+    if (!el) return;
+
+    el.textContent = "—";
+
+    const nota = el.parentElement?.querySelector("span");
+    if (nota) nota.textContent = mensaje;
+
+}
+
+async function cargarDashboard(){
+
+    marcarSinDatos("totalAPH");
+    marcarSinDatos("totalAyudas");
+    marcarSinDatos("totalCensos");
+
+    try {
+
+        const [{ listarEmergencias }, { listarInspecciones }] = await Promise.all([
+            import("./modules/emergencia/firebase.js"),
+            import("./modules/inspecciones/firebase.js")
+        ]);
+
+        const [emergencias, inspecciones] = await Promise.all([
+            listarEmergencias().catch(error => {
+                console.error("[dashboard] No se pudieron cargar emergencias:", error);
+                return null;
+            }),
+            listarInspecciones().catch(error => {
+                console.error("[dashboard] No se pudieron cargar inspecciones:", error);
+                return null;
+            })
+        ]);
+
+        if (Array.isArray(emergencias)) {
+
+            const inicioMes = new Date();
+            inicioMes.setDate(1);
+            inicioMes.setHours(0, 0, 0, 0);
+
+            const esteMes = emergencias.filter(e => {
+                const match = /^(\d{4})-(\d{2})-(\d{2})/.exec(e.fecha || "");
+                if (!match) return false;
+                const fecha = new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]));
+                return fecha >= inicioMes;
+            }).length;
+
+            document.getElementById("totalEmergencias").textContent = esteMes;
+
+        } else {
+
+            marcarSinDatos("totalEmergencias", "No se pudo cargar (revisa conexión)");
+
+        }
+
+        if (Array.isArray(inspecciones)) {
+
+            document.getElementById("totalInspecciones").textContent = inspecciones.length;
+
+        } else {
+
+            marcarSinDatos("totalInspecciones", "No se pudo cargar (revisa conexión)");
+
+        }
+
+    } catch (error) {
+
+        console.error("[dashboard] Error cargando datos reales del panel:", error);
+
+    }
+
+    // Anima SOLO los contadores que sí quedaron con un número real
+    // ("—" no es numérico, así que animarContadores() ya lo ignora).
     animarContadores();
 
 }
@@ -89,7 +166,7 @@ function abrirInspecciones(){
 
 function abrirEstadisticas(){
 
-    alert("Próximamente");
+    location.href = "modules/estadisticas/index.html";
 
 }
 
