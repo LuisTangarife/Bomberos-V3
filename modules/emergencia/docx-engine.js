@@ -15,6 +15,61 @@ import { crearContexto } from "./placeholder-engine.js";
 
 let doc = null;
 
+// Convierte un data URL ("data:image/png;base64,...") al ArrayBuffer que
+// pide docxtemplater-image-module-free. Se probó primero en Node contra
+// la plantilla real (mismo delimitador {{ }} y misma versión de
+// docxtemplater, 3.69.3) antes de tocar este archivo — con ArrayBuffer
+// puro funciona igual en el navegador; en Node hace falta un Buffer,
+// pero eso es solo un detalle de esa prueba, no de este archivo.
+function base64DataURLToArrayBuffer(dataURL) {
+
+    const coincidencia = /^data:image\/(png|jpe?g);base64,/.exec(dataURL || '');
+    if (!coincidencia) return false;
+
+    const base64 = dataURL.slice(coincidencia[0].length);
+    const binario = window.atob(base64);
+    const bytes = new Uint8Array(binario.length);
+
+    for (let i = 0; i < binario.length; i++) {
+        bytes[i] = binario.charCodeAt(i);
+    }
+
+    return bytes.buffer;
+
+}
+
+// Tamaño fijo para las firmas insertadas en el Word (en píxeles, antes
+// de convertir a EMU — lo hace el propio módulo). 150x60 mantiene una
+// proporción razonable para una firma dibujada en un canvas de
+// 350x120 (ver firma_afectado_N y #firefighterSignatures en app.js)
+// sin depender de leer las dimensiones reales de cada trazo.
+function crearModuloImagenes() {
+
+    if (typeof window.ImageModule !== 'function') {
+        throw new Error(
+            'La librería docxtemplater-image-module-free no está cargada en esta página.'
+        );
+    }
+
+    return new window.ImageModule({
+
+        centered: false,
+
+        getImage(tagValue) {
+            return base64DataURLToArrayBuffer(tagValue);
+        },
+
+        getSize() {
+            // Proporción real del canvas de firma (350x120, ver
+            // setupSignature en app.js) — no es al azar: si no coincide,
+            // docx-preview/Word estiran la firma y se ve deformada.
+            return [150, 51];
+        }
+
+    });
+
+}
+
 export async function abrirDocumento() {
 
     const zip = await cargarPlantillaDOCX();
@@ -25,7 +80,9 @@ export async function abrirDocumento() {
 
         linebreaks: true,
 
-        delimiters: { start: "{{", end: "}}" }
+        delimiters: { start: "{{", end: "}}" },
+
+        modules: [crearModuloImagenes()]
 
     });
 

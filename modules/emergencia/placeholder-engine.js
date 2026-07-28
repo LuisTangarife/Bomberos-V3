@@ -3,20 +3,21 @@
  Construye el contexto de datos que docxtemplater usa para
  rellenar plantilla1.docx.
 
- OJO con dos diferencias respecto a la vista HTML (certificados.js):
+ FIRMAS_AFECTADOS y FIRMAS_BOMBEROS ya NO son texto plano: plantilla1.docx
+ ahora tiene, en su lugar, un bucle real por persona ({{#afectados}} /
+ {{#firmasBomberos}}) con un tag de imagen ({{%firma}}) dentro. Eso lo
+ procesa el módulo de imágenes de docxtemplater conectado en
+ docx-engine.js (ver ese archivo para el porqué de cada detalle).
 
- 1. FIRMAS_AFECTADOS y FIRMAS_BOMBEROS aquí son texto plano (solo
-    nombres), no bloques con <img>. Un documento .docx no puede
-    recibir HTML crudo en un tag de texto — docxtemplater lo
-    insertaría literalmente como la cadena "<img src=...>" visible
-    en el Word, no como una imagen real. Insertar las firmas como
-    imágenes de verdad requeriría el módulo de imágenes de
-    docxtemplater con un resolver de base64 a ArrayBuffer, que no
-    está incluido en este proyecto.
- 2. El valor anterior de este archivo pasaba los campos "en crudo"
-    (sin formatear fecha, sin calcular coordenadas, sin convertir
-    arrays a texto), por lo que el Word generado habría mostrado
-    fechas ISO sin formato y "[object Object]" en personal/vehículos.
+ Ojo con el saneo de `firma` en sanearFirmantes(): el módulo de
+ imágenes NO comprueba si getImage() devolvió algo válido — solo
+ comprueba si el valor del campo en sí (antes de llamar a getImage)
+ es "verdadero". Si aquí llega el string literal "Sin firma" (que es
+ lo que guardaba el formulario cuando no había firma), docxtemplater
+ SÍ intenta renderizarlo como imagen y el documento entero falla al
+ generarse. Por eso cualquier valor que no sea una firma real en
+ base64 se convierte aquí en '' (cadena vacía), que es lo único que
+ el bucle de la plantilla reconoce como "sin firma" y omite.
 =========================================================*/
 
 import {
@@ -28,21 +29,26 @@ import {
     generarDocNum
 } from "./report-helpers.js";
 
-function nombresAfectadosTexto(afectados) {
-    if (!afectados?.length) return 'Ninguno';
-    const nombres = afectados.map(a => a.nombre).filter(Boolean);
-    return nombres.length ? nombres.join(', ') : 'Ninguno';
+function esFirmaValida(firma) {
+    return typeof firma === 'string' && firma.startsWith('data:image');
 }
 
-// Mismo criterio que renderFirmasBomberosHTML en certificados.js: solo
-// se listan bomberos que efectivamente firmaron.
-function nombresBomberosFirmantesTexto(firmasBomberos) {
-    if (!firmasBomberos?.length) return 'Sin firmas registradas';
-    const nombres = firmasBomberos
-        .filter(b => b.firma && b.firma !== 'Sin firma')
-        .map(b => b.nombre)
-        .filter(Boolean);
-    return nombres.length ? nombres.join(', ') : 'Sin firmas registradas';
+// Deja pasar nombre/dni/etc. tal cual, pero normaliza `firma` a '' en
+// cualquier caso que no sea una imagen real (undefined, '', 'Sin firma').
+// Un canvas vacío exportado con toDataURL() también genera un
+// data:image/png válido (un PNG transparente de 1x1) — eso SÍ pasa el
+// filtro de esFirmaValida() y se insertará como una imagen vacía en el
+// Word. No se intenta filtrar ese caso aquí para no depender de
+// decodificar el PNG; si llega a ser un problema real en uso, se
+// resuelve mejor en el origen (no generar ese dataURL cuando el canvas
+// nunca se tocó — ver limpiarFirma()/guardarFirma() en el módulo de
+// inspecciones como referencia de ese patrón).
+function sanearFirmantes(lista) {
+    if (!lista?.length) return [];
+    return lista.map(item => ({
+        ...item,
+        firma: esFirmaValida(item.firma) ? item.firma : ''
+    }));
 }
 
 export function crearContexto(data, docNum) {
@@ -83,9 +89,11 @@ export function crearContexto(data, docNum) {
 
         NOVEDADES: data.novedades || '',
 
-        FIRMAS_AFECTADOS: nombresAfectadosTexto(data.afectados),
+        // Arreglos para los bucles {{#afectados}} / {{#firmasBomberos}}
+        // de plantilla1.docx — ya no texto plano, ver comentario arriba.
+        afectados: sanearFirmantes(data.afectados),
 
-        FIRMAS_BOMBEROS: nombresBomberosFirmantesTexto(data.firmasBomberos)
+        firmasBomberos: sanearFirmantes(data.firmasBomberos)
 
     };
 

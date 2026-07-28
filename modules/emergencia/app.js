@@ -1022,7 +1022,7 @@ function getFormData() {
 
     let firma = '';
 
-    if (canvas) {
+    if (canvas && canvas.dataset.dibujado === "1") {
 
       try {
 
@@ -1119,14 +1119,22 @@ if(canvas){
 
     let firma = '';
 
-    try{
+    // Igual que con los afectados: un canvas nunca tocado también
+    // exporta un PNG "válido" (transparente) con toDataURL(), así que
+    // sin esta bandera no hay forma de saber si el comandante
+    // realmente firmó.
+    if (canvas.dataset.dibujado === "1") {
 
-        firma =
-        canvas.toDataURL();
+        try{
 
-    }catch(err){
+            firma =
+            canvas.toDataURL();
 
-        console.error(err);
+        }catch(err){
+
+            console.error(err);
+
+        }
 
     }
 
@@ -1135,8 +1143,11 @@ if(canvas){
         nombre:
         canvas.dataset.nombre || '',
 
+        // '' (no el string 'Sin firma') — así lo reconoce como "sin
+        // firma" tanto el certificado HTML (certificados.js) como el
+        // bucle de imágenes del Word (placeholder-engine.js).
         firma:
-        firma || 'Sin firma'
+        firma
 
     });
 
@@ -2439,6 +2450,13 @@ function setupSignature(id){
 
             drawing=true;
 
+            // Un canvas recién creado (o recién limpiado) exporta con
+            // toDataURL() un PNG "válido" igual — transparente, pero
+            // válido — así que sin esta marca no hay forma de saber en
+            // guardarFormulario() si alguien realmente firmó o el
+            // campo se quedó vacío. Ver clearSignature(), que la borra.
+            canvas.dataset.dibujado = "1";
+
             const pos=
                 getPosition(e);
 
@@ -2526,5 +2544,10 @@ canvas.height
 );
 
 ctx.restore();
+
+// Sin esto, limpiar el canvas no revertía la marca de "sí hay trazo"
+// puesta en pointerdown — guardarFormulario() seguiría exportando el
+// canvas (ahora vacío) como si tuviera una firma real.
+canvas.dataset.dibujado = "0";
 
 }
