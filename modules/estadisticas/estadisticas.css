@@ -1,0 +1,225 @@
+/*==================================================
+ MÓDULO ESTADÍSTICAS
+ Reutiliza las variables de color de dashboard.css
+ (:root se declara ahí y es global a la página).
+==================================================*/
+
+.estadisticas{
+    max-width:1400px;
+    margin:0 auto;
+    padding:28px 32px 60px;
+    display:flex;
+    flex-direction:column;
+    gap:28px;
+}
+
+/* ---------- Aviso de fuente de datos ---------- */
+.fuente-datos{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    padding:14px 18px;
+    background:var(--glass);
+    border:1px solid var(--border);
+    border-radius:14px;
+    color:var(--text-light);
+    font-size:13px;
+}
+
+.fuente-datos i{ color:var(--blue); }
+
+.fuente-datos.alerta{ border-color:rgba(255,179,0,.4); }
+.fuente-datos.alerta i{ color:var(--amber); }
+
+/* ---------- Selector de módulo ---------- */
+.tabs-modulo{
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+}
+
+.tabs-modulo button{
+    padding:10px 18px;
+    border-radius:12px;
+    border:1px solid var(--border);
+    background:var(--glass);
+    color:var(--text-light);
+    font-weight:700;
+    font-size:13px;
+    cursor:pointer;
+    transition:.2s;
+}
+
+.tabs-modulo button:hover{ color:var(--text); border-color:var(--border-hover); }
+
+.tabs-modulo button.activo{
+    background:var(--primary);
+    border-color:var(--primary);
+    color:#fff;
+}
+
+/* ---------- Grid de tarjetas KPI (reutiliza .stat-card) ---------- */
+.kpi-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(210px,1fr));
+    gap:18px;
+}
+
+/* ---------- Grid de gráficas ---------- */
+.charts-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(420px,1fr));
+    gap:20px;
+}
+
+.chart-card{
+    background:var(--glass);
+    border:1px solid var(--border);
+    border-radius:18px;
+    padding:22px;
+    box-shadow:var(--shadow);
+    display:flex;
+    flex-direction:column;
+    gap:14px;
+    min-height:340px;
+}
+
+.chart-card.ancho{ grid-column:1/-1; }
+
+.chart-card h3{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    font-size:15px;
+    font-weight:800;
+    color:var(--white);
+    margin:0;
+}
+
+.chart-card h3 i{ color:var(--primary); }
+
+.chart-card .subtitulo{
+    font-size:12px;
+    color:var(--text-mute);
+    margin-top:-10px;
+}
+
+.chart-card .lienzo{
+    position:relative;
+    flex:1;
+    min-height:220px;
+}
+
+.chart-card .vacio{
+    flex:1;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    color:var(--text-mute);
+    font-size:13px;
+    text-align:center;
+    padding:20px;
+}
+
+#mapaEmergencias{
+    flex:1;
+    min-height:320px;
+    border-radius:14px;
+    overflow:hidden;
+}
+
+/* ---------- Tablas de ranking ---------- */
+.tabla-ranking{
+    width:100%;
+    border-collapse:collapse;
+    font-size:13px;
+}
+
+.tabla-ranking th{
+    text-align:left;
+    color:var(--text-mute);
+    font-weight:700;
+    padding:6px 8px;
+    border-bottom:1px solid var(--border);
+}
+
+.tabla-ranking td{
+    padding:8px 8px;
+    border-bottom:1px solid rgba(255,255,255,.04);
+    color:var(--text);
+}
+
+.tabla-ranking .barra-mini{
+    height:6px;
+    border-radius:4px;
+    background:var(--primary);
+    opacity:.75;
+}
+
+/* ---------- Bloque de proyección ---------- */
+.proyeccion-badge{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    padding:6px 12px;
+    border-radius:999px;
+    font-size:12px;
+    font-weight:700;
+}
+
+.proyeccion-badge.subiendo{ background:rgba(255,59,48,.15); color:#FF6B60; }
+.proyeccion-badge.bajando{ background:rgba(0,200,116,.15); color:var(--green); }
+.proyeccion-badge.estable{ background:rgba(139,92,246,.15); color:var(--violet); }
+
+.nota-metodologica{
+    font-size:12px;
+    color:var(--text-mute);
+    line-height:1.5;
+    border-top:1px dashed var(--border);
+    padding-top:12px;
+    margin-top:auto;
+}
+
+/* ---------- Índice de riesgo por barrio ---------- */
+.riesgo-barrio{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    padding:10px 0;
+    border-bottom:1px solid rgba(255,255,255,.04);
+}
+
+.riesgo-barrio .nombre{
+    flex:0 0 140px;
+    font-size:13px;
+    color:var(--text);
+    font-weight:600;
+}
+
+.riesgo-barrio .track{
+    flex:1;
+    height:8px;
+    border-radius:6px;
+    background:rgba(255,255,255,.06);
+    overflow:hidden;
+}
+
+.riesgo-barrio .track .fill{
+    height:100%;
+    border-radius:6px;
+    background:linear-gradient(90deg,var(--amber),var(--primary));
+}
+
+.riesgo-barrio .valor{
+    flex:0 0 34px;
+    text-align:right;
+    font-size:13px;
+    font-weight:800;
+    color:var(--text);
+}
+
+@media (max-width:720px){
+    .estadisticas{ padding:20px 16px 40px; }
+    .charts-grid{ grid-template-columns:1fr; }
+    .chart-card{ min-height:280px; }
+}

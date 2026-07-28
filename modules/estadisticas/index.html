@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" href="../../icons/icon-192-v4.png">
+<link rel="manifest" href="../../manifest.json">
+<meta name="theme-color" content="#CC2200">
+
+<title>Estadísticas | Centro de Operaciones</title>
+
+<link rel="stylesheet" href="../../shared/shared.css">
+<link rel="stylesheet" href="../../dashboard.css">
+<link rel="stylesheet" href="estadisticas.css">
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+
+</head>
+<body>
+
+<div class="app-layout">
+
+    <aside id="sidebar"></aside>
+
+    <div class="content">
+
+        <header id="header"></header>
+
+        <main class="estadisticas">
+
+            <!-- Aviso de fuente de datos: honesto sobre qué colecciones
+                 alimentan esto y desde cuándo, no un adorno. -->
+            <div class="fuente-datos" id="avisoFuente">
+                <i class="fa-solid fa-database"></i>
+                <span id="avisoFuenteTexto">Cargando datos reales de Firestore…</span>
+            </div>
+
+            <div class="tabs-modulo">
+                <button class="activo" data-vista="general" onclick="cambiarVista('general')">
+                    <i class="fa-solid fa-chart-simple"></i> General
+                </button>
+                <button data-vista="emergencias" onclick="cambiarVista('emergencias')">
+                    <i class="fa-solid fa-fire-extinguisher"></i> Emergencias
+                </button>
+                <button data-vista="inspecciones" onclick="cambiarVista('inspecciones')">
+                    <i class="fa-solid fa-building-shield"></i> Inspecciones
+                </button>
+                <button data-vista="predictivo" onclick="cambiarVista('predictivo')">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i> Proyección
+                </button>
+            </div>
+
+            <!-- ============ VISTA GENERAL ============ -->
+            <section id="vistaGeneral" class="vista">
+
+                <div class="kpi-grid" id="kpiGeneral"></div>
+
+                <div class="charts-grid">
+
+                    <div class="chart-card ancho">
+                        <h3><i class="fa-solid fa-timeline"></i> Emergencias e inspecciones por mes</h3>
+                        <div class="subtitulo">Serie completa, incluye meses sin actividad</div>
+                        <div class="lienzo"><canvas id="chartSerieMensual"></canvas></div>
+                    </div>
+
+                    <div class="chart-card">
+                        <h3><i class="fa-solid fa-map-location-dot"></i> Mapa de emergencias</h3>
+                        <div class="subtitulo" id="subtituloMapa"></div>
+                        <div id="mapaEmergencias"></div>
+                    </div>
+
+                    <div class="chart-card">
+                        <h3><i class="fa-solid fa-signature"></i> Cobertura de firmas</h3>
+                        <div class="subtitulo">Calidad del proceso de captura, no de la emergencia en sí</div>
+                        <div class="lienzo"><canvas id="chartCobertura"></canvas></div>
+                    </div>
+
+                </div>
+
+            </section>
+
+            <!-- ============ VISTA EMERGENCIAS ============ -->
+            <section id="vistaEmergencias" class="vista" style="display:none">
+
+                <div class="kpi-grid" id="kpiEmergencias"></div>
+
+                <div class="charts-grid">
+
+                    <div class="chart-card">
+                        <h3><i class="fa-solid fa-layer-group"></i> Por categoría de evento</h3>
+                        <div class="lienzo"><canvas id="chartCategoria"></canvas></div>
+                    </div>
+
+                    <div class="chart-card">
+                        <h3><i class="fa-solid fa-list-ol"></i> Top 10 tipos de evento</h3>
+                        <div class="lienzo"><canvas id="chartTopEvento"></canvas></div>
+                    </div>
+
+                    <div class="chart-card">
+                        <h3><i class="fa-solid fa-calendar-week"></i> Por día de la semana</h3>
+                        <div class="lienzo"><canvas id="chartDiaSemana"></canvas></div>
+                    </div>
+
+                    <div class="chart-card">
+                        <h3><i class="fa-solid fa-clock"></i> Por hora del día</h3>
+                        <div class="subtitulo">Según hora de llegada reportada</div>
+                        <div class="lienzo"><canvas id="chartHora"></canvas></div>
+                    </div>
+
+                    <div class="chart-card">
+                        <h3><i class="fa-solid fa-user-group"></i> Personal con más intervenciones</h3>
+                        <div id="tablaPersonal"></div>
+                    </div>
+
+                    <div class="chart-card">
+                        <h3><i class="fa-solid fa-truck"></i> Vehículos más utilizados</h3>
+                        <div id="tablaVehiculos"></div>
+                    </div>
+
+                </div>
+
+            </section>
+
+            <!-- ============ VISTA INSPECCIONES ============ -->
+            <section id="vistaInspecciones" class="vista" style="display:none">
+
+                <div class="kpi-grid" id="kpiInspecciones"></div>
+
+                <div class="charts-grid">
+
+                    <div class="chart-card">
+                        <h3><i class="fa-solid fa-clipboard-check"></i> Resultado de inspección</h3>
+                        <div class="lienzo"><canvas id="chartResultado"></canvas></div>
+                    </div>
+
+                    <div class="chart-card">
+                        <h3><i class="fa-solid fa-triangle-exclamation"></i> Hallazgos de riesgo</h3>
+                        <div class="subtitulo">% de inspecciones donde se marcó cada factor</div>
+                        <div class="lienzo"><canvas id="chartHallazgos"></canvas></div>
+                    </div>
+
+                    <div class="chart-card">
+                        <h3><i class="fa-solid fa-fire-extinguisher"></i> Estado de extintores revisados</h3>
+                        <div class="lienzo"><canvas id="chartExtintores"></canvas></div>
+                    </div>
+
+                    <div class="chart-card ancho">
+                        <h3><i class="fa-solid fa-map-pin"></i> Índice de riesgo por barrio</h3>
+                        <div class="subtitulo">Conteo ponderado (3× resultados "No cumple" + hallazgos de riesgo) — no es un modelo predictivo, es una priorización simple para visitas de seguimiento</div>
+                        <div id="listaRiesgoBarrio"></div>
+                    </div>
+
+                </div>
+
+            </section>
+
+            <!-- ============ VISTA PREDICTIVA ============ -->
+            <section id="vistaPredictivo" class="vista" style="display:none">
+
+                <div class="chart-card ancho" style="min-height:auto">
+                    <h3><i class="fa-solid fa-circle-info"></i> Qué es (y qué no es) esta proyección</h3>
+                    <div class="nota-metodologica" style="margin-top:0;border-top:none;padding-top:0">
+                        Es una <strong>regresión lineal simple</strong> sobre el total de emergencias por mes,
+                        no un modelo entrenado ni una predicción de eventos individuales. Con menos de 4 meses
+                        de historia no se proyecta nada (no hay suficiente base para que una tendencia
+                        signifique algo). El r² indicado es la bondad de ajuste de la recta sobre los datos
+                        históricos, no una probabilidad de que la proyección se cumpla.
+                    </div>
+                </div>
+
+                <div class="charts-grid">
+
+                    <div class="chart-card ancho">
+                        <h3><i class="fa-solid fa-chart-line"></i> Tendencia y proyección — próximos meses</h3>
+                        <div id="badgeTendencia"></div>
+                        <div class="lienzo"><canvas id="chartProyeccion"></canvas></div>
+                    </div>
+
+                </div>
+
+            </section>
+
+        </main>
+
+    </div>
+
+</div>
+
+<script src="../../shared/pwa.js"></script>
+<script src="../../shared/sidebar.js"></script>
+<script src="../../shared/header.js"></script>
+<script src="../../shared/shared.js"></script>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<script type="module" src="app.js"></script>
+
+</body>
+</html>
