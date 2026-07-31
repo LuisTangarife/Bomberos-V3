@@ -204,8 +204,37 @@
 <script src="https://unpkg.com/docxtemplater@3.69.3/build/docxtemplater.js"></script>
 <!-- Módulo de imágenes de docxtemplater — permite insertar las firmas
      (canvas → PNG en base64) como imágenes reales dentro del Word,
-     en vez de solo el nombre en texto. Ver docx-engine.js. -->
-<script src="https://unpkg.com/docxtemplater-image-module-free@1.1.1/build/imagemodule.min.js"></script>
+     en vez de solo el nombre en texto. Ver docx-engine.js.
+
+     La URL de la versión 1.1.1 minificada (.min.js) da 404 real en el
+     CDN -- confirmado en consola del navegador, no es un problema de
+     código. Por eso esto ya no es un <script src> fijo: intenta varias
+     URL en orden y se detiene en la primera que sí defina
+     window.ImageModule, en vez de depender de adivinar una sola URL
+     correcta. -->
+<script>
+(function () {
+  var candidatos = [
+    'https://unpkg.com/docxtemplater-image-module-free@1.0.0/build/imagemodule.js',
+    'https://cdn.jsdelivr.net/npm/docxtemplater-image-module-free@1.0.0/build/imagemodule.js',
+    'https://unpkg.com/docxtemplater-image-module-free@1.1.1/build/imagemodule.js'
+  ];
+  var indice = 0;
+  function intentarSiguiente() {
+    if (typeof window.ImageModule === 'function') return;
+    if (indice >= candidatos.length) {
+      console.error('No se pudo cargar docxtemplater-image-module-free desde ninguna de las URL de respaldo.');
+      return;
+    }
+    var script = document.createElement('script');
+    script.src = candidatos[indice++];
+    script.onload = function () { if (typeof window.ImageModule !== 'function') intentarSiguiente(); };
+    script.onerror = intentarSiguiente;
+    document.head.appendChild(script);
+  }
+  intentarSiguiente();
+})();
+</script>
 <script src="https://unpkg.com/file-saver@1.3.8/FileSaver.js"></script>
 <!-- CERTIFICATE MODAL — mismos ids que espera certificados.js -->
 <div class="modal-overlay" id="certModal" style="display:none">
