@@ -8,67 +8,30 @@
  espera llave simple ({REPORTE_ID}), así que hay que declarar
  los delimitadores explícitamente o el render lanza error de
  sintaxis contra la plantilla real.
+
+ FIRMAS: ya NO se insertan vía ningún "módulo de imágenes" de
+ docxtemplater. Se probó docxtemplater-image-module-free (varias
+ versiones y CDNs) y resultó tener un bug real, nunca resuelto desde
+ 2019, en navegadores reales: intenta reasignar `namespaceURI` de un
+ elemento del DOM, algo que el propio estándar no permite (confirmado
+ en el issue tracker de esa librería — afecta a Chrome y Firefox, no
+ es un problema de nuestra configuración).
+
+ El reemplazo (ver incrustarFirmasEnDocx más abajo): plantilla1.docx
+ tiene, en el lugar de cada firma, un marcador de TEXTO plano único
+ ({{marcadorFirma}} → "__FIRMA_0__", etc. — ver placeholder-engine.js).
+ docxtemplater renderiza eso como texto normal, sin tocar imágenes en
+ absoluto. Después del render, se busca cada marcador directamente en
+ el XML ya generado y se reemplaza por el XML de una imagen real —
+ pura manipulación de texto/ZIP con PizZip (que ya estaba cargado para
+ otras cosas en este archivo), nunca del DOM del navegador, así que el
+ bug de namespaceURI ni siquiera puede llegar a ocurrir.
 =========================================================*/
 
 import { cargarPlantillaDOCX } from "./template-loader.js";
 import { crearContexto } from "./placeholder-engine.js";
 
 let doc = null;
-
-// Convierte un data URL ("data:image/png;base64,...") al ArrayBuffer que
-// pide docxtemplater-image-module-free. Se probó primero en Node contra
-// la plantilla real (mismo delimitador {{ }} y misma versión de
-// docxtemplater, 3.69.3) antes de tocar este archivo — con ArrayBuffer
-// puro funciona igual en el navegador; en Node hace falta un Buffer,
-// pero eso es solo un detalle de esa prueba, no de este archivo.
-function base64DataURLToArrayBuffer(dataURL) {
-
-    const coincidencia = /^data:image\/(png|jpe?g);base64,/.exec(dataURL || '');
-    if (!coincidencia) return false;
-
-    const base64 = dataURL.slice(coincidencia[0].length);
-    const binario = window.atob(base64);
-    const bytes = new Uint8Array(binario.length);
-
-    for (let i = 0; i < binario.length; i++) {
-        bytes[i] = binario.charCodeAt(i);
-    }
-
-    return bytes.buffer;
-
-}
-
-// Tamaño fijo para las firmas insertadas en el Word (en píxeles, antes
-// de convertir a EMU — lo hace el propio módulo). 150x60 mantiene una
-// proporción razonable para una firma dibujada en un canvas de
-// 350x120 (ver firma_afectado_N y #firefighterSignatures en app.js)
-// sin depender de leer las dimensiones reales de cada trazo.
-function crearModuloImagenes() {
-
-    if (typeof window.ImageModule !== 'function') {
-        throw new Error(
-            'La librería docxtemplater-image-module-free no está cargada en esta página.'
-        );
-    }
-
-    return new window.ImageModule({
-
-        centered: false,
-
-        getImage(tagValue) {
-            return base64DataURLToArrayBuffer(tagValue);
-        },
-
-        getSize() {
-            // Proporción real del canvas de firma (350x120, ver
-            // setupSignature en app.js) — no es al azar: si no coincide,
-            // docx-preview/Word estiran la firma y se ve deformada.
-            return [150, 51];
-        }
-
-    });
-
-}
 
 export async function abrirDocumento() {
 
@@ -80,13 +43,177 @@ export async function abrirDocumento() {
 
         linebreaks: true,
 
-        delimiters: { start: "{{", end: "}}" },
+        delimiters: { start: "{{", end: "}}" }
 
-        modules: [crearModuloImagenes()]
+        // Sin "modules" -- ya no hace falta ningún módulo de imágenes.
 
     });
 
     return doc;
+
+}
+
+/* =========================================================
+   INCRUSTAR FIRMAS COMO IMAGEN REAL (sin librería de terceros)
+
+   Ver la nota grande al inicio del archivo sobre por qué esto ya no
+   pasa por un "módulo de imágenes" de docxtemplater.
+========================================================= */
+
+// Ancho x alto en píxeles (misma proporción 350x120 del canvas real,
+// ver setupSignature en app.js) convertido a EMU (1px @96dpi = 9525 EMU).
+const ANCHO_FIRMA_PX = 150;
+const ALTO_FIRMA_PX = 51;
+const EMU_POR_PX = 9525;
+
+// docxtemplater puede agregar xml:space="preserve" (u otros atributos)
+// al <w:t> al sustituir el texto del marcador -- no se puede asumir
+// una cadena literal exacta, hay que tolerar atributos de más.
+function patronRunDeMarcador(marcador) {
+    return new RegExp(
+        `<w:r><w:rPr><w:noProof/></w:rPr><w:t[^>]*>${marcador}</w:t></w:r>`
+    );
+}
+
+function construirXmlDibujoFirma(rId, idDibujo) {
+
+    const cx = ANCHO_FIRMA_PX * EMU_POR_PX;
+    const cy = ALTO_FIRMA_PX * EMU_POR_PX;
+
+    return (
+        '<w:r><w:rPr><w:noProof/></w:rPr><w:drawing ' +
+        'xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing" ' +
+        'xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" ' +
+        'xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture" ' +
+        'xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">' +
+        `<wp:inline distT="0" distB="0" distL="0" distR="0">` +
+        `<wp:extent cx="${cx}" cy="${cy}"/>` +
+        `<wp:effectExtent l="0" t="0" r="0" b="0"/>` +
+        `<wp:docPr id="${idDibujo}" name="Firma${idDibujo}"/>` +
+        `<wp:cNvGraphicFramePr><a:graphicFrameLocks noChangeAspect="1"/></wp:cNvGraphicFramePr>` +
+        `<a:graphic><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture">` +
+        `<pic:pic><pic:nvPicPr><pic:cNvPr id="${idDibujo}" name="Firma${idDibujo}"/><pic:cNvPicPr/></pic:nvPicPr>` +
+        `<pic:blipFill><a:blip r:embed="${rId}"/><a:stretch><a:fillRect/></a:stretch></pic:blipFill>` +
+        `<pic:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="${cx}" cy="${cy}"/></a:xfrm>` +
+        `<a:prstGeom prst="rect"><a:avLst/></a:prstGeom></pic:spPr></pic:pic>` +
+        `</a:graphicData></a:graphic></wp:inline></w:drawing></w:r>`
+    );
+
+}
+
+/**
+ * Reemplaza cada marcador de firma ({{marcadorFirma}} → "__FIRMA_0__",
+ * etc.) por una imagen real dentro del .docx ya renderizado, editando
+ * directamente el XML/ZIP del documento -- sin pasar por el DOM del
+ * navegador ni por ninguna librería externa de imágenes.
+ *
+ * @param {Blob} blob  El .docx ya renderizado por docxtemplater (con
+ *   los marcadores de texto en los lugares que ocupará cada firma).
+ * @param {Object<string,string>} marcadores  Mapa marcador -> dataURL
+ *   ("data:image/png;base64,...") o '' si esa persona no firmó.
+ * @returns {Promise<Blob>}
+ */
+async function incrustarFirmasEnDocx(blob, marcadores) {
+
+    if (!marcadores || !Object.keys(marcadores).length) return blob;
+
+    const buffer = await blob.arrayBuffer();
+    const zip = new PizZip(buffer);
+
+    let documentXml = zip.file('word/document.xml').asText();
+    let relsXml = zip.file('word/_rels/document.xml.rels').asText();
+    let contentTypesXml = zip.file('[Content_Types].xml').asText();
+
+    if (!/Extension="png"/.test(contentTypesXml)) {
+        contentTypesXml = contentTypesXml.replace(
+            '</Types>',
+            '<Default Extension="png" ContentType="image/png"/></Types>'
+        );
+    }
+
+    const idsExistentes = [...relsXml.matchAll(/Id="rId(\d+)"/g)].map(m => Number(m[1]));
+    let siguienteRid = (idsExistentes.length ? Math.max(...idsExistentes) : 0) + 1;
+
+    const archivosMedia = Object.keys(zip.files).filter(n => /^word\/media\/image\d*\.\w+$/.test(n));
+    let siguienteImagen = archivosMedia.length + 1;
+
+    let nuevasRelaciones = '';
+    const avisos = [];
+
+    Object.keys(marcadores).forEach(marcador => {
+
+        const dataURL = marcadores[marcador];
+        const patronRun = patronRunDeMarcador(marcador);
+
+        if (!dataURL) {
+            documentXml = documentXml.replace(patronRun, '');
+            return;
+        }
+
+        const coincidencia = /^data:image\/(png|jpe?g);base64,(.+)$/.exec(dataURL);
+
+        if (!coincidencia) {
+            documentXml = documentXml.replace(patronRun, '');
+            avisos.push(`Marcador "${marcador}": el dataURL no tiene el formato esperado, se dejó sin firma.`);
+            return;
+        }
+
+        const extension = coincidencia[1] === 'jpg' ? 'jpeg' : coincidencia[1];
+        const base64 = coincidencia[2];
+        const nombreArchivo = `imageFirma${siguienteImagen}.${extension}`;
+        siguienteImagen++;
+
+        zip.file(`word/media/${nombreArchivo}`, base64, { base64: true });
+
+        const rId = `rId${siguienteRid}`;
+        const idDibujo = siguienteRid;
+        siguienteRid++;
+
+        const tipoRelacion = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/image';
+        nuevasRelaciones += `<Relationship Id="${rId}" Type="${tipoRelacion}" Target="media/${nombreArchivo}"/>`;
+
+        if (extension === 'jpeg' && !/Extension="jpeg"/.test(contentTypesXml)) {
+            contentTypesXml = contentTypesXml.replace(
+                '</Types>',
+                '<Default Extension="jpeg" ContentType="image/jpeg"/></Types>'
+            );
+        }
+
+        if (patronRun.test(documentXml)) {
+
+            documentXml = documentXml.replace(patronRun, construirXmlDibujoFirma(rId, idDibujo));
+
+        } else {
+
+            // Respaldo: el marcador existe pero no calzó ni siquiera el
+            // patrón tolerante (por ejemplo, si algún día se reformatea
+            // la plantilla) -- se deja sin firma en vez de dejar XML
+            // corrupto, y se avisa para poder revisar plantilla1.docx.
+            const patronTexto = new RegExp(`<w:t[^>]*>${marcador}</w:t>`);
+            if (patronTexto.test(documentXml)) {
+                documentXml = documentXml.replace(patronTexto, '<w:t></w:t>');
+            }
+            avisos.push(
+                `Marcador "${marcador}": no se encontró el run exacto esperado -- ` +
+                'se dejó sin firma en vez de arriesgar el documento. Revisar plantilla1.docx.'
+            );
+
+        }
+
+    });
+
+    relsXml = relsXml.replace('</Relationships>', nuevasRelaciones + '</Relationships>');
+
+    zip.file('word/document.xml', documentXml);
+    zip.file('word/_rels/document.xml.rels', relsXml);
+    zip.file('[Content_Types].xml', contentTypesXml);
+
+    if (avisos.length) console.warn('[docx-engine] Avisos al incrustar firmas:', avisos);
+
+    return zip.generate({
+        type: 'blob',
+        mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+    });
 
 }
 
@@ -118,7 +245,7 @@ export function cerrarDocumento(){
  */
 export async function generarDocumentoWordBlob(data, docNum) {
 
-    const contexto = crearContexto(data, docNum);
+    const { contexto, marcadores } = crearContexto(data, docNum);
 
     const documento = await abrirDocumento();
 
@@ -150,7 +277,13 @@ export async function generarDocumentoWordBlob(data, docNum) {
 
     // toBlob() está disponible desde docxtemplater@3.62.0; evita tener
     // que pasar por zip.generate() manualmente.
-    const blob = documento.toBlob();
+    let blob = documento.toBlob();
+
+    // Las firmas (si hay) se incrustan DESPUÉS del render de
+    // docxtemplater, editando el .docx ya generado -- ver la nota
+    // grande al inicio del archivo sobre por qué ya no se hace vía un
+    // módulo de docxtemplater.
+    blob = await incrustarFirmasEnDocx(blob, marcadores);
 
     const nombreArchivo = `Reporte_${contexto.REPORTE_ID}.docx`;
 

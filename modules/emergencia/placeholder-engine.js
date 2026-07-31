@@ -3,21 +3,27 @@
  Construye el contexto de datos que docxtemplater usa para
  rellenar plantilla1.docx.
 
- FIRMAS_AFECTADOS y FIRMAS_BOMBEROS ya NO son texto plano: plantilla1.docx
- ahora tiene, en su lugar, un bucle real por persona ({{#afectados}} /
- {{#firmasBomberos}}) con un tag de imagen ({{%firma}}) dentro. Eso lo
- procesa el módulo de imágenes de docxtemplater conectado en
- docx-engine.js (ver ese archivo para el porqué de cada detalle).
+ CAMBIO IMPORTANTE: las firmas ya NO se insertan vía un módulo de
+ imágenes de docxtemplater. Se probó docxtemplater-image-module-free
+ y resultó tener un bug real, sin resolver desde 2019, en navegadores
+ reales (intenta reasignar `namespaceURI` de un elemento del DOM, algo
+ que el propio estándar no permite -- confirmado en el issue tracker
+ de esa librería, afecta a Chrome y Firefox por igual).
 
- Ojo con el saneo de `firma` en sanearFirmantes(): el módulo de
- imágenes NO comprueba si getImage() devolvió algo válido — solo
- comprueba si el valor del campo en sí (antes de llamar a getImage)
- es "verdadero". Si aquí llega el string literal "Sin firma" (que es
- lo que guardaba el formulario cuando no había firma), docxtemplater
- SÍ intenta renderizarlo como imagen y el documento entero falla al
- generarse. Por eso cualquier valor que no sea una firma real en
- base64 se convierte aquí en '' (cadena vacía), que es lo único que
- el bucle de la plantilla reconoce como "sin firma" y omite.
+ El reemplazo: plantilla1.docx tiene, en el lugar de cada firma, un
+ tag de TEXTO plano ({{marcadorFirma}}) con un valor único por persona
+ (ej. "__FIRMA_0__"). docxtemplater solo pone ese texto ahí, sin tocar
+ imágenes en absoluto. Después, docx-engine.js (fuera de docxtemplater
+ por completo) busca cada uno de esos marcadores directamente en el
+ XML ya generado y los reemplaza por el XML de una imagen real -- pura
+ manipulación de texto/ZIP, nunca del DOM, así que el bug de
+ namespaceURI ni siquiera puede ocurrir.
+
+ crearContexto() ahora devuelve { contexto, marcadores }:
+   - contexto: lo que se le pasa a doc.render() (igual que antes).
+   - marcadores: mapa marcador -> dataURL (o '' si no hay firma real),
+     que docx-engine.js usa DESPUÉS del render para incrustar las
+     imágenes.
 =========================================================*/
 
 import {
@@ -33,27 +39,25 @@ function esFirmaValida(firma) {
     return typeof firma === 'string' && firma.startsWith('data:image');
 }
 
-// Deja pasar nombre/dni/etc. tal cual, pero normaliza `firma` a '' en
-// cualquier caso que no sea una imagen real (undefined, '', 'Sin firma').
-// Un canvas vacío exportado con toDataURL() también genera un
-// data:image/png válido (un PNG transparente de 1x1) — eso SÍ pasa el
-// filtro de esFirmaValida() y se insertará como una imagen vacía en el
-// Word. No se intenta filtrar ese caso aquí para no depender de
-// decodificar el PNG; si llega a ser un problema real en uso, se
-// resuelve mejor en el origen (no generar ese dataURL cuando el canvas
-// nunca se tocó — ver limpiarFirma()/guardarFirma() en el módulo de
-// inspecciones como referencia de ese patrón).
-function sanearFirmantes(lista) {
+// Le pone a cada firmante un marcador único ("__FIRMA_0__", "__FIRMA_1__",
+// ...) y registra en `marcadores` a qué dataURL corresponde (o '' si
+// no hay firma real) -- el contador es compartido entre afectados y
+// bomberos para que nunca se repita un marcador entre los dos grupos.
+function asignarMarcadores(lista, marcadores, contadorRef) {
     if (!lista?.length) return [];
-    return lista.map(item => ({
-        ...item,
-        firma: esFirmaValida(item.firma) ? item.firma : ''
-    }));
+    return lista.map(item => {
+        const marcador = `__FIRMA_${contadorRef.valor++}__`;
+        marcadores[marcador] = esFirmaValida(item.firma) ? item.firma : '';
+        return { ...item, marcadorFirma: marcador };
+    });
 }
 
 export function crearContexto(data, docNum) {
 
-    return {
+    const marcadores = {};
+    const contadorRef = { valor: 0 };
+
+    const contexto = {
 
         REPORTE_ID: docNum || generarDocNum(),
 
@@ -90,11 +94,14 @@ export function crearContexto(data, docNum) {
         NOVEDADES: data.novedades || '',
 
         // Arreglos para los bucles {{#afectados}} / {{#firmasBomberos}}
-        // de plantilla1.docx — ya no texto plano, ver comentario arriba.
-        afectados: sanearFirmantes(data.afectados),
+        // de plantilla1.docx. `marcadorFirma` es el único campo nuevo
+        // -- todo lo demás sigue igual que antes.
+        afectados: asignarMarcadores(data.afectados, marcadores, contadorRef),
 
-        firmasBomberos: sanearFirmantes(data.firmasBomberos)
+        firmasBomberos: asignarMarcadores(data.firmasBomberos, marcadores, contadorRef)
 
     };
+
+    return { contexto, marcadores };
 
 }
