@@ -24,7 +24,12 @@ const BASE_PATH = window.location.pathname.includes("/Bomberos-V3/")
 
 const RAIZ_SITIO = `${window.location.origin}${BASE_PATH}`;
 
-function renderSidebar(active = "") {
+// Enlaces que llevan a datos de TODOS los dispositivos/usuarios (no
+// solo del que está viendo el sidebar): Panel General, Gestor de
+// Emergencias consolidado y Reportes y Estadísticas. Se marcan con
+// data-restringido para poder ocultarlos cuando quien ve el sidebar
+// no tiene sesión (ver parámetro "autenticado" de renderSidebar).
+function renderSidebar(active = "", autenticado = true) {
 
     const container = document.getElementById("sidebar");
 
@@ -57,6 +62,7 @@ function renderSidebar(active = "") {
         <nav>
 
             <a
+                data-restringido="true"
                 href="${RAIZ_SITIO}index.html"
                 class="${active === "dashboard" ? "active" : ""}">
 
@@ -67,6 +73,7 @@ function renderSidebar(active = "") {
             </a>
 
             <a
+                data-restringido="true"
                 href="${RAIZ_SITIO}modules/emergencia/gestor.html"
                 class="${active === "emergencia" ? "active" : ""}">
 
@@ -107,6 +114,7 @@ function renderSidebar(active = "") {
             </a>
 
             <a
+                data-restringido="true"
                 href="${RAIZ_SITIO}modules/estadisticas/index.html"
                 class="${active === "estadisticas" ? "active" : ""}">
 
@@ -133,6 +141,17 @@ function renderSidebar(active = "") {
         </div>
 
     `;
+
+    // autenticado = false (invitado sin sesión): se ocultan los
+    // enlaces a vistas con datos de todos los usuarios/dispositivos.
+    // autenticado = true (default, retrocompatible): páginas que ya
+    // exigen login con protegerPagina() no necesitan pasar este
+    // parámetro y siguen mostrando el menú completo, como siempre.
+    if (!autenticado) {
+        container
+            .querySelectorAll('[data-restringido="true"]')
+            .forEach(enlace => enlace.remove());
+    }
 
 }
 
