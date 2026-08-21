@@ -64,6 +64,32 @@ export function protegerPagina() {
 
 }
 
+/**
+ * Igual que protegerPagina(), pero para páginas que SÍ deben abrir sin
+ * sesión (ej. formularios de Inspecciones/Emergencia). Nunca redirige:
+ * resuelve con el usuario de Firebase si hay sesión, o con `null` si no
+ * la hay. Quien llama esta función es responsable de restringir lo que
+ * un usuario `null` puede ver (normalmente: solo sus registros locales,
+ * nunca el listado completo remoto).
+ */
+export function esperarEstadoAuth() {
+
+    return new Promise(resolve => {
+        onAuthStateChanged(auth, usuario => resolve(usuario || null));
+    });
+
+}
+
+/**
+ * Suscribe un callback a cambios de sesión sin redirigir nunca. Pensado
+ * para piezas de UI compartidas (ej. sidebar.js) que necesitan
+ * mostrar/ocultar enlaces según haya o no sesión activa, en cualquier
+ * página, sin acoplarse a protegerPagina() ni a esperarEstadoAuth().
+ */
+export function escucharEstadoAuth(callback) {
+    return onAuthStateChanged(auth, usuario => callback(usuario || null));
+}
+
 export function obtenerUsuarioActual() {
     return auth.currentUser;
 }
