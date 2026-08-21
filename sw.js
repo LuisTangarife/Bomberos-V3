@@ -4,7 +4,7 @@
    y sea instalable como PWA.
 ======================================================================== */
 
-const SW_VERSION = 'v43'; // v42 -> v43: módulo Censos completo (antes solo un enlace roto en el dashboard, ahora formulario funcional) agregado al precache
+const SW_VERSION = 'v44'; // v43 -> v44: Censos rediseñado (tokens de tema propios, interruptor día/noche, responsive real, asterisco en campos obligatorios)
 const STATIC_CACHE = `bomberos-static-${SW_VERSION}`;
 const DYNAMIC_CACHE = `bomberos-dynamic-${SW_VERSION}`;
 const CACHES_VIGENTES = [STATIC_CACHE, DYNAMIC_CACHE];
