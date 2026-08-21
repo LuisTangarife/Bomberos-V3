@@ -405,7 +405,15 @@ async function manejarGuardar(evento) {
     } catch (err) {
 
         console.error(err);
-        alert("No se pudo guardar el censo. Intenta de nuevo.");
+
+        // Antes decía siempre lo mismo sin importar la causa real. Con
+        // el código y mensaje del error (ej. "permission-denied" si son
+        // las reglas de Firestore) puedes ver la causa exacta sin abrir
+        // la consola del navegador.
+        alert(
+            "No se pudo guardar el censo.\n\n" +
+            `Detalle: ${err.code || err.name || "error desconocido"} — ${err.message || err}`
+        );
 
     } finally {
 
