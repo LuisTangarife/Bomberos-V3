@@ -114,6 +114,16 @@ function renderSidebar(active = "", autenticado = true) {
             </a>
 
             <a
+                href="${RAIZ_SITIO}modules/censos/index.html"
+                class="${active === "censos" ? "active" : ""}">
+
+                <i class="fa-solid fa-people-roof"></i>
+
+                <span>Censos</span>
+
+            </a>
+
+            <a
                 data-restringido="true"
                 href="${RAIZ_SITIO}modules/estadisticas/index.html"
                 class="${active === "estadisticas" ? "active" : ""}">
