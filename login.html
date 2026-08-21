@@ -126,6 +126,45 @@
             cursor:default;
         }
 
+        .login-divider{
+            display:flex;
+            align-items:center;
+            gap:12px;
+            margin:20px 0 16px;
+            color:var(--text-mute);
+            font-size:.75rem;
+        }
+
+        .login-divider::before,
+        .login-divider::after{
+            content:"";
+            flex:1;
+            height:1px;
+            background:var(--border);
+        }
+
+        .login-invitado{
+            width:100%;
+            padding:12px;
+            border-radius:10px;
+            border:1px solid var(--border);
+            background:rgba(255,255,255,.04);
+            color:var(--text-light);
+            font-weight:600;
+            font-size:.9rem;
+            cursor:pointer;
+            text-decoration:none;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            gap:8px;
+        }
+
+        .login-invitado:hover{
+            border-color:var(--border-hover);
+            color:var(--white);
+        }
+
     </style>
 
 </head>
@@ -160,6 +199,13 @@
             </button>
 
         </form>
+
+        <div class="login-divider">o</div>
+
+        <a href="invitado.html" class="login-invitado">
+            <i class="fa-solid fa-user"></i>
+            Continuar sin cuenta
+        </a>
 
     </div>
 

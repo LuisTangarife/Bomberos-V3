@@ -4,7 +4,7 @@
    y sea instalable como PWA.
 ======================================================================== */
 
-const SW_VERSION = 'v41'; // v40 -> v41: módulo Estadísticas (antes ausente del precache por completo) + Chart.js, que usa y tampoco estaba precacheado — mismo problema que ya se había resuelto para Emergencia en v31, pero repetido al agregar Estadísticas después
+const SW_VERSION = 'v42'; // v41 -> v42: nuevo punto de entrada invitado.html (botón "Continuar sin cuenta" en login.html) agregado al precache
 const STATIC_CACHE = `bomberos-static-${SW_VERSION}`;
 const DYNAMIC_CACHE = `bomberos-dynamic-${SW_VERSION}`;
 const CACHES_VIGENTES = [STATIC_CACHE, DYNAMIC_CACHE];
@@ -20,6 +20,7 @@ const FILES = [
     "./",
     "./index.html",
     "./login.html",
+    "./invitado.html",
     "./offline.html",
 
     "./dashboard.css",
