@@ -17,6 +17,7 @@
 import { listarEmergencias, eliminarEmergencia } from "./firebase.js";
 import { inicializarMapa, renderizarMapa } from "./mapas.js";
 import { actualizarClima } from "./clima.js";
+import { protegerPagina } from "../../shared/auth.js";
 
 import { renderCertificate, printCertificate, closeModal, descargarWord } from "./certificados.js";
 
@@ -108,7 +109,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
 });
 
-export function inicializarGestor() {
+export async function inicializarGestor() {
+
+    // El Centro de Gestión consolida TODAS las emergencias de todos los
+    // dispositivos (Firestore completo), no solo las locales — por eso,
+    // a diferencia del formulario de registro, sí exige sesión. Sin
+    // cuenta, protegerPagina() redirige a login antes de cargar nada.
+    await protegerPagina();
 
     inicializarMapa();
 
