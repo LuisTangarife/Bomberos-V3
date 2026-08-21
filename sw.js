@@ -4,7 +4,7 @@
    y sea instalable como PWA.
 ======================================================================== */
 
-const SW_VERSION = 'v42'; // v41 -> v42: nuevo punto de entrada invitado.html (botón "Continuar sin cuenta" en login.html) agregado al precache
+const SW_VERSION = 'v43'; // v42 -> v43: módulo Censos completo (antes solo un enlace roto en el dashboard, ahora formulario funcional) agregado al precache
 const STATIC_CACHE = `bomberos-static-${SW_VERSION}`;
 const DYNAMIC_CACHE = `bomberos-dynamic-${SW_VERSION}`;
 const CACHES_VIGENTES = [STATIC_CACHE, DYNAMIC_CACHE];
@@ -95,6 +95,15 @@ const FILES = [
     "./modules/estadisticas/estadisticas.css",
     "./modules/estadisticas/app.js",
     "./modules/estadisticas/datos.js",
+
+    "./modules/censos/index.html",
+    "./modules/censos/styles.css",
+    "./modules/censos/app.js",
+    "./modules/censos/dom.js",
+    "./modules/censos/estado.js",
+    "./modules/censos/firebase.js",
+    "./modules/censos/listado.js",
+    "./modules/censos/persistencia.js",
 
     "./icons/icon-192-v4.png",
     "./icons/icon-512-v4.png"
