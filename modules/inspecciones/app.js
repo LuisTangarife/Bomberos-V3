@@ -24,7 +24,7 @@
 
 import { APP, state } from "./estado.js";
 import { UI, inicializarDOM } from "./dom.js";
-import { protegerPagina } from "../../shared/auth.js";
+import { esperarEstadoAuth } from "../../shared/auth.js";
 
 import { siguientePaso, pasoAnterior, inicializarMenu, inicializarProgreso } from "./navegacion.js";
 import { inicializarFormulario, establecerFechaHora } from "./formulario.js";
@@ -66,15 +66,26 @@ async function iniciarAplicacion() {
 
     try {
 
-        const usuario = await protegerPagina();
-        state.usuario = usuario.email || usuario.uid;
+        // A diferencia de antes, esto ya NO redirige a login si no hay
+        // sesión: un usuario sin cuenta puede usar el formulario
+        // completo. state.invitado marca ese caso para que
+        // persistencia.js sepa que este dispositivo solo debe ver (y
+        // guardar localmente) SUS PROPIOS registros — nunca el listado
+        // completo de Firestore, que sigue siendo exclusivo de cuentas
+        // registradas.
+        const usuario = await esperarEstadoAuth();
+        state.usuario = usuario ? (usuario.email || usuario.uid) : "invitado";
+        state.invitado = !usuario;
+
+        const avisoInvitado = document.getElementById("avisoInvitado");
+        if (avisoInvitado) avisoInvitado.style.display = state.invitado ? "flex" : "none";
 
         console.log(
             `%cSistema de Inspecciones v${APP.VERSION}`,
             "color:#ff6b00;font-weight:bold;font-size:13px;"
         );
 
-        if (typeof renderSidebar === "function") renderSidebar("inspecciones");
+        if (typeof renderSidebar === "function") renderSidebar("inspecciones", !state.invitado);
         if (typeof renderHeader === "function") renderHeader("Inspecciones");
 
         inicializarDOM();

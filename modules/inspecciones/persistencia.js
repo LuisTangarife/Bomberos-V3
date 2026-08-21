@@ -675,7 +675,14 @@ export async function cargarInspecciones() {
 
     try {
 
-        const datos = await obtenerInspeccionesRemotas();
+        // Invitado (sin sesión): jamás se consulta el listado completo
+        // de Firestore, ni siquiera para intentarlo y caer al local si
+        // falla. Solo ve lo que este dispositivo guardó (leerListaLocal
+        // solo contiene lo que actualizarEnListaLocal fue agregando
+        // desde guardarInspeccionRemota en ESTE navegador).
+        const datos = state.invitado
+            ? leerListaLocal()
+            : await obtenerInspeccionesRemotas();
 
         state.inspecciones = datos;
 

@@ -40,6 +40,12 @@ export const state = {
 
     // Sesión / inspección actual
     usuario: null,
+
+    // true si nadie inició sesión en este dispositivo (ver app.js). El
+    // formulario funciona igual, pero persistencia.js usa esta bandera
+    // para no pedirle nunca a Firestore el listado completo — solo
+    // muestra (y guarda) lo que este dispositivo creó.
+    invitado: false,
     inspeccionId: null,
     editando: false,
     seleccionada: null,
