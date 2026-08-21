@@ -4,7 +4,7 @@
    y sea instalable como PWA.
 ======================================================================== */
 
-const SW_VERSION = 'v40'; // v30 -> v31: módulo Emergencia completo (antes solo Inspecciones) + librerías CDN que usa, precacheados desde la instalación — antes dependían de haber visitado cada página online al menos una vez
+const SW_VERSION = 'v41'; // v40 -> v41: módulo Estadísticas (antes ausente del precache por completo) + Chart.js, que usa y tampoco estaba precacheado — mismo problema que ya se había resuelto para Emergencia en v31, pero repetido al agregar Estadísticas después
 const STATIC_CACHE = `bomberos-static-${SW_VERSION}`;
 const DYNAMIC_CACHE = `bomberos-dynamic-${SW_VERSION}`;
 const CACHES_VIGENTES = [STATIC_CACHE, DYNAMIC_CACHE];
@@ -90,6 +90,11 @@ const FILES = [
     "./modules/emergencia/plantillas/assets/logo-institucional.png",
     "./modules/emergencia/plantillas/assets/sello-oficial.gif",
 
+    "./modules/estadisticas/index.html",
+    "./modules/estadisticas/estadisticas.css",
+    "./modules/estadisticas/app.js",
+    "./modules/estadisticas/datos.js",
+
     "./icons/icon-192-v4.png",
     "./icons/icon-512-v4.png"
 ];
@@ -123,7 +128,12 @@ const EXTERNOS = [
     "https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js",
     "https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js",
 
-    "https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"
+    "https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js",
+
+    // Módulo Estadísticas: Chart.js no estaba precacheado — si el
+    // usuario nunca había visitado esta página en línea, los gráficos
+    // fallaban al abrirla sin conexión.
+    "https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"
 ];
 
 // Nunca cachear llamadas a Firebase (Firestore/Storage/Auth): deben ir
