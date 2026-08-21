@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>APP Bomberos | Censos</title>
+
+    <link rel="icon" href="../../icons/icon-192-v4.png">
+    <link rel="manifest" href="../../manifest.json">
+    <meta name="theme-color" content="#CC2200">
+
+    <link rel="stylesheet" href="../../shared/shared.css">
+    <link rel="stylesheet" href="styles.css">
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap"
+          rel="stylesheet">
+
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
+          rel="stylesheet">
+
+</head>
+
+<body>
+
+<div class="app-layout">
+
+    <aside id="sidebar"></aside>
+
+    <div class="content">
+
+        <header id="header"></header>
+
+        <main class="censo-page">
+
+        <!-- =======================================================
+             VISTA LISTADO
+        =========================================================== -->
+        <section id="vistaListado" class="vista activa">
+
+            <div class="censo-toolbar">
+
+                <div>
+                    <h1><i class="fa-solid fa-people-roof"></i> Censos de Damnificados</h1>
+                    <p>Registro y consulta de censos poblacionales y caracterización de familias afectadas.</p>
+
+                    <p id="avisoInvitadoCensos" class="aviso-invitado" style="display:none;">
+                        <i class="fa-solid fa-circle-info"></i>
+                        Modo invitado: solo ves los censos creados en este dispositivo.
+                    </p>
+                </div>
+
+                <button id="btnNuevoCenso" type="button" class="btn-primario">
+                    <i class="fa-solid fa-plus"></i> Nuevo Censo
+                </button>
+
+            </div>
+
+            <div class="censo-filtros">
+                <input id="buscarCenso" type="search" placeholder="Buscar por jefe de hogar, cédula, barrio o código...">
+            </div>
+
+            <div id="censosCards" class="censos-grid">
+                <p class="censo-vacio">Cargando censos...</p>
+            </div>
+
+        </section>
+
+        <!-- =======================================================
+             VISTA FORMULARIO
+        =========================================================== -->
+        <section id="vistaFormulario" class="vista">
+
+            <div class="censo-form-header">
+                <button id="btnVolverListadoCensos" type="button" class="btn-secundario">
+                    <i class="fa-solid fa-arrow-left"></i> Volver al listado
+                </button>
+                <h2 id="tituloFormularioCenso">Nuevo Censo</h2>
+            </div>
+
+            <form id="formCenso">
+
+                <!-- 1. DATOS VIVIENDA -->
+                <fieldset class="form-section">
+                    <legend>1. Datos de la vivienda</legend>
+                    <div class="form-grid cols-3">
+                        <label>Código UDEGER<input type="text" id="codigoUdeger"></label>
+                        <label>Municipio<input type="text" id="municipio"></label>
+                        <label>Corregimiento<input type="text" id="corregimiento"></label>
+                        <label class="span-2">Barrio / Vereda<input type="text" id="barrioVereda"></label>
+                        <label>Núcleo #<input type="text" id="nucleo"></label>
+                        <label class="span-3">Dirección<input type="text" id="direccion"></label>
+                    </div>
+                </fieldset>
+
+                <!-- 2. JEFE DE NÚCLEO FAMILIAR -->
+                <fieldset class="form-section">
+                    <legend>2. Información jefe de núcleo familiar</legend>
+                    <div class="form-grid cols-3">
+                        <label>Cédula<input type="text" id="jefeCedula"></label>
+                        <label class="span-2">Nombre completo<input type="text" id="jefeNombre" required></label>
+                        <label>Teléfono<input type="tel" id="jefeTelefono"></label>
+                        <label>Fecha de nacimiento<input type="date" id="jefeFechaNacimiento"></label>
+                        <label>Edad<input type="number" min="0" id="jefeEdad"></label>
+                    </div>
+
+                    <div class="radio-group">
+                        <label><input type="radio" name="tipoOcupante" value="propietario" checked> Propietario</label>
+                        <label><input type="radio" name="tipoOcupante" value="inquilino"> Inquilino</label>
+                        <label><input type="radio" name="tipoOcupante" value="otro"> Otro</label>
+                    </div>
+
+                    <div id="bloquePropietario" style="display:none;">
+                        <p class="form-note">Si es inquilino u otro, diligencie la información del propietario:</p>
+                        <div class="form-grid cols-3">
+                            <label>Cédula<input type="text" id="propietarioCedula"></label>
+                            <label class="span-2">Nombre completo<input type="text" id="propietarioNombre"></label>
+                            <label class="span-2">Dirección<input type="text" id="propietarioDireccion"></label>
+                            <label>Teléfono<input type="tel" id="propietarioTelefono"></label>
+                        </div>
+                    </div>
+                </fieldset>
+
+                <!-- 3. NÚCLEO FAMILIAR -->
+                <fieldset class="form-section">
+                    <legend>3. Información núcleo familiar</legend>
+
+                    <div class="tabla-scroll">
+                        <table class="tabla-integrantes">
+                            <thead>
+                                <tr>
+                                    <th>Tipo doc.</th>
+                                    <th>Número</th>
+                                    <th>Nombre completo</th>
+                                    <th>Fecha nacimiento</th>
+                                    <th>Edad</th>
+                                    <th>Sexo</th>
+                                    <th>Parentesco</th>
+                                    <th>Discapacidad</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody id="tablaIntegrantesBody"></tbody>
+                        </table>
+                    </div>
+
+                    <button type="button" id="btnAgregarIntegrante" class="btn-secundario btn-agregar-fila">
+                        <i class="fa-solid fa-plus"></i> Agregar integrante
+                    </button>
+                </fieldset>
+
+                <!-- 4. SERVICIOS PÚBLICOS -->
+                <fieldset class="form-section">
+                    <legend>4. Información acceso servicios públicos</legend>
+                    <div class="checkbox-group">
+                        <label><input type="checkbox" name="servicios" value="Acueducto"> Acueducto</label>
+                        <label><input type="checkbox" name="servicios" value="Alcantarillado"> Alcantarillado</label>
+                        <label><input type="checkbox" name="servicios" value="Pozo séptico"> Pozo séptico</label>
+                        <label><input type="checkbox" name="servicios" value="Energía eléctrica"> Energía eléctrica</label>
+                        <label><input type="checkbox" name="servicios" value="Gas domiciliario"> Gas domiciliario</label>
+                        <label><input type="checkbox" name="servicios" value="Otro"> Otro</label>
+                    </div>
+                </fieldset>
+
+                <!-- 5. SUBSIDIOS -->
+                <fieldset class="form-section">
+                    <legend>5. ¿Ha sido beneficiario de algún subsidio?</legend>
+                    <div class="checkbox-group">
+                        <label><input type="checkbox" name="subsidios" value="Vivienda nueva"> Vivienda nueva</label>
+                        <label><input type="checkbox" name="subsidios" value="Mejoramiento de vivienda"> Mejoramiento de vivienda</label>
+                        <label><input type="checkbox" name="subsidios" value="Arrendamiento"> Arrendamiento</label>
+                        <label><input type="checkbox" name="subsidios" value="Otro"> Otro</label>
+                    </div>
+                </fieldset>
+
+                <!-- 6. FENÓMENO AMENAZANTE -->
+                <fieldset class="form-section">
+                    <legend>6. Información fenómeno amenazante</legend>
+
+                    <div class="radio-group">
+                        <label><input type="radio" name="situacionFenomeno" value="Inminente"> Inminente</label>
+                        <label><input type="radio" name="situacionFenomeno" value="Sucedido"> Sucedido</label>
+                    </div>
+
+                    <div class="form-grid cols-4 origen-fenomeno">
+                        <div>
+                            <p class="form-note">A. Origen natural</p>
+                            <label><input type="checkbox" name="origenFenomeno" value="Movimiento en masa"> Movimiento en masa</label>
+                            <label><input type="checkbox" name="origenFenomeno" value="Vendaval"> Vendaval</label>
+                            <label><input type="checkbox" name="origenFenomeno" value="Avalancha"> Avalancha</label>
+                            <label><input type="checkbox" name="origenFenomeno" value="Sismo"> Sismo</label>
+                            <label><input type="checkbox" name="origenFenomeno" value="Inundación"> Inundación</label>
+                            <label><input type="checkbox" name="origenFenomeno" value="Volcánico"> Volcánico</label>
+                        </div>
+                        <div>
+                            <p class="form-note">B. Origen humano</p>
+                            <label><input type="checkbox" name="origenFenomeno" value="Terrorismo"> Terrorismo</label>
+                            <label><input type="checkbox" name="origenFenomeno" value="Vandalismo"> Vandalismo</label>
+                            <label><input type="checkbox" name="origenFenomeno" value="Aglomeraciones"> Aglomeraciones</label>
+                        </div>
+                        <div>
+                            <p class="form-note">C. Origen tecnológico</p>
+                            <label><input type="checkbox" name="origenFenomeno" value="Derrame - MATPEL"> Derrame - MATPEL</label>
+                            <label><input type="checkbox" name="origenFenomeno" value="Explosión"> Explosión</label>
+                            <label><input type="checkbox" name="origenFenomeno" value="Colapso"> Colapso</label>
+                            <label><input type="checkbox" name="origenFenomeno" value="Incendio estructural"> Incendio estructural</label>
+                            <label><input type="checkbox" name="origenFenomeno" value="Deterioro estructural"> Deterioro estructural</label>
+                        </div>
+                        <div>
+                            <p class="form-note">D. Otros</p>
+                            <label><input type="checkbox" name="origenFenomeno" value="Otro"> Otro</label>
+                        </div>
+                    </div>
+                </fieldset>
+
+                <!-- 7. AFECTACIÓN -->
+                <fieldset class="form-section">
+                    <legend>7. Afectación</legend>
+
+                    <p class="form-note">Tipo de infraestructura afectada</p>
+                    <div class="checkbox-group">
+                        <label><input type="checkbox" name="infraestructuraAfectada" value="Vivienda"> Vivienda</label>
+                        <label><input type="checkbox" name="infraestructuraAfectada" value="Educativa"> Educativa</label>
+                        <label><input type="checkbox" name="infraestructuraAfectada" value="Comunitaria"> Comunitaria</label>
+                        <label><input type="checkbox" name="infraestructuraAfectada" value="Vial"> Vial</label>
+                    </div>
+
+                    <div class="form-grid cols-3">
+                        <label>Área afectada (m²)<input type="text" id="areaAfectadaM2"></label>
+                        <label>Pérdida agropecuaria (descripción / área)<input type="text" id="perdidaAgropecuaria"></label>
+                        <label>Porcentaje de daño en edificación<input type="text" id="porcentajeDano" placeholder="Ej: 40%"></label>
+                    </div>
+
+                    <p class="form-note">Pérdida de bienes, muebles y enseres</p>
+                    <div class="radio-group">
+                        <label><input type="radio" name="perdidaBienes" value="SI"> Sí</label>
+                        <label><input type="radio" name="perdidaBienes" value="NO"> No</label>
+                    </div>
+                    <label class="campo-completo">Descripción breve de bienes afectados
+                        <textarea id="descripcionBienesPerdidos" rows="2"></textarea>
+                    </label>
+
+                    <p class="form-note">Daño en edificación</p>
+                    <div class="radio-group">
+                        <label><input type="radio" name="danoEdificacion" value="Ninguno"> Ninguno</label>
+                        <label><input type="radio" name="danoEdificacion" value="Parcial"> Parcial</label>
+                        <label><input type="radio" name="danoEdificacion" value="Total"> Total</label>
+                    </div>
+                </fieldset>
+
+                <!-- 8. RECOMENDACIÓN DE EVACUACIÓN -->
+                <fieldset class="form-section">
+                    <legend>8. Recomendación de evacuación</legend>
+                    <div class="radio-group">
+                        <label><input type="radio" name="recomendacionEvacuacion" value="SI"> Sí</label>
+                        <label><input type="radio" name="recomendacionEvacuacion" value="NO"> No</label>
+                    </div>
+                </fieldset>
+
+                <!-- 9. FECHA DE ELABORACIÓN -->
+                <fieldset class="form-section">
+                    <legend>9. Fecha de elaboración</legend>
+                    <div class="form-grid cols-6">
+                        <label>Día<input type="text" id="fechaDia" maxlength="2"></label>
+                        <label>Mes<input type="text" id="fechaMes" maxlength="2"></label>
+                        <label>Año<input type="text" id="fechaAnio" maxlength="4"></label>
+                        <label>Hora<input type="text" id="fechaHora" maxlength="2"></label>
+                        <label>Minutos<input type="text" id="fechaMinutos" maxlength="2"></label>
+                        <div class="radio-group radio-inline">
+                            <label><input type="radio" name="fechaAmPm" value="AM"> AM</label>
+                            <label><input type="radio" name="fechaAmPm" value="PM"> PM</label>
+                        </div>
+                    </div>
+                </fieldset>
+
+                <!-- 10. OBSERVACIONES -->
+                <fieldset class="form-section">
+                    <legend>10. Observaciones generales</legend>
+                    <label class="campo-completo">
+                        <textarea id="observaciones" rows="4"></textarea>
+                    </label>
+                </fieldset>
+
+                <!-- 11. FIRMAS -->
+                <fieldset class="form-section">
+                    <legend>11. Firmas</legend>
+                    <div class="form-grid cols-2">
+                        <div>
+                            <p class="form-note">Funcionario</p>
+                            <label>Cédula<input type="text" id="funcionarioCedula"></label>
+                            <label>Nombre<input type="text" id="funcionarioNombre"></label>
+                        </div>
+                        <div>
+                            <p class="form-note">Encuestado</p>
+                            <label>Cédula<input type="text" id="encuestadoCedula"></label>
+                            <label>Nombre<input type="text" id="encuestadoNombre"></label>
+                        </div>
+                    </div>
+                </fieldset>
+
+                <div class="censo-form-acciones">
+                    <button id="btnGuardarCenso" type="submit" class="btn-primario">
+                        <i class="fa-solid fa-floppy-disk"></i> Guardar Censo
+                    </button>
+                </div>
+
+            </form>
+
+        </section>
+
+        </main>
+
+    </div>
+
+</div>
+
+<script src="../../shared/sidebar.js"></script>
+<script src="../../shared/header.js"></script>
+<script src="../../shared/shared.js"></script>
+
+<script src="app.js" type="module"></script>
+
+</body>
+
+</html>
