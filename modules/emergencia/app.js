@@ -1296,12 +1296,25 @@ async function saveReport() {
 
     fb.textContent = '✅ Reporte guardado correctamente';
     fb.className = 'save-feedback ok';
-    
+
+    // gestor.html (vista consolidada de todos los dispositivos) ahora
+    // exige sesión. Un invitado que acaba de guardar su reporte NO debe
+    // ser expulsado a login justo después de terminar: se queda en el
+    // formulario, donde ya ve su reporte en "Reportes Guardados"
+    // (guardado localmente arriba con saveToIDB). Solo el personal con
+    // cuenta pasa al gestor consolidado, como antes.
+    const { esperarEstadoAuth } = await import("../../shared/auth.js");
+    const usuarioActual = await esperarEstadoAuth();
+
     // Esperar un momento para que el usuario vea el mensaje
     setTimeout(() => {
-    
-        window.location.href = "./gestor.html";
-    
+
+        if (usuarioActual) {
+            window.location.href = "./gestor.html";
+        }
+        // Invitado: no se redirige. El reporte recién guardado ya
+        // aparece en la lista local de esta misma página.
+
     }, 1200);
 
   } catch (err) {

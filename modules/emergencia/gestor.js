@@ -111,6 +111,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
 export async function inicializarGestor() {
 
+    // gestor.js se carga como <script type="module"> tanto en gestor.html
+    // como en el formulario de registro (index.html), que solo lo usa
+    // para piezas compartidas (clima, certificado). Si el marcador propio
+    // de gestor.html no está en el DOM, no estamos realmente en el
+    // Centro de Gestión: salir sin pedir sesión, para no expulsar a un
+    // invitado que solo abrió el formulario de registro.
+    if (!document.getElementById("gestorEmergenciasList")) return;
+
     // El Centro de Gestión consolida TODAS las emergencias de todos los
     // dispositivos (Firestore completo), no solo las locales — por eso,
     // a diferencia del formulario de registro, sí exige sesión. Sin
