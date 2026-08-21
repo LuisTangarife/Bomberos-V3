@@ -1,40 +1,146 @@
 /* ========================================================================
    STYLES.CSS — Módulo Censos
-   Reutiliza las variables de shared/shared.css (--primary, --border,
-   --glass-solid, etc.) para mantener el mismo lenguaje visual del
-   resto de la app.
+
+   Usa TOKENS PROPIOS (--censo-*) en vez de las variables globales de
+   shared.css directamente. Así el interruptor día/noche de este módulo
+   solo repinta el contenido de Censos (formulario y listado), sin
+   tocar el sidebar/header compartido con Inspecciones, Emergencia y
+   Estadísticas.
+
+   Tema por defecto = oscuro (mismos valores que shared.css). El tema
+   claro se activa con el atributo data-tema="claro" en <html>, puesto
+   por un script inline en el <head> de index.html (evita parpadeo) y
+   alternado desde app.js con el botón día/noche.
+======================================================================== */
+
+:root{
+
+    --censo-bg-pagina: transparent;
+    --censo-bg-card: #12151f;
+    --censo-bg-section: rgba(255,255,255,.03);
+    --censo-bg-input: rgba(255,255,255,.06);
+    --censo-bg-input-hover: rgba(255,255,255,.10);
+
+    --censo-text: #F4F6FB;
+    --censo-text-light: #B7BECD;
+    --censo-text-mute: #838DA3;
+
+    --censo-border: rgba(255,255,255,.12);
+    --censo-border-hover: rgba(255,90,60,.5);
+
+    --censo-badge-alerta-bg: rgba(255,80,66,.22);
+    --censo-badge-alerta-fg: #FF8A7A;
+    --censo-badge-pendiente-bg: rgba(255,200,0,.20);
+    --censo-badge-pendiente-fg: #FFD54A;
+
+    --censo-aviso-bg: #3A2E00;
+    --censo-aviso-fg: #FFD54A;
+    --censo-aviso-icon: #FFC400;
+
+}
+
+html[data-tema="claro"]{
+
+    --censo-bg-pagina: #EEF0F5;
+    --censo-bg-card: #FFFFFF;
+    --censo-bg-section: #F6F7FA;
+    --censo-bg-input: #FFFFFF;
+    --censo-bg-input-hover: #F0F1F5;
+
+    --censo-text: #1B2030;
+    --censo-text-light: #454E63;
+    --censo-text-mute: #6B7590;
+
+    --censo-border: rgba(20,24,40,.14);
+    --censo-border-hover: rgba(204,34,0,.45);
+
+    --censo-badge-alerta-bg: #FFE3DF;
+    --censo-badge-alerta-fg: #B3261E;
+    --censo-badge-pendiente-bg: #FFF3CC;
+    --censo-badge-pendiente-fg: #8A6800;
+
+    --censo-aviso-bg: #FFF3CC;
+    --censo-aviso-fg: #6B5300;
+    --censo-aviso-icon: #B38A00;
+
+}
+
+/* Los inputs/select/textarea nativos (calendario de fechas, flechas de
+   number, checkbox/radio) siguen el color-scheme del sistema operativo
+   si no se les indica lo contrario — por eso se veían widgets claros
+   "flotando" sobre fondo oscuro, o viceversa en tema claro. */
+.censo-page{ color-scheme: dark; }
+html[data-tema="claro"] .censo-page{ color-scheme: light; }
+
+/* ========================================================================
+   LAYOUT GENERAL
 ======================================================================== */
 
 .censo-page {
     max-width: 1100px;
     margin: 0 auto;
     padding: 24px 20px 60px;
+    background: var(--censo-bg-pagina);
+    color: var(--censo-text);
 }
 
 .vista { display: none; }
 .vista.activa { display: block; }
 
-/* ── Toolbar / listado ── */
+/* ========================================================================
+   BOTÓN DÍA / NOCHE
+======================================================================== */
+
+.btn-tema-censo {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    border: 1px solid var(--censo-border);
+    background: var(--censo-bg-section);
+    color: var(--censo-text);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+.btn-tema-censo:hover { border-color: var(--censo-border-hover); }
+
+/* ========================================================================
+   TOOLBAR / LISTADO
+======================================================================== */
 
 .censo-toolbar {
     display: flex;
     align-items: flex-start;
     justify-content: space-between;
-    gap: 20px;
+    gap: 16px;
     flex-wrap: wrap;
     margin-bottom: 18px;
 }
 
-.censo-toolbar h1 {
-    font-size: 1.4rem;
-    color: var(--white);
+.censo-toolbar-titulo { flex: 1; min-width: 220px; }
+
+.censo-toolbar-acciones {
     display: flex;
     align-items: center;
     gap: 10px;
+    flex-wrap: wrap;
+}
+
+.censo-toolbar h1 {
+    font-size: 1.35rem;
+    color: var(--censo-text);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
 }
 
 .censo-toolbar p {
-    color: var(--text-light);
+    color: var(--censo-text-light);
     margin-top: 6px;
     max-width: 520px;
 }
@@ -45,14 +151,15 @@
     align-items: center;
     gap: 8px;
     width: fit-content;
+    max-width: 100%;
     padding: 6px 12px;
     border-radius: 8px;
-    background: #FFF7E0;
-    color: #8A6800;
+    background: var(--censo-aviso-bg);
+    color: var(--censo-aviso-fg);
     font-size: 0.85rem;
 }
 
-.aviso-invitado i { color: #C99400; }
+.aviso-invitado i { color: var(--censo-aviso-icon); }
 
 .censo-filtros { margin-bottom: 18px; }
 
@@ -61,28 +168,28 @@
     max-width: 420px;
     padding: 10px 14px;
     border-radius: 10px;
-    border: 1px solid var(--border);
-    background: rgba(255,255,255,.04);
-    color: var(--text);
+    border: 1px solid var(--censo-border);
+    background: var(--censo-bg-input);
+    color: var(--censo-text);
     font-size: .9rem;
 }
 
 .censos-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
     gap: 16px;
 }
 
 .censo-vacio {
-    color: var(--text-mute);
+    color: var(--censo-text-mute);
     grid-column: 1 / -1;
     padding: 30px 0;
     text-align: center;
 }
 
 .censo-card {
-    background: var(--glass-solid);
-    border: 1px solid var(--border);
+    background: var(--censo-bg-card);
+    border: 1px solid var(--censo-border);
     border-radius: 14px;
     padding: 16px;
     display: flex;
@@ -100,7 +207,7 @@
 .censo-codigo {
     font-family: "JetBrains Mono", monospace;
     font-size: .78rem;
-    color: var(--text-mute);
+    color: var(--censo-text-mute);
 }
 
 .censo-badge {
@@ -110,26 +217,27 @@
     display: inline-flex;
     align-items: center;
     gap: 4px;
+    font-weight: 600;
 }
 
 .censo-badge.alerta {
-    background: rgba(255,59,48,.15);
-    color: #FF6A5C;
+    background: var(--censo-badge-alerta-bg);
+    color: var(--censo-badge-alerta-fg);
 }
 
 .censo-badge.pendiente {
-    background: rgba(255,200,0,.15);
-    color: #E0B400;
+    background: var(--censo-badge-pendiente-bg);
+    color: var(--censo-badge-pendiente-fg);
 }
 
 .censo-card h3 {
-    color: var(--white);
+    color: var(--censo-text);
     font-size: 1rem;
     margin-top: 4px;
 }
 
 .censo-sub {
-    color: var(--text-light);
+    color: var(--censo-text-light);
     font-size: .85rem;
     display: flex;
     align-items: center;
@@ -146,23 +254,23 @@
     flex: 1;
     padding: 8px;
     border-radius: 8px;
-    border: 1px solid var(--border);
-    background: rgba(255,255,255,.03);
-    color: var(--text);
+    border: 1px solid var(--censo-border);
+    background: var(--censo-bg-section);
+    color: var(--censo-text);
     cursor: pointer;
     font-size: .82rem;
 }
 
 .censo-card-actions .btn-borrar-censo {
     flex: 0 0 auto;
-    color: #FF6A5C;
+    color: var(--censo-badge-alerta-fg);
 }
 
-.censo-card-actions button:hover {
-    border-color: var(--border-hover);
-}
+.censo-card-actions button:hover { border-color: var(--censo-border-hover); }
 
-/* ── Botones ── */
+/* ========================================================================
+   BOTONES
+======================================================================== */
 
 .btn-primario {
     padding: 11px 18px;
@@ -175,6 +283,8 @@
     display: inline-flex;
     align-items: center;
     gap: 8px;
+    justify-content: center;
+    white-space: nowrap;
 }
 
 .btn-primario:disabled { opacity: .6; cursor: default; }
@@ -182,9 +292,9 @@
 .btn-secundario {
     padding: 10px 16px;
     border-radius: 10px;
-    border: 1px solid var(--border);
-    background: rgba(255,255,255,.03);
-    color: var(--text-light);
+    border: 1px solid var(--censo-border);
+    background: var(--censo-bg-section);
+    color: var(--censo-text-light);
     cursor: pointer;
     display: inline-flex;
     align-items: center;
@@ -192,30 +302,48 @@
 }
 
 .btn-secundario:hover {
-    color: var(--white);
-    border-color: var(--border-hover);
+    color: var(--censo-text);
+    border-color: var(--censo-border-hover);
 }
 
-/* ── Formulario ── */
+/* ========================================================================
+   FORMULARIO
+======================================================================== */
 
 .censo-form-header {
     display: flex;
     align-items: center;
     gap: 16px;
     margin-bottom: 20px;
+    flex-wrap: wrap;
 }
 
 .censo-form-header h2 {
-    color: var(--white);
-    font-size: 1.2rem;
+    color: var(--censo-text);
+    font-size: 1.15rem;
+}
+
+.leyenda-obligatorio {
+    color: var(--censo-text-mute);
+    font-size: .78rem;
+    margin: -8px 0 16px;
+}
+
+.leyenda-obligatorio .req { color: var(--primary); font-weight: 700; }
+
+.campo-obligatorio .req,
+label .req {
+    color: var(--primary);
+    font-weight: 700;
+    margin-left: 2px;
 }
 
 .form-section {
-    border: 1px solid var(--border);
+    border: 1px solid var(--censo-border);
     border-radius: 12px;
     padding: 18px;
     margin-bottom: 18px;
-    background: rgba(255,255,255,.02);
+    background: var(--censo-bg-section);
 }
 
 .form-section legend {
@@ -226,7 +354,7 @@
 }
 
 .form-note {
-    color: var(--text-light);
+    color: var(--censo-text-light);
     font-size: .8rem;
     font-weight: 600;
     margin: 8px 0 6px;
@@ -236,7 +364,7 @@
 
 .form-grid {
     display: grid;
-    gap: 12px;
+    gap: 14px;
 }
 
 .form-grid.cols-2 { grid-template-columns: repeat(2, 1fr); }
@@ -248,9 +376,9 @@
 .censo-form-header label {
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 5px;
     font-size: .8rem;
-    color: var(--text-light);
+    color: var(--censo-text-light);
 }
 
 .form-grid .span-2 { grid-column: span 2; }
@@ -263,19 +391,27 @@ textarea,
 .form-section input[type="tel"],
 .form-section input[type="date"],
 .form-section input[type="number"] {
-    padding: 9px 10px;
+    padding: 10px 11px;
     border-radius: 8px;
-    border: 1px solid var(--border);
-    background: rgba(255,255,255,.04);
-    color: var(--text);
+    border: 1px solid var(--censo-border);
+    background: var(--censo-bg-input);
+    color: var(--censo-text);
     font-size: .88rem;
+}
+
+.form-grid input:focus,
+.form-grid select:focus,
+textarea:focus {
+    outline: none;
+    border-color: var(--censo-border-hover);
+    background: var(--censo-bg-input-hover);
 }
 
 .campo-completo {
     display: flex;
     flex-direction: column;
-    gap: 4px;
-    color: var(--text-light);
+    gap: 5px;
+    color: var(--censo-text-light);
     font-size: .8rem;
     margin-top: 10px;
 }
@@ -283,9 +419,9 @@ textarea,
 .campo-completo textarea {
     padding: 10px;
     border-radius: 8px;
-    border: 1px solid var(--border);
-    background: rgba(255,255,255,.04);
-    color: var(--text);
+    border: 1px solid var(--censo-border);
+    background: var(--censo-bg-input);
+    color: var(--censo-text);
     resize: vertical;
 }
 
@@ -307,15 +443,29 @@ textarea,
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    color: var(--text-light);
+    color: var(--censo-text-light);
     font-size: .85rem;
+}
+
+.radio-group input,
+.checkbox-group input {
+    width: 16px;
+    height: 16px;
+    accent-color: var(--primary);
 }
 
 .origen-fenomeno .form-note { margin-top: 0; }
 
-/* ── Tabla de integrantes ── */
+/* ========================================================================
+   TABLA DE INTEGRANTES
+======================================================================== */
 
-.tabla-scroll { overflow-x: auto; margin-bottom: 12px; }
+.tabla-scroll {
+    overflow-x: auto;
+    margin-bottom: 12px;
+    border-radius: 10px;
+    border: 1px solid var(--censo-border);
+}
 
 .tabla-integrantes {
     width: 100%;
@@ -326,34 +476,38 @@ textarea,
 .tabla-integrantes th {
     text-align: left;
     font-size: .72rem;
-    color: var(--text-mute);
+    color: var(--censo-text-mute);
     text-transform: uppercase;
-    padding: 6px 8px;
-    border-bottom: 1px solid var(--border);
+    padding: 8px;
+    background: var(--censo-bg-section);
+    border-bottom: 1px solid var(--censo-border);
+    position: sticky;
+    top: 0;
 }
 
 .tabla-integrantes td {
     padding: 6px 8px;
-    border-bottom: 1px solid var(--border);
+    border-bottom: 1px solid var(--censo-border);
 }
 
 .tabla-integrantes input,
 .tabla-integrantes select {
     width: 100%;
-    padding: 6px 8px;
+    padding: 7px 8px;
     border-radius: 6px;
-    border: 1px solid var(--border);
-    background: rgba(255,255,255,.04);
-    color: var(--text);
+    border: 1px solid var(--censo-border);
+    background: var(--censo-bg-input);
+    color: var(--censo-text);
     font-size: .82rem;
 }
 
 .btn-quitar-integrante {
     background: none;
     border: none;
-    color: #FF6A5C;
+    color: var(--censo-badge-alerta-fg);
     cursor: pointer;
-    font-size: .95rem;
+    font-size: 1rem;
+    padding: 4px 8px;
 }
 
 .btn-agregar-fila { margin-top: 4px; }
@@ -364,11 +518,51 @@ textarea,
     margin-top: 10px;
 }
 
+/* ========================================================================
+   RESPONSIVE
+======================================================================== */
+
+@media (max-width: 860px) {
+
+    .form-grid.cols-4,
+    .form-grid.cols-6 { grid-template-columns: repeat(3, 1fr); }
+
+}
+
 @media (max-width: 720px) {
+
+    .censo-page { padding: 18px 14px 50px; }
+
+    .censo-toolbar { flex-direction: column; align-items: stretch; }
+    .censo-toolbar-acciones { justify-content: space-between; }
+    .censo-toolbar-acciones #btnNuevoCenso { flex: 1; }
+
+    .censos-grid { grid-template-columns: 1fr; }
+
     .form-grid.cols-2,
     .form-grid.cols-3,
     .form-grid.cols-4,
     .form-grid.cols-6 { grid-template-columns: repeat(2, 1fr); }
+
     .form-grid .span-2,
     .form-grid .span-3 { grid-column: span 2; }
+
+    .origen-fenomeno.form-grid.cols-4 { grid-template-columns: 1fr; }
+
+}
+
+@media (max-width: 480px) {
+
+    .form-grid.cols-2,
+    .form-grid.cols-3,
+    .form-grid.cols-4,
+    .form-grid.cols-6 { grid-template-columns: 1fr; }
+
+    .form-grid .span-2,
+    .form-grid .span-3 { grid-column: span 1; }
+
+    .censo-form-acciones button { width: 100%; }
+
+    .radio-group.radio-inline { justify-content: flex-start; }
+
 }

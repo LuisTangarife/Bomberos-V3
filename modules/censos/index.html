@@ -8,6 +8,15 @@
 
     <title>APP Bomberos | Censos</title>
 
+    <!-- Se aplica el tema guardado ANTES de que llegue el CSS, para que
+         no haya un parpadeo oscuro→claro (o viceversa) al cargar. -->
+    <script>
+        document.documentElement.setAttribute(
+            "data-tema",
+            localStorage.getItem("censos_tema") || "oscuro"
+        );
+    </script>
+
     <link rel="icon" href="../../icons/icon-192-v4.png">
     <link rel="manifest" href="../../manifest.json">
     <meta name="theme-color" content="#CC2200">
@@ -42,7 +51,7 @@
 
             <div class="censo-toolbar">
 
-                <div>
+                <div class="censo-toolbar-titulo">
                     <h1><i class="fa-solid fa-people-roof"></i> Censos de Damnificados</h1>
                     <p>Registro y consulta de censos poblacionales y caracterización de familias afectadas.</p>
 
@@ -52,9 +61,17 @@
                     </p>
                 </div>
 
-                <button id="btnNuevoCenso" type="button" class="btn-primario">
-                    <i class="fa-solid fa-plus"></i> Nuevo Censo
-                </button>
+                <div class="censo-toolbar-acciones">
+
+                    <button id="btnTemaCenso" type="button" class="btn-tema-censo" title="Cambiar tema">
+                        <i class="fa-solid fa-moon"></i>
+                    </button>
+
+                    <button id="btnNuevoCenso" type="button" class="btn-primario">
+                        <i class="fa-solid fa-plus"></i> Nuevo Censo
+                    </button>
+
+                </div>
 
             </div>
 
@@ -80,6 +97,8 @@
                 <h2 id="tituloFormularioCenso">Nuevo Censo</h2>
             </div>
 
+            <p class="leyenda-obligatorio"><span class="req">*</span> Campos obligatorios</p>
+
             <form id="formCenso">
 
                 <!-- 1. DATOS VIVIENDA -->
@@ -100,7 +119,7 @@
                     <legend>2. Información jefe de núcleo familiar</legend>
                     <div class="form-grid cols-3">
                         <label>Cédula<input type="text" id="jefeCedula"></label>
-                        <label class="span-2">Nombre completo<input type="text" id="jefeNombre" required></label>
+                        <label class="span-2">Nombre completo<span class="req">*</span><input type="text" id="jefeNombre" required></label>
                         <label>Teléfono<input type="tel" id="jefeTelefono"></label>
                         <label>Fecha de nacimiento<input type="date" id="jefeFechaNacimiento"></label>
                         <label>Edad<input type="number" min="0" id="jefeEdad"></label>

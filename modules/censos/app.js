@@ -40,9 +40,55 @@ async function iniciarAplicacion() {
     }
 
     configurarEventos();
+    configurarTema();
     agregarFilaIntegrante();
 
     await cargarCensos();
+
+}
+
+/* ========================================================================
+   TEMA DÍA / NOCHE
+
+   El atributo data-tema ya se aplicó en el <head> (script inline, ver
+   index.html) para evitar parpadeo. Aquí solo se sincroniza el ícono
+   del botón y se agrega el toggle.
+======================================================================== */
+
+function configurarTema() {
+
+    const btn = document.getElementById("btnTemaCenso");
+    if (!btn) return;
+
+    actualizarIconoTema();
+
+    btn.addEventListener("click", () => {
+
+        const actual = document.documentElement.getAttribute("data-tema") === "claro"
+            ? "claro" : "oscuro";
+        const nuevo = actual === "claro" ? "oscuro" : "claro";
+
+        document.documentElement.setAttribute("data-tema", nuevo);
+        localStorage.setItem("censos_tema", nuevo);
+
+        actualizarIconoTema();
+
+    });
+
+}
+
+function actualizarIconoTema() {
+
+    const btn = document.getElementById("btnTemaCenso");
+    if (!btn) return;
+
+    const esClaro = document.documentElement.getAttribute("data-tema") === "claro";
+
+    btn.innerHTML = esClaro
+        ? '<i class="fa-solid fa-sun"></i>'
+        : '<i class="fa-solid fa-moon"></i>';
+
+    btn.title = esClaro ? "Cambiar a tema oscuro" : "Cambiar a tema claro";
 
 }
 
