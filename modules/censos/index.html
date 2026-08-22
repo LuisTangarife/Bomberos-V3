@@ -108,10 +108,88 @@
                         <label>Código UDEGER<input type="text" id="codigoUdeger"></label>
                         <label>Municipio<input type="text" id="municipio"></label>
                         <label>Corregimiento<input type="text" id="corregimiento"></label>
-                        <label class="span-2">Barrio / Vereda<input type="text" id="barrioVereda"></label>
+                        <label class="span-2">Barrio / Vereda
+                            <select id="barrioVeredaSelect">
+                                <option value="">Seleccione...</option>
+                                <optgroup label="Veredas">
+                                    <option>Alto Arroyo</option>
+                                    <option>Alto Castillo</option>
+                                    <option>Bajo Arroyo</option>
+                                    <option>Bajo Castillo</option>
+                                    <option>Corozal</option>
+                                    <option>Cuervos</option>
+                                    <option>El Avión</option>
+                                    <option>El Pindo</option>
+                                    <option>El Yarumo</option>
+                                    <option>Frailes</option>
+                                    <option>Gallinazo</option>
+                                    <option>Guayana</option>
+                                    <option>La Batea</option>
+                                    <option>La Floresta</option>
+                                    <option>La Florida</option>
+                                    <option>La Laguna</option>
+                                    <option>Laguna Alta</option>
+                                    <option>Llanitos</option>
+                                    <option>Miraflores</option>
+                                    <option>Montaño</option>
+                                    <option>Nueva Primavera</option>
+                                    <option>Papayal</option>
+                                    <option>Páramo</option>
+                                    <option>Partidas</option>
+                                    <option>Playa Larga</option>
+                                    <option>Rincón Santo</option>
+                                    <option>Romeral</option>
+                                    <option>San Julián</option>
+                                    <option>Santo Domingo</option>
+                                    <option>Tejares</option>
+                                    <option>Termales</option>
+                                    <option>Valles</option>
+                                    <option>Villarazo</option>
+                                </optgroup>
+                                <optgroup label="Barrios (casco urbano)">
+                                    <option>Centro / Sector Tradicional</option>
+                                    <option>La Pradera</option>
+                                    <option>Turín</option>
+                                    <option>San Diego</option>
+                                    <option>Monserrate</option>
+                                    <option>Urapanes</option>
+                                </optgroup>
+                                <option value="Otro">Otro (especificar)</option>
+                            </select>
+                        </label>
+                        <label class="span-2" id="campoBarrioVeredaOtro" style="display:none;">
+                            Especifique barrio o vereda
+                            <input type="text" id="barrioVeredaOtro">
+                        </label>
                         <label>Núcleo #<input type="text" id="nucleo"></label>
                         <label class="span-3">Dirección<input type="text" id="direccion"></label>
                     </div>
+
+                    <p class="form-note">Tipo de predio</p>
+                    <div class="radio-group">
+                        <label><input type="radio" name="tipoPredio" value="Vivienda" checked> Vivienda</label>
+                        <label><input type="radio" name="tipoPredio" value="Comercial"> Establecimiento comercial</label>
+                        <label><input type="radio" name="tipoPredio" value="Mixto"> Mixto (vivienda y comercio)</label>
+                        <label><input type="radio" name="tipoPredio" value="Otro"> Otro</label>
+                    </div>
+
+                    <div id="bloqueEstablecimiento" style="display:none;">
+                        <div class="form-grid cols-3">
+                            <label class="span-2">Nombre del establecimiento<input type="text" id="nombreEstablecimiento"></label>
+                            <label>Tipo de actividad económica
+                                <select id="tipoActividadEconomica">
+                                    <option value="">Seleccione...</option>
+                                    <option>Comercio (tienda, ferretería, misceláneo)</option>
+                                    <option>Alimentos y bebidas (restaurante, panadería, tienda de barrio)</option>
+                                    <option>Servicios (peluquería, taller, oficina)</option>
+                                    <option>Industrial / manufactura</option>
+                                    <option>Agropecuario</option>
+                                    <option>Otro</option>
+                                </select>
+                            </label>
+                        </div>
+                    </div>
+
                 </fieldset>
 
                 <!-- 2. JEFE DE NÚCLEO FAMILIAR -->
@@ -167,6 +245,30 @@
 
                     <button type="button" id="btnAgregarIntegrante" class="btn-secundario btn-agregar-fila">
                         <i class="fa-solid fa-plus"></i> Agregar integrante
+                    </button>
+                </fieldset>
+
+                <!-- 3B. MASCOTAS -->
+                <fieldset class="form-section">
+                    <legend>Mascotas</legend>
+
+                    <div class="tabla-scroll">
+                        <table class="tabla-integrantes">
+                            <thead>
+                                <tr>
+                                    <th>Especie</th>
+                                    <th>Cantidad</th>
+                                    <th>Nombre</th>
+                                    <th>Estado / observación</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody id="tablaMascotasBody"></tbody>
+                        </table>
+                    </div>
+
+                    <button type="button" id="btnAgregarMascota" class="btn-secundario btn-agregar-fila">
+                        <i class="fa-solid fa-plus"></i> Agregar mascota
                     </button>
                 </fieldset>
 

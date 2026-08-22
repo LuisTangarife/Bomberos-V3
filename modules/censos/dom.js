@@ -21,6 +21,10 @@ export const UI = {
     tablaIntegrantes: null,
     btnAgregarIntegrante: null,
 
+    // Mascotas (tabla dinámica)
+    tablaMascotas: null,
+    btnAgregarMascota: null,
+
     // Bloque "propietario" (solo si el jefe es inquilino/otro)
     bloquePropietario: null
 
@@ -42,6 +46,9 @@ export function inicializarDOM() {
 
     UI.tablaIntegrantes = document.getElementById("tablaIntegrantesBody");
     UI.btnAgregarIntegrante = document.getElementById("btnAgregarIntegrante");
+
+    UI.tablaMascotas = document.getElementById("tablaMascotasBody");
+    UI.btnAgregarMascota = document.getElementById("btnAgregarMascota");
 
     UI.bloquePropietario = document.getElementById("bloquePropietario");
 

@@ -114,6 +114,10 @@ function configurarEventos() {
         UI.btnAgregarIntegrante.addEventListener("click", () => agregarFilaIntegrante());
     }
 
+    if (UI.btnAgregarMascota) {
+        UI.btnAgregarMascota.addEventListener("click", () => agregarFilaMascota());
+    }
+
     if (UI.form) {
         UI.form.addEventListener("submit", manejarGuardar);
     }
@@ -122,6 +126,40 @@ function configurarEventos() {
     document.querySelectorAll("input[name='tipoOcupante']").forEach(radio => {
         radio.addEventListener("change", actualizarBloquePropietario);
     });
+
+    // Mostrar/ocultar datos del establecimiento según el tipo de predio
+    document.querySelectorAll("input[name='tipoPredio']").forEach(radio => {
+        radio.addEventListener("change", actualizarBloqueEstablecimiento);
+    });
+
+    // Barrio/Vereda: "Otro" habilita el campo de texto libre (no obligatorio)
+    const selectBarrio = document.getElementById("barrioVeredaSelect");
+    if (selectBarrio) {
+        selectBarrio.addEventListener("change", actualizarCampoBarrioOtro);
+    }
+
+}
+
+function actualizarBloqueEstablecimiento() {
+
+    const seleccionado = UI.form?.querySelector("input[name='tipoPredio']:checked");
+    const esVivienda = !seleccionado || seleccionado.value === "Vivienda";
+
+    const bloque = document.getElementById("bloqueEstablecimiento");
+    if (bloque) bloque.style.display = esVivienda ? "none" : "block";
+
+}
+
+function actualizarCampoBarrioOtro() {
+
+    const select = document.getElementById("barrioVeredaSelect");
+    const campo = document.getElementById("campoBarrioVeredaOtro");
+    if (!select || !campo) return;
+
+    campo.style.display = select.value === "Otro" ? "flex" : "none";
+    if (select.value !== "Otro") {
+        document.getElementById("barrioVeredaOtro").value = "";
+    }
 
 }
 
@@ -207,6 +245,57 @@ function recopilarIntegrantes() {
 }
 
 /* ========================================================================
+   MASCOTAS — FILAS DINÁMICAS
+======================================================================== */
+
+function agregarFilaMascota(datos = {}) {
+
+    if (!UI.tablaMascotas) return;
+
+    const fila = document.createElement("tr");
+
+    fila.innerHTML = `
+        <td>
+            <select class="cm-especie">
+                <option value="Perro" ${datos.especie === "Perro" ? "selected" : ""}>Perro</option>
+                <option value="Gato" ${datos.especie === "Gato" ? "selected" : ""}>Gato</option>
+                <option value="Ave" ${datos.especie === "Ave" ? "selected" : ""}>Ave</option>
+                <option value="Bovino" ${datos.especie === "Bovino" ? "selected" : ""}>Bovino</option>
+                <option value="Equino" ${datos.especie === "Equino" ? "selected" : ""}>Equino</option>
+                <option value="Porcino" ${datos.especie === "Porcino" ? "selected" : ""}>Porcino</option>
+                <option value="Otro" ${datos.especie === "Otro" ? "selected" : ""}>Otro</option>
+            </select>
+        </td>
+        <td><input type="number" min="1" class="cm-cantidad" value="${datos.cantidad ?? 1}" style="width:70px"></td>
+        <td><input type="text" class="cm-nombre" value="${datos.nombre || ""}" placeholder="Opcional"></td>
+        <td><input type="text" class="cm-estado" value="${datos.estado || ""}" placeholder="Ej: Sano, herido, extraviado"></td>
+        <td>
+            <button type="button" class="btn-quitar-integrante" title="Quitar">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </td>
+    `;
+
+    fila.querySelector(".btn-quitar-integrante").addEventListener("click", () => fila.remove());
+
+    UI.tablaMascotas.appendChild(fila);
+
+}
+
+function recopilarMascotas() {
+
+    if (!UI.tablaMascotas) return [];
+
+    return [...UI.tablaMascotas.querySelectorAll("tr")].map(fila => ({
+        especie: fila.querySelector(".cm-especie")?.value || "",
+        cantidad: fila.querySelector(".cm-cantidad")?.value || "1",
+        nombre: fila.querySelector(".cm-nombre")?.value.trim() || "",
+        estado: fila.querySelector(".cm-estado")?.value.trim() || ""
+    }));
+
+}
+
+/* ========================================================================
    CHECKBOXES MARCADOS (helper genérico)
 ======================================================================== */
 
@@ -235,9 +324,15 @@ function recopilarDatosFormulario() {
         codigoUdeger: valorCampo("codigoUdeger"),
         municipio: valorCampo("municipio"),
         corregimiento: valorCampo("corregimiento"),
-        barrioVereda: valorCampo("barrioVereda"),
         direccion: valorCampo("direccion"),
         nucleo: valorCampo("nucleo"),
+        tipoPredio: valorRadio("tipoPredio"),
+        nombreEstablecimiento: valorCampo("nombreEstablecimiento"),
+        tipoActividadEconomica: valorCampo("tipoActividadEconomica"),
+        barrioVereda: document.getElementById("barrioVeredaSelect")?.value === "Otro"
+            ? valorCampo("barrioVeredaOtro")
+            : (document.getElementById("barrioVeredaSelect")?.value || ""),
+        barrioVeredaSeleccionado: document.getElementById("barrioVeredaSelect")?.value || "",
 
         // 2. Jefe de núcleo familiar
         jefeCedula: valorCampo("jefeCedula"),
@@ -253,6 +348,9 @@ function recopilarDatosFormulario() {
 
         // 3. Núcleo familiar
         integrantes: recopilarIntegrantes(),
+
+        // Mascotas
+        mascotas: recopilarMascotas(),
 
         // 4. Servicios públicos
         servicios: marcados("servicios"),
@@ -319,9 +417,27 @@ function poblarFormulario(censo) {
     asignar("codigoUdeger", censo.codigoUdeger);
     asignar("municipio", censo.municipio);
     asignar("corregimiento", censo.corregimiento);
-    asignar("barrioVereda", censo.barrioVereda);
     asignar("direccion", censo.direccion);
     asignar("nucleo", censo.nucleo);
+
+    marcarRadio("tipoPredio", censo.tipoPredio || "Vivienda");
+    asignar("nombreEstablecimiento", censo.nombreEstablecimiento);
+    asignar("tipoActividadEconomica", censo.tipoActividadEconomica);
+    actualizarBloqueEstablecimiento();
+
+    // Barrio/Vereda: si el valor guardado coincide con una opción del
+    // desplegable se selecciona directo; si no (censos guardados antes
+    // de este cambio, o un "Otro" con texto libre), se cae a "Otro" y
+    // se rellena el campo de texto para no perder el dato.
+    const selectBarrio = document.getElementById("barrioVeredaSelect");
+    if (selectBarrio) {
+        const coincide = [...selectBarrio.options].some(o => o.value === censo.barrioVereda);
+        selectBarrio.value = coincide ? censo.barrioVereda : (censo.barrioVereda ? "Otro" : "");
+        if (!coincide && censo.barrioVereda) {
+            document.getElementById("barrioVeredaOtro").value = censo.barrioVereda;
+        }
+        actualizarCampoBarrioOtro();
+    }
 
     asignar("jefeCedula", censo.jefeCedula);
     asignar("jefeNombre", censo.jefeNombre);
@@ -337,6 +453,11 @@ function poblarFormulario(censo) {
 
     UI.tablaIntegrantes.innerHTML = "";
     (censo.integrantes?.length ? censo.integrantes : [{}]).forEach(agregarFilaIntegrante);
+
+    if (UI.tablaMascotas) {
+        UI.tablaMascotas.innerHTML = "";
+        (censo.mascotas || []).forEach(agregarFilaMascota);
+    }
 
     marcarChecks("servicios", censo.servicios);
     marcarChecks("subsidios", censo.subsidios);
@@ -399,6 +520,11 @@ export function nuevoFormularioCenso() {
     if (UI.tablaIntegrantes) UI.tablaIntegrantes.innerHTML = "";
     agregarFilaIntegrante();
     actualizarBloquePropietario();
+
+    if (UI.tablaMascotas) UI.tablaMascotas.innerHTML = "";
+    actualizarBloqueEstablecimiento();
+    actualizarCampoBarrioOtro();
+
     fechaHoyPorDefecto();
 
     if (UI.tituloFormulario) UI.tituloFormulario.textContent = "Nuevo Censo";
