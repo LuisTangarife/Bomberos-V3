@@ -77,17 +77,22 @@ html[data-tema="claro"] .censo-page{ color-scheme: light; }
    renderiza con fondo claro sin importar el tema de la página, dejando
    el texto casi invisible). Se fuerza directo sobre el <select> y sobre
    cada <option>, que es lo que de verdad controla el popup. */
-.censo-page select{ color-scheme: dark; }
-html[data-tema="claro"] .censo-page select{ color-scheme: light; }
-
+/* El popup de opciones de un <select> nativo no siempre hereda bien el
+   color-scheme del contenedor padre. Pero el problema real es más
+   simple: la mayoría de navegadores IGNORAN el background-color que se
+   le ponga a <option> y dejan el popup en blanco pase lo que pase —
+   solo respetan el color del texto. Por eso, en vez de intentar forzar
+   un popup oscuro (que en tema oscuro terminaba en texto blanco sobre
+   fondo blanco real), el texto de las opciones queda siempre oscuro:
+   funciona sin importar qué fondo termine usando el navegador. */
 .censo-page select option{
-    background: var(--censo-bg-input);
-    color: var(--censo-text);
+    color: #1B2030;
+    background: #FFFFFF;
 }
 
 .censo-page select optgroup{
-    background: var(--censo-bg-section);
-    color: var(--censo-text-mute);
+    color: #55607A;
+    background: #FFFFFF;
     font-weight: 700;
 }
 
