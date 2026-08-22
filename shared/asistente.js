@@ -16,9 +16,22 @@
 ======================================================================== */
 
 import { obtenerDatosParaTendencias, calcularTendencias, resumenLegible } from "./tendencias.js";
+import { escucharEstadoAuth } from "./auth.js";
+import {
+    HERRAMIENTAS_ESCRITURA,
+    describirPropuestaCenso,
+    confirmarYGuardarCenso
+} from "./asistente-escritura.js";
+import { anunciar } from "./voz.js";
 
 const CLAVE_API = "asistente_gemini_key";
-const MODELO_GEMINI = "gemini-2.0-flash";
+// "gemini-flash-latest" es un alias que Google mantiene apuntando
+// siempre al modelo Flash vigente — evita que el asistente se rompa
+// de nuevo cada vez que retiran una versión fija (como pasó con
+// "gemini-2.0-flash", que dejó de existir el 1 de junio de 2026). El
+// costo es que la versión exacta puede cambiar sin aviso previo; para
+// un asistente de consulta interna como este, es la opción correcta.
+const MODELO_GEMINI = "gemini-flash-latest";
 
 let panelAbierto = false;
 let ultimasTendencias = null;
@@ -142,7 +155,7 @@ async function cambiarTab(nombre) {
                 <pre>Mientras tanto, la pestaña "Tendencias" funciona sin ninguna clave.</pre>
             `;
         } else if (!body.dataset.chatIniciado) {
-            body.innerHTML = `<pre>Pregúntame algo sobre los reportes registrados. Solo leo datos — nunca creo ni modifico nada.</pre>`;
+            body.innerHTML = `<pre>Pregúntame algo sobre los reportes registrados, o pídeme que registre un censo nuevo. Nunca guardo nada sin que confirmes cada dato en pantalla primero.</pre>`;
             body.dataset.chatIniciado = "1";
         }
 
@@ -235,7 +248,15 @@ async function enviarPregunta() {
         const contexto = resumenLegible(tendencias, datos.invitado);
 
         const respuesta = await preguntarGemini(clave, contexto, pregunta);
-        fila.innerHTML = `<b>Tú:</b> ${escaparHTML(pregunta)}<br><b>Asistente:</b> ${escaparHTML(respuesta)}`;
+
+        if (respuesta.tipo === "propuesta_censo") {
+
+            fila.innerHTML = `<b>Tú:</b> ${escaparHTML(pregunta)}<br><b>Asistente:</b> ${escaparHTML(respuesta.texto || "Preparé esta propuesta:")}`;
+            renderizarTarjetaPropuestaCenso(respuesta.args, body);
+
+        } else {
+            fila.innerHTML = `<b>Tú:</b> ${escaparHTML(pregunta)}<br><b>Asistente:</b> ${escaparHTML(respuesta.texto)}`;
+        }
 
     } catch (err) {
 
@@ -255,7 +276,10 @@ async function preguntarGemini(clave, contexto, pregunta) {
 
     const prompt = [
         "Eres un asistente de datos para una estación de bomberos voluntarios en Villamaría, Caldas, Colombia.",
-        "SOLO puedes leer y comentar los datos agregados que te doy abajo. NUNCA sugieras comandos, código, ni instrucciones para crear, editar o borrar registros — no tienes esa capacidad.",
+        "Puedes leer y comentar los datos agregados que te doy abajo, y opcionalmente proponer un censo nuevo con la función proponer_censo si la persona te pide explícitamente registrar o crear uno.",
+        "IMPORTANTE: llamar a proponer_censo NUNCA guarda nada — solo arma una propuesta que un humano debe confirmar aparte. Nunca digas que \"ya lo registraste\" o \"ya quedó guardado\"; di que dejaste la propuesta lista para confirmar.",
+        "No propongas ni sugieras crear, editar o borrar Inspecciones ni Emergencias — no tienes esa capacidad todavía.",
+        "No tienes acceso a internet ni puedes buscar información externa (clima, noticias, normativa, nada fuera de estos datos). Si te preguntan algo así, dilo claramente en vez de inventar una respuesta.",
         "Responde en español, en pocas frases, directo al punto.",
         "",
         "Datos agregados actuales:",
@@ -268,7 +292,8 @@ async function preguntarGemini(clave, contexto, pregunta) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-            contents: [{ parts: [{ text: prompt }] }]
+            contents: [{ parts: [{ text: prompt }] }],
+            tools: HERRAMIENTAS_ESCRITURA
         })
     });
 
@@ -278,11 +303,90 @@ async function preguntarGemini(clave, contexto, pregunta) {
     }
 
     const datos = await respuesta.json();
-    const texto = datos?.candidates?.[0]?.content?.parts?.[0]?.text;
+    const partes = datos?.candidates?.[0]?.content?.parts || [];
 
-    if (!texto) throw new Error("Respuesta vacía del modelo.");
+    const parteFuncion = partes.find(p => p.functionCall);
+    const parteTexto = partes.find(p => p.text)?.text;
 
-    return texto.trim();
+    if (parteFuncion) {
+        return {
+            tipo: "propuesta_censo",
+            args: parteFuncion.functionCall.args || {},
+            texto: parteTexto || ""
+        };
+    }
+
+    if (!parteTexto) throw new Error("Respuesta vacía del modelo.");
+
+    return { tipo: "texto", texto: parteTexto.trim() };
+
+}
+
+/* ========================================================================
+   PROPUESTA DE CENSO — tarjeta de confirmación
+
+   Nada de lo que hay aquí escribe en Firestore por sí solo. Solo el
+   clic explícito en "Confirmar y guardar" ejecuta confirmarYGuardarCenso().
+======================================================================== */
+
+function renderizarTarjetaPropuestaCenso(args, contenedor) {
+
+    const campos = describirPropuestaCenso(args);
+
+    if (!campos.length) {
+        contenedor.innerHTML += `<div class="asist-aviso">El asistente intentó proponer un censo pero no trajo ningún dato utilizable. Intenta describirlo de nuevo con más detalle.</div>`;
+        return;
+    }
+
+    const tarjeta = document.createElement("div");
+    tarjeta.style.cssText = "border:1px solid rgba(255,255,255,.15);border-radius:10px;padding:10px 12px;margin:8px 0;background:rgba(255,255,255,.03);";
+
+    tarjeta.innerHTML = `
+        <div style="font-weight:700;margin-bottom:6px;color:#FF8A7A;">
+            <i class="fa-solid fa-file-circle-plus"></i> Propuesta de censo nuevo (sin guardar)
+        </div>
+        ${campos.map(c => `<div style="font-size:.78rem;margin-bottom:3px;"><b>${escaparHTML(c.etiqueta)}:</b> ${escaparHTML(c.valor)}</div>`).join("")}
+        <div style="display:flex;gap:8px;margin-top:10px;">
+            <button class="btn-confirmar-censo" style="flex:1;padding:8px;border-radius:8px;border:none;background:#00C874;color:#062;font-weight:700;cursor:pointer;">
+                Confirmar y guardar
+            </button>
+            <button class="btn-cancelar-censo" style="padding:8px 12px;border-radius:8px;border:1px solid rgba(255,255,255,.15);background:none;color:#B7BECD;cursor:pointer;">
+                Cancelar
+            </button>
+        </div>
+    `;
+
+    contenedor.appendChild(tarjeta);
+
+    tarjeta.querySelector(".btn-confirmar-censo").addEventListener("click", async () => {
+
+        const btn = tarjeta.querySelector(".btn-confirmar-censo");
+        btn.disabled = true;
+        btn.textContent = "Guardando...";
+
+        try {
+
+            const usuario = await new Promise(resolve => {
+                const unsub = escucharEstadoAuth(u => { unsub(); resolve(u); });
+            });
+
+            const registro = await confirmarYGuardarCenso(args, usuario ? (usuario.email || usuario.uid) : "invitado");
+
+            tarjeta.innerHTML = `<div style="color:#7CFFB2;"><i class="fa-solid fa-circle-check"></i> Censo <b>${escaparHTML(registro.id)}</b> guardado correctamente.</div>`;
+            anunciar(`Censo registrado por el asistente. Jefe de hogar: ${registro.jefeNombre}.`);
+
+        } catch (err) {
+            console.error("[asistente] Error al guardar censo confirmado:", err);
+            btn.disabled = false;
+            btn.textContent = "Confirmar y guardar";
+            tarjeta.insertAdjacentHTML("beforeend", `<div style="color:#FF8A7A;font-size:.75rem;margin-top:6px;">No se pudo guardar: ${escaparHTML(err.message || "error desconocido")}</div>`);
+        }
+
+    });
+
+    tarjeta.querySelector(".btn-cancelar-censo").addEventListener("click", () => {
+        tarjeta.innerHTML = `<div style="color:#8A93A8;"><i class="fa-solid fa-ban"></i> Propuesta descartada. No se guardó nada.</div>`;
+    });
 
 }
 
