@@ -72,6 +72,25 @@ html[data-tema="claro"]{
 .censo-page{ color-scheme: dark; }
 html[data-tema="claro"] .censo-page{ color-scheme: light; }
 
+/* El popup de opciones de un <select> nativo no siempre hereda bien el
+   color-scheme del contenedor padre (Chrome en particular a veces lo
+   renderiza con fondo claro sin importar el tema de la página, dejando
+   el texto casi invisible). Se fuerza directo sobre el <select> y sobre
+   cada <option>, que es lo que de verdad controla el popup. */
+.censo-page select{ color-scheme: dark; }
+html[data-tema="claro"] .censo-page select{ color-scheme: light; }
+
+.censo-page select option{
+    background: var(--censo-bg-input);
+    color: var(--censo-text);
+}
+
+.censo-page select optgroup{
+    background: var(--censo-bg-section);
+    color: var(--censo-text-mute);
+    font-weight: 700;
+}
+
 /* ========================================================================
    LAYOUT GENERAL
 ======================================================================== */
