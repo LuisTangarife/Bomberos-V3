@@ -4,7 +4,7 @@
    y sea instalable como PWA.
 ======================================================================== */
 
-const SW_VERSION = 'v55'; // v54 -> v55: Fase 2 del asistente extendida a Inspecciones (borrador sin fotos/firma, siempre queda "Pendiente") y Emergencia (con regla dura: nunca inventa horas ni vehículos, pregunta si faltan) — mismo patrón de confirmación explícita, ahora genérico para los tres tipos
+const SW_VERSION = 'v56'; // v55 -> v56: recuperados de la versión inicial 8 bomberos y 4 tipos de evento que faltaban en Emergencia; corregido el bug de TomSelect que borraba el último bombero/vehículo seleccionado al seguir escribiendo (faltaba el onItemAdd de la versión original); quitado el dictado por voz (SpeechRecognition) de Descripción y Novedades; teclado numérico en Afectados y Víctimas Fatales
 const STATIC_CACHE = `bomberos-static-${SW_VERSION}`;
 const DYNAMIC_CACHE = `bomberos-dynamic-${SW_VERSION}`;
 const CACHES_VIGENTES = [STATIC_CACHE, DYNAMIC_CACHE];
