@@ -4,7 +4,7 @@
    y sea instalable como PWA.
 ======================================================================== */
 
-const SW_VERSION = 'v50'; // v49 -> v50: asistente flotante Fase 1 — tendencias locales gratis (sin IA) + chat opcional con Gemini (clave del usuario, guardada solo en su navegador, solo lectura)
+const SW_VERSION = 'v51'; // v50 -> v51: asistente flotante Fase 1 — tendencias locales gratis (sin IA) + chat opcional con Gemini (clave del usuario, guardada solo en su navegador, solo lectura)
 const STATIC_CACHE = `bomberos-static-${SW_VERSION}`;
 const DYNAMIC_CACHE = `bomberos-dynamic-${SW_VERSION}`;
 const CACHES_VIGENTES = [STATIC_CACHE, DYNAMIC_CACHE];
