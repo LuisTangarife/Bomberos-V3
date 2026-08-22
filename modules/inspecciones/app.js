@@ -25,6 +25,7 @@
 import { APP, state } from "./estado.js";
 import { UI, inicializarDOM } from "./dom.js";
 import { esperarEstadoAuth } from "../../shared/auth.js";
+import { anunciar } from "../../shared/voz.js";
 
 import { siguientePaso, pasoAnterior, inicializarMenu, inicializarProgreso } from "./navegacion.js";
 import { inicializarFormulario, establecerFechaHora } from "./formulario.js";
@@ -48,6 +49,21 @@ import {
 ======================================================================== */
 
 document.addEventListener("DOMContentLoaded", iniciarAplicacion);
+
+// Aviso por voz al guardar (Web Speech API, sin costo ni conexión). Se
+// engancha al mismo evento "inspection:saved" que ya usan listado.js
+// y persistencia.js — no duplica lógica de guardado.
+document.addEventListener("inspection:saved", e => {
+
+    const inspeccion = e.detail;
+    if (!inspeccion) return;
+
+    const tipo = inspeccion.formulario?.tipoInspeccion || "sin tipo especificado";
+    const establecimiento = inspeccion.formulario?.establecimiento || "sin nombre registrado";
+
+    anunciar(`Nueva inspección registrada. Tipo: ${tipo}. Establecimiento: ${establecimiento}.`);
+
+});
 
 // Red de seguridad: si algo se rompe en cualquier parte de este módulo
 // (una promesa que nadie atrapó, un error inesperado) antes no se veía
