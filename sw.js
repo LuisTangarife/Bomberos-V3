@@ -4,7 +4,7 @@
    y sea instalable como PWA.
 ======================================================================== */
 
-const SW_VERSION = 'v54'; // v53 -> v54: el chat con Gemini se rendía a la primera ante un 503 "modelo saturado" (frecuente en la capa gratuita) y mostraba el JSON crudo del error — ahora reintenta hasta 3 veces con espera creciente antes de avisar, y solo para errores de saturación temporal (503/429), no para errores reales
+const SW_VERSION = 'v55'; // v54 -> v55: Fase 2 del asistente extendida a Inspecciones (borrador sin fotos/firma, siempre queda "Pendiente") y Emergencia (con regla dura: nunca inventa horas ni vehículos, pregunta si faltan) — mismo patrón de confirmación explícita, ahora genérico para los tres tipos
 const STATIC_CACHE = `bomberos-static-${SW_VERSION}`;
 const DYNAMIC_CACHE = `bomberos-dynamic-${SW_VERSION}`;
 const CACHES_VIGENTES = [STATIC_CACHE, DYNAMIC_CACHE];
