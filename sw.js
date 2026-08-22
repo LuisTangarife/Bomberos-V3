@@ -4,7 +4,7 @@
    y sea instalable como PWA.
 ======================================================================== */
 
-const SW_VERSION = 'v51'; // v50 -> v51: re-conectados asistente.js (faltaba en las 7 páginas) y las llamadas a anunciar() (faltaban en los 3 módulos) — los archivos ya existían pero nada los llamaba
+const SW_VERSION = 'v53'; // v52 -> v53: re-conectados asistente.js (faltaba en las 7 páginas) y las llamadas a anunciar() (faltaban en los 3 módulos) — los archivos ya existían pero nada los llamaba
 const STATIC_CACHE = `bomberos-static-${SW_VERSION}`;
 const DYNAMIC_CACHE = `bomberos-dynamic-${SW_VERSION}`;
 const CACHES_VIGENTES = [STATIC_CACHE, DYNAMIC_CACHE];
