@@ -1297,6 +1297,13 @@ async function saveReport() {
     fb.textContent = '✅ Reporte guardado correctamente';
     fb.className = 'save-feedback ok';
 
+    // Aviso por voz (Web Speech API, sin costo). app.js es un script
+    // clásico (no módulo), por eso el import es dinámico aquí en vez
+    // de un import estático arriba del archivo.
+    import("../../shared/voz.js").then(({ anunciar }) => {
+        anunciar(`Nuevo reporte de emergencia registrado. Evento: ${data.evento}. Dirección: ${data.direccion}.`);
+    });
+
     // gestor.html (vista consolidada de todos los dispositivos) ahora
     // exige sesión. Un invitado que acaba de guardar su reporte NO debe
     // ser expulsado a login justo después de terminar: se queda en el
