@@ -4,7 +4,7 @@
    y sea instalable como PWA.
 ======================================================================== */
 
-const SW_VERSION = 'v44'; // v43 -> v44: Censos rediseñado (tokens de tema propios, interruptor día/noche, responsive real, asterisco en campos obligatorios)
+const SW_VERSION = 'v45'; // v44 -> v45: docx-preview precacheado en 0.3.7 (URL muerta) mientras el HTML real pedía 0.4.0 — el certificado en Word dependía de caché dinámico oportunista en vez de estar garantizado desde la instalación
 const STATIC_CACHE = `bomberos-static-${SW_VERSION}`;
 const DYNAMIC_CACHE = `bomberos-dynamic-${SW_VERSION}`;
 const CACHES_VIGENTES = [STATIC_CACHE, DYNAMIC_CACHE];
@@ -128,7 +128,7 @@ const EXTERNOS = [
     "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js",
 
     "https://unpkg.com/jszip@3.10.1/dist/jszip.min.js",
-    "https://unpkg.com/docx-preview@0.3.7/dist/docx-preview.min.js",
+    "https://unpkg.com/docx-preview@0.4.0/dist/docx-preview.min.js",
     "https://unpkg.com/pizzip@3.2.0/dist/pizzip.js",
     "https://unpkg.com/docxtemplater@3.69.3/build/docxtemplater.js",
     "https://unpkg.com/file-saver@1.3.8/FileSaver.js",
