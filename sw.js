@@ -4,7 +4,7 @@
    y sea instalable como PWA.
 ======================================================================== */
 
-const SW_VERSION = 'v45'; // v44 -> v45: docx-preview precacheado en 0.3.7 (URL muerta) mientras el HTML real pedía 0.4.0 — el certificado en Word dependía de caché dinámico oportunista en vez de estar garantizado desde la instalación
+const SW_VERSION = 'v46'; // v45 -> v46: Censos — tipo de predio (vivienda/comercial/mixto), mascotas (tabla dinámica), y barrio/vereda como desplegable (veredas oficiales de Villamaría + Otro con texto libre)
 const STATIC_CACHE = `bomberos-static-${SW_VERSION}`;
 const DYNAMIC_CACHE = `bomberos-dynamic-${SW_VERSION}`;
 const CACHES_VIGENTES = [STATIC_CACHE, DYNAMIC_CACHE];
