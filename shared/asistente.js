@@ -288,21 +288,64 @@ async function preguntarGemini(clave, contexto, pregunta) {
         `Pregunta: ${pregunta}`
     ].join("\n");
 
-    const respuesta = await fetch(url, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-            contents: [{ parts: [{ text: prompt }] }],
-            tools: HERRAMIENTAS_ESCRITURA
-        })
+    const cuerpo = JSON.stringify({
+        contents: [{ parts: [{ text: prompt }] }],
+        tools: HERRAMIENTAS_ESCRITURA
     });
 
-    if (!respuesta.ok) {
-        const detalle = await respuesta.text().catch(() => "");
-        throw new Error(`HTTP ${respuesta.status} ${detalle.slice(0, 120)}`);
+    // Google satura seguido su capa gratuita de Flash en horas pico
+    // (error 503 "high demand" o 429 "rate limit") — son errores
+    // pasajeros del lado de Google, no un problema del código ni de la
+    // clave. Antes esto se rendía a la primera y mostraba el JSON
+    // crudo del error. Ahora reintenta unas pocas veces con espera
+    // creciente antes de darse por vencido, y solo para ESTOS dos
+    // códigos — un error real (clave inválida, cuota agotada del todo)
+    // no se reintenta, se informa de una vez.
+    const INTENTOS = 3;
+    const ESPERA_BASE_MS = 1200;
+
+    let ultimoError = null;
+
+    for (let intento = 1; intento <= INTENTOS; intento++) {
+
+        let respuesta;
+
+        try {
+            respuesta = await fetch(url, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: cuerpo
+            });
+        } catch (errorRed) {
+            // Sin conexión u otro fallo de red: no tiene caso reintentar
+            // en bucle, el chat necesita internet sí o sí.
+            throw new Error("Sin conexión a internet — el chat con IA no funciona sin conexión (a diferencia de Tendencias).");
+        }
+
+        if (respuesta.ok) {
+            return procesarRespuestaGemini(await respuesta.json());
+        }
+
+        const esSaturacion = respuesta.status === 503 || respuesta.status === 429;
+
+        if (!esSaturacion || intento === INTENTOS) {
+            const detalle = await respuesta.text().catch(() => "");
+            ultimoError = esSaturacion
+                ? new Error("Google tiene su servicio de IA saturado en este momento. Intenta de nuevo en un minuto.")
+                : new Error(`HTTP ${respuesta.status} ${detalle.slice(0, 120)}`);
+            break;
+        }
+
+        await new Promise(resolve => setTimeout(resolve, ESPERA_BASE_MS * intento));
+
     }
 
-    const datos = await respuesta.json();
+    throw ultimoError;
+
+}
+
+function procesarRespuestaGemini(datos) {
+
     const partes = datos?.candidates?.[0]?.content?.parts || [];
 
     const parteFuncion = partes.find(p => p.functionCall);
