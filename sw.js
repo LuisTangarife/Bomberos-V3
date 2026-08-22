@@ -4,7 +4,7 @@
    y sea instalable como PWA.
 ======================================================================== */
 
-const SW_VERSION = 'v47'; // v46 -> v47: Censos — tipo de predio (vivienda/comercial/mixto), mascotas (tabla dinámica), y barrio/vereda como desplegable (veredas oficiales de Villamaría + Otro con texto libre)
+const SW_VERSION = 'v48'; // v47 -> v48: Censos — tipo de predio (vivienda/comercial/mixto), mascotas (tabla dinámica), y barrio/vereda como desplegable (veredas oficiales de Villamaría + Otro con texto libre)
 const STATIC_CACHE = `bomberos-static-${SW_VERSION}`;
 const DYNAMIC_CACHE = `bomberos-dynamic-${SW_VERSION}`;
 const CACHES_VIGENTES = [STATIC_CACHE, DYNAMIC_CACHE];
