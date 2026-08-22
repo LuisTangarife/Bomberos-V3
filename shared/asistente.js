@@ -20,7 +20,11 @@ import { escucharEstadoAuth } from "./auth.js";
 import {
     HERRAMIENTAS_ESCRITURA,
     describirPropuestaCenso,
-    confirmarYGuardarCenso
+    confirmarYGuardarCenso,
+    describirPropuestaInspeccion,
+    confirmarYGuardarInspeccion,
+    describirPropuestaEmergencia,
+    confirmarYGuardarEmergencia
 } from "./asistente-escritura.js";
 import { anunciar } from "./voz.js";
 
@@ -155,7 +159,7 @@ async function cambiarTab(nombre) {
                 <pre>Mientras tanto, la pestaña "Tendencias" funciona sin ninguna clave.</pre>
             `;
         } else if (!body.dataset.chatIniciado) {
-            body.innerHTML = `<pre>Pregúntame algo sobre los reportes registrados, o pídeme que registre un censo nuevo. Nunca guardo nada sin que confirmes cada dato en pantalla primero.</pre>`;
+            body.innerHTML = `<pre>Pregúntame algo sobre los reportes registrados, o pídeme que registre un censo, una inspección o una emergencia. Nunca guardo nada sin que confirmes cada dato en pantalla primero.</pre>`;
             body.dataset.chatIniciado = "1";
         }
 
@@ -249,10 +253,10 @@ async function enviarPregunta() {
 
         const respuesta = await preguntarGemini(clave, contexto, pregunta);
 
-        if (respuesta.tipo === "propuesta_censo") {
+        if (CONFIG_PROPUESTAS[respuesta.tipo]) {
 
             fila.innerHTML = `<b>Tú:</b> ${escaparHTML(pregunta)}<br><b>Asistente:</b> ${escaparHTML(respuesta.texto || "Preparé esta propuesta:")}`;
-            renderizarTarjetaPropuestaCenso(respuesta.args, body);
+            renderizarTarjetaPropuesta(respuesta.tipo, respuesta.args, body);
 
         } else {
             fila.innerHTML = `<b>Tú:</b> ${escaparHTML(pregunta)}<br><b>Asistente:</b> ${escaparHTML(respuesta.texto)}`;
@@ -276,9 +280,10 @@ async function preguntarGemini(clave, contexto, pregunta) {
 
     const prompt = [
         "Eres un asistente de datos para una estación de bomberos voluntarios en Villamaría, Caldas, Colombia.",
-        "Puedes leer y comentar los datos agregados que te doy abajo, y opcionalmente proponer un censo nuevo con la función proponer_censo si la persona te pide explícitamente registrar o crear uno.",
-        "IMPORTANTE: llamar a proponer_censo NUNCA guarda nada — solo arma una propuesta que un humano debe confirmar aparte. Nunca digas que \"ya lo registraste\" o \"ya quedó guardado\"; di que dejaste la propuesta lista para confirmar.",
-        "No propongas ni sugieras crear, editar o borrar Inspecciones ni Emergencias — no tienes esa capacidad todavía.",
+        "Puedes leer y comentar los datos agregados que te doy abajo, y opcionalmente proponer un registro nuevo con una de estas funciones: proponer_censo, proponer_inspeccion, proponer_emergencia — solo si la persona te pide explícitamente registrar o crear uno.",
+        "IMPORTANTE: llamar a cualquiera de esas funciones NUNCA guarda nada — solo arma una propuesta que un humano debe confirmar aparte. Nunca digas que \"ya lo registraste\" o \"ya quedó guardado\"; di que dejaste la propuesta lista para confirmar.",
+        "Para proponer_emergencia en particular: NUNCA inventes horaReporte, horaLlegada, horaFinal ni vehiculos. Si la persona no los dijo explícitamente, no llames a la función — pídeselos primero en texto.",
+        "Para proponer_inspeccion: recuerda que el registro queda sin fotos ni firma (esta función no puede generarlas), es solo un borrador de datos.",
         "No tienes acceso a internet ni puedes buscar información externa (clima, noticias, normativa, nada fuera de estos datos). Si te preguntan algo así, dilo claramente en vez de inventar una respuesta.",
         "Responde en español, en pocas frases, directo al punto.",
         "",
@@ -353,7 +358,7 @@ function procesarRespuestaGemini(datos) {
 
     if (parteFuncion) {
         return {
-            tipo: "propuesta_censo",
+            tipo: parteFuncion.functionCall.name,
             args: parteFuncion.functionCall.args || {},
             texto: parteTexto || ""
         };
@@ -366,18 +371,56 @@ function procesarRespuestaGemini(datos) {
 }
 
 /* ========================================================================
-   PROPUESTA DE CENSO — tarjeta de confirmación
+   PROPUESTAS DE REGISTRO — tarjeta de confirmación (genérica)
 
    Nada de lo que hay aquí escribe en Firestore por sí solo. Solo el
-   clic explícito en "Confirmar y guardar" ejecuta confirmarYGuardarCenso().
+   clic explícito en "Confirmar y guardar" ejecuta la función real de
+   guardado del tipo correspondiente.
 ======================================================================== */
 
-function renderizarTarjetaPropuestaCenso(args, contenedor) {
+const CONFIG_PROPUESTAS = {
 
-    const campos = describirPropuestaCenso(args);
+    proponer_censo: {
+        titulo: "Propuesta de censo nuevo (sin guardar)",
+        icono: "fa-file-circle-plus",
+        describir: describirPropuestaCenso,
+        confirmar: confirmarYGuardarCenso,
+        anuncio: r => `Censo registrado por el asistente. Jefe de hogar: ${r.jefeNombre}.`,
+        mensajeExito: r => `Censo <b>${escaparHTML(r.id)}</b> guardado correctamente.`
+    },
+
+    proponer_inspeccion: {
+        titulo: "Propuesta de inspección nueva (sin fotos ni firma — sin guardar)",
+        icono: "fa-building-shield",
+        describir: describirPropuestaInspeccion,
+        confirmar: confirmarYGuardarInspeccion,
+        anuncio: r => `Inspección registrada por el asistente. Establecimiento: ${r.formulario.establecimiento}.`,
+        mensajeExito: r => `Inspección <b>${escaparHTML(r.id)}</b> guardada como Pendiente. Complétala con fotos y firma desde el formulario normal cuando puedas.`
+    },
+
+    proponer_emergencia: {
+        titulo: "Propuesta de reporte de emergencia (sin guardar)",
+        icono: "fa-fire-extinguisher",
+        describir: describirPropuestaEmergencia,
+        confirmar: confirmarYGuardarEmergencia,
+        anuncio: r => `Reporte de emergencia registrado por el asistente. Evento: ${r.evento}.`,
+        mensajeExito: r => `Emergencia guardada correctamente.`,
+        // Este es el único tipo con datos de tiempo operativo real —
+        // se le agrega una advertencia extra en la tarjeta para que se
+        // revisen las horas con cuidado antes de confirmar, aunque el
+        // modelo ya tiene instrucción de no inventarlas.
+        avisoExtra: "Revisa que las horas sean exactamente las que dio la persona. El asistente no debería haber inventado ninguna — si algo se ve mal, cancela y regístralo desde el formulario normal."
+    }
+
+};
+
+function renderizarTarjetaPropuesta(tipo, args, contenedor) {
+
+    const config = CONFIG_PROPUESTAS[tipo];
+    const campos = config.describir(args);
 
     if (!campos.length) {
-        contenedor.innerHTML += `<div class="asist-aviso">El asistente intentó proponer un censo pero no trajo ningún dato utilizable. Intenta describirlo de nuevo con más detalle.</div>`;
+        contenedor.innerHTML += `<div class="asist-aviso">El asistente intentó proponer un registro pero no trajo ningún dato utilizable. Intenta describirlo de nuevo con más detalle.</div>`;
         return;
     }
 
@@ -386,14 +429,15 @@ function renderizarTarjetaPropuestaCenso(args, contenedor) {
 
     tarjeta.innerHTML = `
         <div style="font-weight:700;margin-bottom:6px;color:#FF8A7A;">
-            <i class="fa-solid fa-file-circle-plus"></i> Propuesta de censo nuevo (sin guardar)
+            <i class="fa-solid ${config.icono}"></i> ${escaparHTML(config.titulo)}
         </div>
+        ${config.avisoExtra ? `<div class="asist-aviso" style="margin-bottom:8px;">${escaparHTML(config.avisoExtra)}</div>` : ""}
         ${campos.map(c => `<div style="font-size:.78rem;margin-bottom:3px;"><b>${escaparHTML(c.etiqueta)}:</b> ${escaparHTML(c.valor)}</div>`).join("")}
         <div style="display:flex;gap:8px;margin-top:10px;">
-            <button class="btn-confirmar-censo" style="flex:1;padding:8px;border-radius:8px;border:none;background:#00C874;color:#062;font-weight:700;cursor:pointer;">
+            <button class="btn-confirmar-propuesta" style="flex:1;padding:8px;border-radius:8px;border:none;background:#00C874;color:#062;font-weight:700;cursor:pointer;">
                 Confirmar y guardar
             </button>
-            <button class="btn-cancelar-censo" style="padding:8px 12px;border-radius:8px;border:1px solid rgba(255,255,255,.15);background:none;color:#B7BECD;cursor:pointer;">
+            <button class="btn-cancelar-propuesta" style="padding:8px 12px;border-radius:8px;border:1px solid rgba(255,255,255,.15);background:none;color:#B7BECD;cursor:pointer;">
                 Cancelar
             </button>
         </div>
@@ -401,9 +445,9 @@ function renderizarTarjetaPropuestaCenso(args, contenedor) {
 
     contenedor.appendChild(tarjeta);
 
-    tarjeta.querySelector(".btn-confirmar-censo").addEventListener("click", async () => {
+    tarjeta.querySelector(".btn-confirmar-propuesta").addEventListener("click", async () => {
 
-        const btn = tarjeta.querySelector(".btn-confirmar-censo");
+        const btn = tarjeta.querySelector(".btn-confirmar-propuesta");
         btn.disabled = true;
         btn.textContent = "Guardando...";
 
@@ -413,13 +457,13 @@ function renderizarTarjetaPropuestaCenso(args, contenedor) {
                 const unsub = escucharEstadoAuth(u => { unsub(); resolve(u); });
             });
 
-            const registro = await confirmarYGuardarCenso(args, usuario ? (usuario.email || usuario.uid) : "invitado");
+            const registro = await config.confirmar(args, usuario ? (usuario.email || usuario.uid) : "invitado");
 
-            tarjeta.innerHTML = `<div style="color:#7CFFB2;"><i class="fa-solid fa-circle-check"></i> Censo <b>${escaparHTML(registro.id)}</b> guardado correctamente.</div>`;
-            anunciar(`Censo registrado por el asistente. Jefe de hogar: ${registro.jefeNombre}.`);
+            tarjeta.innerHTML = `<div style="color:#7CFFB2;"><i class="fa-solid fa-circle-check"></i> ${config.mensajeExito(registro)}</div>`;
+            anunciar(config.anuncio(registro));
 
         } catch (err) {
-            console.error("[asistente] Error al guardar censo confirmado:", err);
+            console.error("[asistente] Error al guardar propuesta confirmada:", err);
             btn.disabled = false;
             btn.textContent = "Confirmar y guardar";
             tarjeta.insertAdjacentHTML("beforeend", `<div style="color:#FF8A7A;font-size:.75rem;margin-top:6px;">No se pudo guardar: ${escaparHTML(err.message || "error desconocido")}</div>`);
@@ -427,7 +471,7 @@ function renderizarTarjetaPropuestaCenso(args, contenedor) {
 
     });
 
-    tarjeta.querySelector(".btn-cancelar-censo").addEventListener("click", () => {
+    tarjeta.querySelector(".btn-cancelar-propuesta").addEventListener("click", () => {
         tarjeta.innerHTML = `<div style="color:#8A93A8;"><i class="fa-solid fa-ban"></i> Propuesta descartada. No se guardó nada.</div>`;
     });
 
