@@ -15,6 +15,7 @@ import { UI, inicializarDOM } from "./dom.js";
 import { esperarEstadoAuth } from "../../shared/auth.js";
 import { cargarCensos, guardarCenso } from "./persistencia.js";
 import { renderizarListado, filtrarListado } from "./listado.js";
+import { anunciar } from "../../shared/voz.js";
 
 let contadorIntegrantes = 0;
 
@@ -571,6 +572,8 @@ async function manejarGuardar(evento) {
         }
 
         await guardarCenso(datos);
+
+        anunciar(`Nuevo censo registrado. Jefe de hogar: ${datos.jefeNombre}. Ubicación: ${datos.barrioVereda || "sin especificar"}.`);
 
         mostrarVistaListado();
 
