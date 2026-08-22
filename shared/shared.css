@@ -468,6 +468,33 @@ button:focus-visible{
     border-top:1px solid var(--border);
 }
 
+.btn-voz-sidebar{
+    width:100%;
+    display:flex;
+    align-items:center;
+    gap:8px;
+    padding:9px 12px;
+    margin-bottom:14px;
+    border-radius:10px;
+    border:1px solid var(--border);
+    background:rgba(255,255,255,.03);
+    color:var(--text-light);
+    font-size:12px;
+    font-weight:600;
+    cursor:pointer;
+    text-align:left;
+}
+
+.btn-voz-sidebar:hover{
+    border-color:var(--border-hover);
+    color:var(--white);
+}
+
+.btn-voz-sidebar.silenciado{
+    color:var(--text-mute);
+    opacity:.7;
+}
+
 .sidebar-footer .status-line{
     display:flex;
     align-items:center;

@@ -138,6 +138,11 @@ function renderSidebar(active = "", autenticado = true) {
 
         <div class="sidebar-footer">
 
+            <button id="btnVozSidebar" type="button" class="btn-voz-sidebar" title="Anuncios por voz">
+                <i class="fa-solid fa-volume-high"></i>
+                <span>Anuncios por voz</span>
+            </button>
+
             <div class="status-line">
                 <span class="dot"></span>
                 Sistema en línea
@@ -161,6 +166,30 @@ function renderSidebar(active = "", autenticado = true) {
         container
             .querySelectorAll('[data-restringido="true"]')
             .forEach(enlace => enlace.remove());
+    }
+
+    // Botón de anuncios por voz. Se maneja aquí (localStorage directo,
+    // sin import) porque sidebar.js es un script clásico, no un módulo
+    // ES — la lógica real de síntesis de voz vive en shared/voz.js,
+    // que sí es un módulo y lo usan censos/emergencia/inspecciones.
+    const CLAVE_VOZ = "voz_habilitada";
+    const btnVoz = document.getElementById("btnVozSidebar");
+
+    function refrescarBotonVoz() {
+        const activa = localStorage.getItem(CLAVE_VOZ) !== "no";
+        btnVoz.classList.toggle("silenciado", !activa);
+        btnVoz.querySelector("i").className = activa
+            ? "fa-solid fa-volume-high"
+            : "fa-solid fa-volume-xmark";
+    }
+
+    if (btnVoz) {
+        refrescarBotonVoz();
+        btnVoz.addEventListener("click", () => {
+            const activa = localStorage.getItem(CLAVE_VOZ) !== "no";
+            localStorage.setItem(CLAVE_VOZ, activa ? "no" : "si");
+            refrescarBotonVoz();
+        });
     }
 
 }
