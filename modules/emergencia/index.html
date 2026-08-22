@@ -330,6 +330,8 @@ rel="stylesheet">
             <option>Rescate de Personas Atrapadas</option>
             <option>Rescate Animal</option>
             <option>Control de Abejas</option>
+            <option>Control de Enjambre de Avispas</option>
+            <option>Recuperación de Cadáver</option>
           </optgroup>
           <optgroup label="EMERGENCIAS MÉDICAS">
             <option>Atención Prehospitalaria</option>
@@ -344,10 +346,11 @@ rel="stylesheet">
             <option>Fuga de Gas</option>
             <option>Derrame de Hidrocarburos</option>
           </optgroup>
-          <optgroup label="RIESGO TECNOLÓGICO">
+          <optgroup label="RIESGO TECNOLÓGICO Y AMBIENTAL">
             <option>Explosión</option>
             <option>Colapso Estructural</option>
             <option>Emergencia en Instalación Eléctrica</option>
+            <option>Emergencias Ambientales</option>
           </optgroup>
           <optgroup label="OTROS">
             <option>Falsa Alarma</option>
@@ -355,7 +358,9 @@ rel="stylesheet">
             <option>Prevención y Seguridad</option>
             <option>Servicio Social a la Comunidad</option>
             <option>Capacitación</option>
+            <option>Salida sin Intervención</option>
             <option>Otro Evento</option>
+            <option>Revisión de terreno</option>
           </optgroup>
         </select>
       </div>
@@ -469,6 +474,14 @@ rel="stylesheet">
         <option value="MUÑOZ GARCÍA SEBASTIÁN">MUÑOZ GARCÍA SEBASTIÁN</option>
         <option value="PARRA JORGE HERNAN">PARRA JORGE HERNAN</option>
         <option value="LÓPEZ JOSE IVAN">LÓPEZ JOSE IVAN</option>
+        <option value="NOREÑA EDINSON">NOREÑA EDINSON</option>
+        <option value="UCHIMA TREJOS MATEO">UCHIMA TREJOS MATEO</option>
+        <option value="MARÍN JHOAN SEBASTIÁN">MARÍN JHOAN SEBASTIÁN</option>
+        <option value="BRICEÑO JUAN CARLOS">BRICEÑO JUAN CARLOS</option>
+        <option value="LONDÑO GALLEGO JUAN SEBASTIAN">LONDOÑO GALLEGO JUAN SEBASTIAN</option>
+        <option value="SÁNCHEZ SÁNCHEZ LEIDY TATIANA">SÁNCHEZ SÁNCHEZ LEIDY TATIANA</option>
+        <option value="MARTÍNEZ JULIO CESAR">MARTÍNEZ JULIO CESAR</option>
+        <option value="NIETO MOLINA ROXANA">NIETO MOLINA ROXANA</option>
       </select> 
     </div>
  </div>
@@ -481,16 +494,11 @@ rel="stylesheet">
         <label for="descripcion">
             Descripción
             <span class="req">*</span>
-            <span class="voice-hint">— Puede dictar por voz</span>
         </label>
         <div class="textarea-wrapper">
           <textarea id="descripcion" rows="5" placeholder="Describa detalladamente el incidente..." class="spell-check" spellcheck="true" lang="es"></textarea>
-          <button type="button" class="btn-voice" id="btnVoice" onclick="toggleDictation('descripcion')" title="Iniciar dictado por voz">
-            🎤
-          </button>
         </div>
         <div class="spell-suggestions" id="suggestions-descripcion"></div>
-        <div class="voice-status" id="voiceStatus"></div>
       </div>
     </div>
 
@@ -500,11 +508,11 @@ rel="stylesheet">
     <div class="fields-grid">
       <div class="field-group">
         <label>Afectados</label>
-        <input type="number" id="lesionados" min="0" value="0" placeholder="0">
+        <input type="number" id="lesionados" min="0" value="0" placeholder="0" inputmode="numeric">
       </div>
       <div class="field-group">
         <label>Víctimas Fatales</label>
-        <input type="number" id="victimas" min="0" value="0" placeholder="0">
+        <input type="number" id="victimas" min="0" value="0" placeholder="0" inputmode="numeric">
       </div>
         <div class="field-group full-width">
           <div id="affectedContainer"></div>
@@ -514,14 +522,9 @@ rel="stylesheet">
           <div id="firefighterSignatures"></div>
       </div>
       <div class="field-group full-width">
-        <label>Novedades
-          <span class="voice-hint">— Puede dictar por voz</span>
-        </label>
+        <label>Novedades</label>
         <div class="textarea-wrapper">
           <textarea id="novedades" rows="3" placeholder="Observaciones adicionales, novedades del servicio..." class="spell-check" spellcheck="true" lang="es"></textarea>
-          <button type="button" class="btn-voice" id="btnVoice2" onclick="toggleDictation('novedades')" title="Iniciar dictado por voz">
-            🎤
-          </button>
         </div>
         <div class="spell-suggestions" id="suggestions-novedades"></div>
       </div>

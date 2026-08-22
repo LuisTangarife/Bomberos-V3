@@ -414,7 +414,25 @@ document.addEventListener('DOMContentLoaded', async () => {
         create:false,
 
         placeholder:
-        "Seleccione vehículos..."
+        "Seleccione vehículos...",
+
+        onItemAdd() {
+
+            // Limpia el texto escrito
+            this.setTextboxValue('');
+
+            // Refresca las opciones
+            this.refreshOptions(false);
+
+            // Cierra el desplegable
+            this.close();
+
+            // Quita el foco y oculta el teclado en móviles — sin esto
+            // se repite el mismo bug que en el selector de bomberos:
+            // seguir escribiendo o dar Backspace borraba el último
+            // vehículo ya seleccionado.
+            this.blur();
+        }
     });
 
     personalDB=
@@ -499,7 +517,23 @@ function generateVehicleAssignments(){
             valueField:'value',
             labelField:'text',
             searchField:'text',
-            placeholder:'Seleccione personal...'
+            placeholder:'Seleccione personal...',
+
+            onItemAdd() {
+                // Borra inmediatamente lo que el usuario escribió en
+                // el cuadro de búsqueda al seleccionar a alguien.
+                this.setTextboxValue('');
+
+                // Limpia el filtro interno para que la lista completa
+                // vuelva a estar disponible en la próxima búsqueda.
+                this.refreshOptions(false);
+
+                // Quita el foco del cuadro de búsqueda: sin esto,
+                // seguir escribiendo (o presionar Backspace con el
+                // cuadro vacío) borraba al último bombero ya
+                // seleccionado en vez de solo limpiar el texto.
+                this.blur();
+            }
         });
         
         ts.on(
@@ -871,84 +905,6 @@ function getLocation() {
     },
     { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
   );
-}
-
-// ── VOICE DICTATION ───────────────────────────────────────────────────────
-let recognition = null;
-let activeVoiceField = null;
-
-function toggleDictation(fieldId) {
-  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-  const statusEl = document.getElementById('voiceStatus');
-  const btnId = fieldId === 'descripcion' ? 'btnVoice' : 'btnVoice2';
-  const btn = document.getElementById(btnId);
-
-  if (!SpeechRecognition) {
-    if (statusEl) statusEl.textContent = '⚠️ Dictado por voz no disponible en este navegador. Use Chrome o Edge.';
-    return;
-  }
-
-  // Stop if already recording this field
-  if (recognition && activeVoiceField === fieldId) {
-    recognition.stop();
-    return;
-  }
-  // Stop if recording another field
-  if (recognition) recognition.stop();
-
-  recognition = new SpeechRecognition();
-  recognition.lang = 'es-CO';
-  recognition.continuous = true;
-  recognition.interimResults = true;
-  activeVoiceField = fieldId;
-
-  let finalTranscript = document.getElementById(fieldId).value;
-
-  recognition.onstart = () => {
-    btn.classList.add('recording');
-    btn.title = 'Detener dictado';
-    if (statusEl) statusEl.textContent = '🎙️ Escuchando... hable ahora';
-  };
-
-  recognition.onresult = e => {
-    let interim = '';
-    for (let i = e.resultIndex; i < e.results.length; i++) {
-      const t = e.results[i][0].transcript;
-      if (e.results[i].isFinal) {
-        finalTranscript += (finalTranscript ? ' ' : '') + t;
-        // Apply spell check on final
-        const corrected = applyAutoCorrections(finalTranscript);
-        finalTranscript = corrected;
-      } else {
-        interim = t;
-      }
-    }
-    const el = document.getElementById(fieldId);
-    el.value = finalTranscript + (interim ? ' ' + interim : '');
-    // Trigger spell check
-    const sg = document.getElementById('suggestions-' + fieldId);
-    if (sg) runSpellCheck(el, sg);
-  };
-
-  recognition.onerror = e => {
-    btn.classList.remove('recording');
-    const errMsgs = {
-      'no-speech': 'No se detectó voz. Intente de nuevo.',
-      'network': 'Error de red. El dictado requiere conexión.',
-      'not-allowed': 'Permiso de micrófono denegado.',
-    };
-    if (statusEl) statusEl.textContent = '⚠️ ' + (errMsgs[e.error] || 'Error de dictado.');
-  };
-
-  recognition.onend = () => {
-    btn.classList.remove('recording');
-    btn.title = 'Iniciar dictado por voz';
-    if (statusEl) statusEl.textContent = '';
-    activeVoiceField = null;
-    recognition = null;
-  };
-
-  recognition.start();
 }
 
 function applyAutoCorrections(text) {
