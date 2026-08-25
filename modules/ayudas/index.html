@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>APP Bomberos | Ayudas Humanitarias</title>
+
+    <!-- Se aplica el tema guardado ANTES de que llegue el CSS, para que
+         no haya un parpadeo oscuro→claro (o viceversa) al cargar. -->
+    <script>
+        document.documentElement.setAttribute(
+            "data-tema",
+            localStorage.getItem("ayudas_tema") || "oscuro"
+        );
+    </script>
+
+    <link rel="icon" href="../../icons/icon-192-v4.png">
+    <link rel="manifest" href="../../manifest.json">
+    <meta name="theme-color" content="#1B8A4B">
+
+    <link rel="stylesheet" href="../../shared/shared.css">
+    <link rel="stylesheet" href="styles.css">
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap"
+          rel="stylesheet">
+
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
+          rel="stylesheet">
+
+</head>
+
+<body>
+
+<div class="app-layout">
+
+    <aside id="sidebar"></aside>
+
+    <div class="content">
+
+        <header id="header"></header>
+
+        <main class="ayuda-page">
+
+        <!-- =======================================================
+             VISTA LISTADO
+        =========================================================== -->
+        <section id="vistaListado" class="vista activa">
+
+            <div class="ayuda-toolbar">
+
+                <div class="ayuda-toolbar-titulo">
+                    <h1><i class="fa-solid fa-box-open"></i> Ayudas Humanitarias</h1>
+                    <p>Registro de entrega de kits (alimentario, aseo, cocina, noche y mascota) durante la atención de emergencias.</p>
+
+                    <p id="avisoInvitadoAyudas" class="aviso-invitado" style="display:none;">
+                        <i class="fa-solid fa-circle-info"></i>
+                        Modo invitado: solo ves las entregas creadas en este dispositivo.
+                    </p>
+                </div>
+
+                <div class="ayuda-toolbar-acciones">
+
+                    <button id="btnTemaAyuda" type="button" class="btn-tema-ayuda" title="Cambiar tema">
+                        <i class="fa-solid fa-moon"></i>
+                    </button>
+
+                    <button id="btnNuevaAyuda" type="button" class="btn-primario">
+                        <i class="fa-solid fa-plus"></i> Nueva Entrega
+                    </button>
+
+                </div>
+
+            </div>
+
+            <div class="ayuda-filtros">
+                <input id="buscarAyuda" type="search" placeholder="Buscar por beneficiario, cédula, sector, tipo de kit o código...">
+            </div>
+
+            <div id="ayudasCards" class="ayudas-grid">
+                <p class="ayuda-vacio">Cargando entregas...</p>
+            </div>
+
+        </section>
+
+        <!-- =======================================================
+             VISTA FORMULARIO
+        =========================================================== -->
+        <section id="vistaFormulario" class="vista">
+
+            <div class="ayuda-form-header">
+                <button id="btnVolverListadoAyudas" type="button" class="btn-secundario">
+                    <i class="fa-solid fa-arrow-left"></i> Volver al listado
+                </button>
+                <h2 id="tituloFormularioAyuda">Nueva entrega de kit</h2>
+            </div>
+
+            <p class="leyenda-obligatorio"><span class="req">*</span> Campos obligatorios</p>
+
+            <form id="formAyuda">
+
+                <!-- ENCABEZADO -->
+                <fieldset class="form-section">
+                    <legend>Datos de la entrega</legend>
+                    <div class="form-grid cols-3">
+
+                        <label>Tipo de kit<span class="req">*</span>
+                            <select id="tipoKit" required>
+                                <option value="">Seleccione...</option>
+                                <option value="Kit Alimentario">🧺 Kit Alimentario</option>
+                                <option value="Kit Aseo">🧼 Kit Aseo</option>
+                                <option value="Kit Cocina">🍳 Kit Cocina</option>
+                                <option value="Kit Noche">🛏️ Kit Noche</option>
+                                <option value="Kit Mascota">🐾 Kit Mascota</option>
+                            </select>
+                        </label>
+
+                        <label>Fecha<input type="date" id="fecha"></label>
+                        <label>Lugar<input type="text" id="lugar" placeholder="Sector, barrio o punto de entrega"></label>
+
+                    </div>
+                </fieldset>
+
+                <!-- DATOS DEL BENEFICIARIO -->
+                <fieldset class="form-section">
+                    <legend>Datos del beneficiario</legend>
+                    <div class="form-grid cols-3">
+
+                        <label class="span-2">Nombre<span class="req">*</span>
+                            <input type="text" id="beneficiarioNombre" required>
+                        </label>
+                        <label>C.C.<input type="text" id="beneficiarioCedula"></label>
+
+                        <label>Teléfono<input type="tel" id="beneficiarioTelefono"></label>
+                        <label class="span-2">Dirección / Sector<input type="text" id="direccionSector"></label>
+
+                        <label>N.º de integrantes del hogar<input type="number" min="0" id="numIntegrantesHogar"></label>
+
+                    </div>
+
+                    <p class="form-note">¿Está censado como afectado?</p>
+                    <div class="radio-group radio-inline">
+                        <label><input type="radio" name="censado" value="Sí"> Sí</label>
+                        <label><input type="radio" name="censado" value="No" checked> No</label>
+                    </div>
+
+                    <div id="bloqueNumCenso" class="form-grid cols-3" style="display:none;">
+                        <label class="span-2">N.º de censo o registro<input type="text" id="numCenso"></label>
+                    </div>
+
+                </fieldset>
+
+                <!-- ENTREGA -->
+                <fieldset class="form-section">
+                    <legend>Entrega</legend>
+
+                    <div class="form-grid cols-3">
+                        <label>Cantidad entregada (kits)<input type="number" min="1" id="cantidadEntregada" value="1"></label>
+                    </div>
+
+                    <label class="campo-observaciones">Observaciones
+                        <textarea id="observaciones" rows="3" placeholder="Novedades relacionadas con la entrega..."></textarea>
+                    </label>
+
+                </fieldset>
+
+                <!-- CONSTANCIA / RESPONSABLE -->
+                <fieldset class="form-section">
+                    <legend>Constancia</legend>
+                    <p class="form-note">
+                        Declara que recibió a satisfacción el kit entregado por la Alcaldía de
+                        Villamaría — Secretaría de Desarrollo Social, en el marco de la
+                        atención humanitaria por la emergencia.
+                    </p>
+
+                    <div class="form-grid cols-2">
+                        <label>Nombre de quien entrega<input type="text" id="responsableNombre"></label>
+                        <label>C.C. de quien entrega<input type="text" id="responsableCedula"></label>
+                    </div>
+
+                    <div class="signature-grid">
+
+                        <div class="signature-block">
+                            <label class="signature-label">Firma del beneficiario</label>
+                            <canvas id="firmaBeneficiario"></canvas>
+                            <button type="button" class="clear-signature btn-secundario" data-canvas="firmaBeneficiario">
+                                <i class="fa-solid fa-eraser"></i> Borrar firma
+                            </button>
+                        </div>
+
+                        <div class="signature-block">
+                            <label class="signature-label">Firma del responsable de la entrega</label>
+                            <canvas id="firmaResponsable"></canvas>
+                            <button type="button" class="clear-signature btn-secundario" data-canvas="firmaResponsable">
+                                <i class="fa-solid fa-eraser"></i> Borrar firma
+                            </button>
+                        </div>
+
+                    </div>
+
+                </fieldset>
+
+                <div class="ayuda-form-acciones">
+                    <button id="btnGuardarAyuda" type="submit" class="btn-primario">
+                        <i class="fa-solid fa-floppy-disk"></i> Guardar Entrega
+                    </button>
+                </div>
+
+            </form>
+
+        </section>
+
+        </main>
+
+    </div>
+
+</div>
+
+<script src="../../shared/sidebar.js"></script>
+<script src="../../shared/header.js"></script>
+<script src="../../shared/shared.js"></script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+<script src="app.js" type="module"></script>
+
+</body>
+</html>
