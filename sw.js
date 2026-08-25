@@ -4,7 +4,7 @@
    y sea instalable como PWA.
 ======================================================================== */
 
-const SW_VERSION = 'v61'; // v60 -> v61: Panel General — cargarUnidades()/cargarPersonalCuerpo() se quedaban en "Cargando..." para siempre en conexiones lentas/entrecortadas (datos móviles), porque esperaban la respuesta de Firestore sin ningún límite de tiempo ni respaldo local (a diferencia de Censos/Inspecciones, que ya mostraban una copia local de inmediato). Ahora tienen un límite de 10s; si se agota, muestran un mensaje claro con un enlace "Reintentar" en vez de quedarse colgado sin avisar nada. También se ajustó la fila de unidad/persona en celulares angostos (<560px) para que el selector de estado y el botón de borrar no queden amontonados junto al nombre.
+const SW_VERSION = 'v62'; // v61 -> v62: Nuevo módulo "Ayudas Humanitarias" (modules/ayudas/) — registro de entrega de kits (Alimentario, Aseo, Cocina, Noche, Mascota) calcado del formato oficial de la Alcaldía de Villamaría / Secretaría de Desarrollo Social. Mismo patrón que Censos (Firestore + respaldo local + modo invitado), con firmas digitales por canvas (beneficiario y responsable, adaptado de Inspecciones) y certificado descargable en PDF que replica el texto y el logo del formato oficial. Diseño propio en verde institucional, distinto al de los demás módulos. El enlace "Ayudas Humanitarias" del menú lateral, que antes era un "Próximamente", ahora apunta de verdad al módulo.
 const STATIC_CACHE = `bomberos-static-${SW_VERSION}`;
 const DYNAMIC_CACHE = `bomberos-dynamic-${SW_VERSION}`;
 const CACHES_VIGENTES = [STATIC_CACHE, DYNAMIC_CACHE];
@@ -112,6 +112,18 @@ const FILES = [
     "./modules/censos/persistencia.js",
     "./modules/censos/pdf.js",
     "./modules/censos/excel.js",
+
+    "./modules/ayudas/index.html",
+    "./modules/ayudas/styles.css",
+    "./modules/ayudas/app.js",
+    "./modules/ayudas/dom.js",
+    "./modules/ayudas/estado.js",
+    "./modules/ayudas/firebase.js",
+    "./modules/ayudas/firmas.js",
+    "./modules/ayudas/listado.js",
+    "./modules/ayudas/persistencia.js",
+    "./modules/ayudas/pdf.js",
+    "./modules/ayudas/assets/logo-villamaria.png",
 
     "./icons/icon-192-v4.png",
     "./icons/icon-512-v4.png"
