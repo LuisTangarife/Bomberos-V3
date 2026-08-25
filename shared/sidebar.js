@@ -94,8 +94,8 @@ function renderSidebar(active = "", autenticado = true) {
             </a>
 
             <a
-                href="#"
-                onclick="abrirAyudas(); return false;">
+                href="${RAIZ_SITIO}modules/ayudas/index.html"
+                class="${active === "ayudas" ? "active" : ""}">
 
                 <i class="fa-solid fa-box-open"></i>
 
