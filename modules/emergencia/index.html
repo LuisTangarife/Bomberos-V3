@@ -212,19 +212,19 @@ rel="stylesheet">
     </div>
     <div class="fields-grid">
       <div class="field-group">
-        <label>Fecha <span class="req">*</span></label>
-        <input type="date" id="fecha" required>
+        <label>Fecha</label>
+        <input type="date" id="fecha">
       </div>
      <div class="field-group">
-          <label>Hora de Reporte <span class="req">*</span></label>
+          <label>Hora de Reporte</label>
       
           <div class="time-selector">
       
-              <select id="horaReporteHora" required>
+              <select id="horaReporteHora">
                   <option value="">Hora</option>
               </select>
       
-              <select id="horaReporteMinuto" required disabled>
+              <select id="horaReporteMinuto" disabled>
                   <option value="">Minutos</option>
               </select>
       
@@ -235,15 +235,15 @@ rel="stylesheet">
       
       
       <div class="field-group">
-          <label>Hora de Llegada al Sitio <span class="req">*</span></label>
+          <label>Hora de Llegada al Sitio</label>
       
           <div class="time-selector">
       
-              <select id="horaLlegadaHora" required>
+              <select id="horaLlegadaHora">
                   <option value="">Hora</option>
               </select>
       
-              <select id="horaLlegadaMinuto" required disabled>
+              <select id="horaLlegadaMinuto" disabled>
                   <option value="">Minutos</option>
               </select>
       
@@ -254,15 +254,15 @@ rel="stylesheet">
       
       
       <div class="field-group">
-          <label>Hora Final <span class="req">*</span></label>
+          <label>Hora Final</label>
       
           <div class="time-selector">
       
-              <select id="horaFinalHora" required>
+              <select id="horaFinalHora">
                   <option value="">Hora</option>
               </select>
       
-              <select id="horaFinalMinuto" required disabled>
+              <select id="horaFinalMinuto" disabled>
                   <option value="">Minutos</option>
               </select>
       
@@ -277,12 +277,12 @@ rel="stylesheet">
     </div>
     <div class="fields-grid">
       <div class="field-group full-width">
-        <label>Lugar <span class="req">*</span></label>
+        <label>Lugar</label>
         <input type="text" id="lugar" placeholder="Nombre del lugar o sector" class="spell-check" spellcheck="true" lang="es">
         <div class="spell-suggestions" id="suggestions-lugar"></div>
       </div>
       <div class="field-group full-width">
-        <label>Dirección <span class="req">*</span></label>
+        <label>Dirección</label>
         <input type="text" id="direccion" placeholder="Calle, carrera, barrio, municipio" class="spell-check" spellcheck="true" lang="es">
         <div class="spell-suggestions" id="suggestions-direccion"></div>
       </div>
@@ -307,8 +307,8 @@ rel="stylesheet">
     </div>
     <div class="fields-grid">
       <div class="field-group full-width">
-        <label>Evento <span class="req">*</span></label>
-        <select id="evento" required>
+        <label>Evento</label>
+        <select id="evento">
           <option value="">— Seleccione el tipo de evento —</option>
           <optgroup label="INCENDIOS">
             <option>Incendio Estructural</option>
@@ -378,13 +378,11 @@ rel="stylesheet">
 
         <label for="vehiculos">
             🚒 Vehículos desplegados
-            <span class="req">*</span>
         </label>
         
         <select
             id="vehiculos"
             multiple
-            required
         >
 
             <option value="Móvil 1">Móvil 1</option>
@@ -493,7 +491,6 @@ rel="stylesheet">
       <div class="field-group full-width">
         <label for="descripcion">
             Descripción
-            <span class="req">*</span>
         </label>
         <div class="textarea-wrapper">
           <textarea id="descripcion" rows="5" placeholder="Describa detalladamente el incidente..." class="spell-check" spellcheck="true" lang="es"></textarea>

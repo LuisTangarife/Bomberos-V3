@@ -461,6 +461,50 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     }));
 
+    // Reemplaza la flota/personal fijos del HTML por los reales del
+    // Panel General (colecciones "unidades" y "personal_cuerpo" en
+    // Firestore) cuando hay conexión. Si falla (sin internet, o
+    // ninguna unidad/persona registrada todavía), se sigue usando la
+    // lista fija de siempre — así el formulario nunca se queda sin
+    // opciones para elegir.
+    (async () => {
+
+        try {
+
+            const { listarUnidades } = await import("../../shared/unidades.js");
+            const unidades = await listarUnidades();
+
+            if (unidades.length) {
+
+                vehiculosTS.clearOptions();
+
+                unidades.forEach(u => {
+                    vehiculosTS.addOption({ value: u.nombre, text: u.nombre });
+                });
+
+                vehiculosTS.refreshOptions(false);
+
+            }
+
+        } catch (error) {
+            console.warn("[emergencia] No se pudo cargar la flota real, se usa la lista fija del HTML:", error);
+        }
+
+        try {
+
+            const { listarPersonalCuerpo } = await import("../../shared/personalCuerpo.js");
+            const personal = await listarPersonalCuerpo();
+
+            if (personal.length) {
+                personalDB = personal.map(p => ({ value: p.nombre, text: p.nombre }));
+            }
+
+        } catch (error) {
+            console.warn("[emergencia] No se pudo cargar el personal real, se usa la lista fija del HTML:", error);
+        }
+
+    })();
+
 
     vehiculosTS.on(
         "change",
@@ -1125,34 +1169,10 @@ return data;
 }
 function validateForm(data){
 
-  // Antes se exigían casi todos los campos de texto del formulario
-  // (fecha, horas, lugar, dirección, evento, vehículos, descripción).
-  // Ahora solo se exige la ubicación por coordenadas GPS: es el único
-  // dato que de verdad no se puede reconstruir después si falta, y el
-  // que más le importa al Cuerpo de Bomberos para ubicar la emergencia.
-  const required=[
-
-    ['latitud','Latitud'],
-    ['longitud','Longitud']
-
-  ];
-
-  for(const [key,label] of required){
-
-    const value=data[key];
-
-    if(
-      value===undefined ||
-      value===null ||
-      value===''
-    ){
-
-      return `⚠️ Debes obtener la ubicación GPS ("${label}" vacío) antes de guardar.`;
-
-    }
-
-  }
-
+  // Ya no hay ningún campo obligatorio en el reporte de emergencia.
+  // Antes se exigían fecha/horas/lugar/dirección/evento/vehículos/
+  // descripción, luego solo las coordenadas GPS; ahora ni eso: se
+  // puede guardar el reporte vacío y completarlo después.
   return null;
 
 }
