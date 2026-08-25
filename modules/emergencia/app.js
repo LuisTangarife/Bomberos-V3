@@ -1168,32 +1168,6 @@ async function saveReport() {
 
     fb.textContent = 'Preparando certificado...';
 
-    // RENDERIZAR CERTIFICADO
-    renderCertificate(data);
-    
-    const images = document
-    .querySelectorAll(
-    '#certContent img'
-    );
-    
-    await Promise.all(
-    
-    [...images].map(img=>{
-    
-        if(img.complete)
-            return Promise.resolve();
-    
-        return new Promise(resolve=>{
-    
-            img.onload=resolve;
-            img.onerror=resolve;
-    
-        });
-    
-    })
-    
-    );
-    
     data.pdfBase64 =
     await generatePDFBase64();
     fb.textContent = 'Subiendo reporte...';
@@ -1442,19 +1416,6 @@ async function loadReport(id){
 }
 
 // ── CERTIFICATE ───────────────────────────────────────────────────────────
-function generateCertificate() {
-  const data = getFormData();
-  const err = validateForm(data);
-  if (err) {
-    const fb = document.getElementById('saveFeedback');
-    fb.textContent = err;
-    fb.className = 'save-feedback err';
-    return;
-  }
-  console.log(data.photos);
-  renderCertificate(data);
-}
-
 async function showCert(id) {
   const all = await getAllFromIDB();
   const r = all.find(x => x.id === id);

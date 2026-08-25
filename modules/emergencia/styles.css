@@ -87,6 +87,14 @@ body.light-theme .theme-toggle {
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
+/* Evita que el navegador/PWA interprete un swipe hacia abajo desde el
+   tope de la página como "pull-to-refresh" y recargue todo el documento
+   (borrando el formulario en memoria). Bomberos reportaron pérdida de
+   datos al bajar mucho el dedo por error en celulares Android/Chrome. */
+html, body {
+  overscroll-behavior-y: none;
+}
+
 body {
   font-family: var(--font-body);
   background: var(--dark);
