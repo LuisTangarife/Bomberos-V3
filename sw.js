@@ -4,7 +4,7 @@
    y sea instalable como PWA.
 ======================================================================== */
 
-const SW_VERSION = 'v57'; // v56 -> v57: Censos ahora permite descargar cada censo como PDF (pdf.js, mismo criterio visual que Inspecciones) y exportar TODOS los censos a Excel en 3 hojas: Censos/Integrantes/Mascotas (excel.js, vía SheetJS). Sin este cambio de versión, dispositivos que ya tenían la app instalada seguirían usando la caché vieja y no verían los botones nuevos ni podrían usarlos sin conexión.
+const SW_VERSION = 'v58'; // v57 -> v58: Emergencia — se quitó el botón "Generar Solicitud" (y su función, generateCertificate, ya sin uso); se quitó la vista previa del certificado que se abría de golpe al presionar "Guardar Reporte" (era código redundante: el PDF real ya lo genera generatePDFBase64 con su propia copia oculta del certificado, sin depender de esa vista previa); y se bloqueó el gesto de pull-to-refresh (overscroll-behavior-y: none) en la página de Emergencia para que un swipe hacia abajo por error ya no recargue la página y borre el formulario a medio llenar.
 const STATIC_CACHE = `bomberos-static-${SW_VERSION}`;
 const DYNAMIC_CACHE = `bomberos-dynamic-${SW_VERSION}`;
 const CACHES_VIGENTES = [STATIC_CACHE, DYNAMIC_CACHE];
