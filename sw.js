@@ -4,7 +4,7 @@
    y sea instalable como PWA.
 ======================================================================== */
 
-const SW_VERSION = 'v60'; // v59 -> v60: Panel General — "Unidades en servicio" y el nuevo panel "Personal del cuerpo" dejaron de ser tarjetas fijas escritas en el HTML: ahora viven en Firestore (colecciones "unidades" y "personal_cuerpo", shared/unidades.js y shared/personalCuerpo.js) y se pueden agregar, cambiar de estado (Disponible/En servicio/Mantenimiento o Franco/Fuera de servicio) y eliminar desde ahí mismo. El formulario de Emergencia ahora lee esa misma flota/nómina real para poblar "Vehículos desplegados" y "Personal" (la lista fija que traía el HTML se conserva como respaldo si no hay conexión o aún no se ha registrado nada). Además, en Emergencia ya no queda NINGÚN campo obligatorio (se quitó también la exigencia de coordenadas GPS que se había dejado en v59).
+const SW_VERSION = 'v61'; // v60 -> v61: Panel General — cargarUnidades()/cargarPersonalCuerpo() se quedaban en "Cargando..." para siempre en conexiones lentas/entrecortadas (datos móviles), porque esperaban la respuesta de Firestore sin ningún límite de tiempo ni respaldo local (a diferencia de Censos/Inspecciones, que ya mostraban una copia local de inmediato). Ahora tienen un límite de 10s; si se agota, muestran un mensaje claro con un enlace "Reintentar" en vez de quedarse colgado sin avisar nada. También se ajustó la fila de unidad/persona en celulares angostos (<560px) para que el selector de estado y el botón de borrar no queden amontonados junto al nombre.
 const STATIC_CACHE = `bomberos-static-${SW_VERSION}`;
 const DYNAMIC_CACHE = `bomberos-dynamic-${SW_VERSION}`;
 const CACHES_VIGENTES = [STATIC_CACHE, DYNAMIC_CACHE];

@@ -209,6 +209,23 @@ function escaparTexto(texto) {
     return div.innerHTML;
 }
 
+// Envuelve una promesa con un límite de tiempo. Sin esto, en datos
+// móviles con señal débil una lectura de Firestore puede quedar
+// "esperando" varios minutos sin dar éxito NI error — la pantalla se
+// queda en "Cargando..." para siempre porque la promesa nunca se
+// resuelve ni se rechaza. Con el timeout, a los 10s se rechaza igual
+// y el catch de cargarUnidades()/cargarPersonalCuerpo() puede mostrar
+// un mensaje útil ("revisa tu conexión" + reintentar) en vez de dejar
+// al usuario mirando un "Cargando..." que nunca cambia.
+function conTimeout(promesa, ms = 10000) {
+    return Promise.race([
+        promesa,
+        new Promise((_, reject) =>
+            setTimeout(() => reject(new Error("Tiempo de espera agotado")), ms)
+        )
+    ]);
+}
+
 async function cargarUnidades() {
 
     const contenedor = document.getElementById("unidadesLista");
@@ -216,13 +233,18 @@ async function cargarUnidades() {
 
     try {
 
-        const unidades = await listarUnidades();
+        const unidades = await conTimeout(listarUnidades());
         renderizarUnidades(unidades);
 
     } catch (error) {
 
         console.error("[dashboard] No se pudieron cargar las unidades:", error);
-        contenedor.innerHTML = `<p class="unit-vacio">No se pudo cargar la flota (revisa tu conexión).</p>`;
+        contenedor.innerHTML = `
+            <p class="unit-vacio">
+                No se pudo cargar la flota (conexión lenta o sin internet).
+                <a href="#" class="unit-reintentar" data-tipo="unidad">Reintentar</a>
+            </p>
+        `;
 
     }
 
@@ -263,13 +285,18 @@ async function cargarPersonalCuerpo() {
 
     try {
 
-        const personal = await listarPersonalCuerpo();
+        const personal = await conTimeout(listarPersonalCuerpo());
         renderizarPersonalCuerpo(personal);
 
     } catch (error) {
 
         console.error("[dashboard] No se pudo cargar el personal:", error);
-        contenedor.innerHTML = `<p class="unit-vacio">No se pudo cargar el personal (revisa tu conexión).</p>`;
+        contenedor.innerHTML = `
+            <p class="unit-vacio">
+                No se pudo cargar el personal (conexión lenta o sin internet).
+                <a href="#" class="unit-reintentar" data-tipo="persona">Reintentar</a>
+            </p>
+        `;
 
     }
 
@@ -362,6 +389,21 @@ function configurarFormulariosRecursos() {
 // enganchan una sola vez sobre "document" en vez de reenlazarlos
 // cada render.
 function configurarAccionesRecursos() {
+
+    document.addEventListener("click", async (e) => {
+
+        const reintentar = e.target.closest(".unit-reintentar");
+        if (reintentar) {
+            e.preventDefault();
+            if (reintentar.dataset.tipo === "unidad") {
+                cargarUnidades();
+            } else {
+                cargarPersonalCuerpo();
+            }
+            return;
+        }
+
+    });
 
     document.addEventListener("change", async (e) => {
 

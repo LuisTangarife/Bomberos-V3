@@ -984,6 +984,13 @@ PANEL INFERIOR
     padding:8px 4px;
 }
 
+.unit-vacio .unit-reintentar{
+    color:var(--primary);
+    font-weight:600;
+    text-decoration:underline;
+    margin-left:4px;
+}
+
 .panel-form-inline{
     display:flex;
     gap:8px;
@@ -1085,4 +1092,28 @@ RESPONSIVE
     .hero-actions button{ padding:13px 18px; font-size:13.5px; }
     .ops-ticker{ font-size:11.5px; }
     .ops-ticker .ops-item{ padding:4px 12px; }
+}
+
+@media(max-width:560px){
+    /* La fila de unidad/persona (ícono + nombre + select de estado +
+       borrar) no cabía cómoda en celulares angostos y se veía
+       amontonada. Se deja envolver en dos líneas: nombre arriba,
+       estado + borrar abajo, alineados bajo el ícono. */
+    .unit-row{
+        flex-wrap:wrap;
+        row-gap:8px;
+    }
+    .unit-info{
+        flex-basis:100%;
+    }
+    .unit-estado-select{
+        margin-left:52px;
+    }
+    .panel-form-inline{
+        flex-direction:column;
+    }
+    .panel-form-inline input,
+    .panel-form-inline button{
+        width:100%;
+    }
 }
