@@ -7,6 +7,7 @@ import { state } from "./estado.js";
 import { UI } from "./dom.js";
 import { cargarFormularioCenso, nuevoFormularioCenso } from "./app.js";
 import { eliminarCenso } from "./persistencia.js";
+import { generarPDFCenso } from "./pdf.js";
 
 function escapar(texto) {
     const div = document.createElement("div");
@@ -58,6 +59,9 @@ export function renderizarListado() {
                     <button type="button" class="btn-editar-censo" data-id="${escapar(censo.id)}">
                         <i class="fa-solid fa-pen"></i> Ver / Editar
                     </button>
+                    <button type="button" class="btn-pdf-censo" data-id="${escapar(censo.id)}">
+                        <i class="fa-solid fa-file-pdf"></i> PDF
+                    </button>
                     <button type="button" class="btn-borrar-censo" data-id="${escapar(censo.id)}">
                         <i class="fa-solid fa-trash"></i>
                     </button>
@@ -70,6 +74,14 @@ export function renderizarListado() {
 
     UI.listadoContainer.querySelectorAll(".btn-editar-censo").forEach(btn => {
         btn.addEventListener("click", () => cargarFormularioCenso(btn.dataset.id));
+    });
+
+    UI.listadoContainer.querySelectorAll(".btn-pdf-censo").forEach(btn => {
+        btn.addEventListener("click", (e) => {
+            e.stopPropagation();
+            const censo = state.censos.find(c => c.id === btn.dataset.id);
+            generarPDFCenso(censo);
+        });
     });
 
     UI.listadoContainer.querySelectorAll(".btn-borrar-censo").forEach(btn => {

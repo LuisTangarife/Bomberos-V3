@@ -13,6 +13,7 @@ export const UI = {
 
     form: null,
     btnNuevo: null,
+    btnExportarExcel: null,
     btnGuardar: null,
     btnVolver: null,
     tituloFormulario: null,
@@ -40,6 +41,7 @@ export function inicializarDOM() {
 
     UI.form = document.getElementById("formCenso");
     UI.btnNuevo = document.getElementById("btnNuevoCenso");
+    UI.btnExportarExcel = document.getElementById("btnExportarExcelCensos");
     UI.btnGuardar = document.getElementById("btnGuardarCenso");
     UI.btnVolver = document.getElementById("btnVolverListadoCensos");
     UI.tituloFormulario = document.getElementById("tituloFormularioCenso");

@@ -16,6 +16,7 @@ import { esperarEstadoAuth } from "../../shared/auth.js";
 import { cargarCensos, guardarCenso } from "./persistencia.js";
 import { renderizarListado, filtrarListado } from "./listado.js";
 import { anunciar } from "../../shared/voz.js";
+import { exportarCensosExcel } from "./excel.js";
 
 let contadorIntegrantes = 0;
 
@@ -101,6 +102,10 @@ function configurarEventos() {
 
     if (UI.btnNuevo) {
         UI.btnNuevo.addEventListener("click", () => nuevoFormularioCenso());
+    }
+
+    if (UI.btnExportarExcel) {
+        UI.btnExportarExcel.addEventListener("click", () => exportarCensosExcel(state.censos));
     }
 
     if (UI.btnVolver) {
