@@ -507,45 +507,38 @@
 
                     </h2>
 
-                    <div class="units">
-
-                        <div class="unit-row">
-                            <i class="fa-solid fa-truck-medical unit-icon"></i>
-                            <div class="unit-info">
-                                <div class="unit-name">Máquina 1</div>
-                                <div class="unit-crew">4 tripulantes</div>
-                            </div>
-                            <span class="unit-tag disponible"><span class="dot"></span>Disponible</span>
-                        </div>
-
-                        <div class="unit-row">
-                            <i class="fa-solid fa-truck-medical unit-icon"></i>
-                            <div class="unit-info">
-                                <div class="unit-name">Ambulancia 2</div>
-                                <div class="unit-crew">2 tripulantes</div>
-                            </div>
-                            <span class="unit-tag servicio"><span class="dot"></span>En servicio</span>
-                        </div>
-
-                        <div class="unit-row">
-                            <i class="fa-solid fa-truck-medical unit-icon"></i>
-                            <div class="unit-info">
-                                <div class="unit-name">Escalera 1</div>
-                                <div class="unit-crew">3 tripulantes</div>
-                            </div>
-                            <span class="unit-tag disponible"><span class="dot"></span>Disponible</span>
-                        </div>
-
-                        <div class="unit-row">
-                            <i class="fa-solid fa-truck-medical unit-icon"></i>
-                            <div class="unit-info">
-                                <div class="unit-name">Máquina 2</div>
-                                <div class="unit-crew">4 tripulantes</div>
-                            </div>
-                            <span class="unit-tag mantenimiento"><span class="dot"></span>Mantenimiento</span>
-                        </div>
-
+                    <div class="units" id="unidadesLista">
+                        <p class="unit-vacio">Cargando unidades...</p>
                     </div>
+
+                    <form id="formNuevaUnidad" class="panel-form-inline">
+                        <input type="text" id="nuevaUnidadNombre" placeholder="Nombre de la unidad (ej: Máquina 3)" required>
+                        <input type="number" id="nuevaUnidadTripulantes" placeholder="Tripulantes" min="0" style="width:110px">
+                        <button type="submit"><i class="fa-solid fa-plus"></i> Agregar unidad</button>
+                    </form>
+
+                </section>
+
+                <!-- PERSONAL DEL CUERPO -->
+
+                <section class="panel">
+
+                    <h2>
+
+                        <i class="fa-solid fa-users"></i>
+
+                        Personal del cuerpo
+
+                    </h2>
+
+                    <div class="units" id="personalLista">
+                        <p class="unit-vacio">Cargando personal...</p>
+                    </div>
+
+                    <form id="formNuevaPersona" class="panel-form-inline">
+                        <input type="text" id="nuevaPersonaNombre" placeholder="Nombre completo" required>
+                        <button type="submit"><i class="fa-solid fa-plus"></i> Agregar persona</button>
+                    </form>
 
                 </section>
 

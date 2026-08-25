@@ -4,7 +4,7 @@
    y sea instalable como PWA.
 ======================================================================== */
 
-const SW_VERSION = 'v59'; // v58 -> v59: Emergencia — solo se exige la ubicación por coordenadas GPS para guardar (antes eran obligatorios fecha, horas, lugar, dirección, evento, vehículos y descripción); y "↩ Cargar" un reporte guardado + "Guardar Reporte" ahora ACTUALIZA ese mismo reporte en vez de crear un duplicado (saveToIDB pasó de add() a put(), que con keyPath+autoIncrement funciona igual para reportes nuevos y actualiza en su lugar cuando se le pasa el id existente).
+const SW_VERSION = 'v60'; // v59 -> v60: Panel General — "Unidades en servicio" y el nuevo panel "Personal del cuerpo" dejaron de ser tarjetas fijas escritas en el HTML: ahora viven en Firestore (colecciones "unidades" y "personal_cuerpo", shared/unidades.js y shared/personalCuerpo.js) y se pueden agregar, cambiar de estado (Disponible/En servicio/Mantenimiento o Franco/Fuera de servicio) y eliminar desde ahí mismo. El formulario de Emergencia ahora lee esa misma flota/nómina real para poblar "Vehículos desplegados" y "Personal" (la lista fija que traía el HTML se conserva como respaldo si no hay conexión o aún no se ha registrado nada). Además, en Emergencia ya no queda NINGÚN campo obligatorio (se quitó también la exigencia de coordenadas GPS que se había dejado en v59).
 const STATIC_CACHE = `bomberos-static-${SW_VERSION}`;
 const DYNAMIC_CACHE = `bomberos-dynamic-${SW_VERSION}`;
 const CACHES_VIGENTES = [STATIC_CACHE, DYNAMIC_CACHE];
@@ -38,6 +38,8 @@ const FILES = [
     "./shared/tendencias.js",
     "./shared/asistente.js",
     "./shared/asistente-escritura.js",
+    "./shared/unidades.js",
+    "./shared/personalCuerpo.js",
 
     "./firebase/config.js",
 

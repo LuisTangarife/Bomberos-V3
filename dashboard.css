@@ -931,6 +931,93 @@ PANEL INFERIOR
     background:var(--text-light);
 }
 
+.unit-tag.fuera{
+    background:rgba(255,59,48,.14);
+    color:var(--primary);
+}
+.unit-tag.fuera .dot{
+    background:var(--primary);
+    box-shadow:0 0 8px var(--primary);
+}
+
+/* select de estado editable (mismo lenguaje visual que .unit-tag,
+   pero interactivo: cambiar el estado de una unidad/persona desde
+   el propio Panel General, sin abrir nada aparte) */
+.unit-estado-select{
+    appearance:none;
+    -webkit-appearance:none;
+    border:none;
+    border-radius:30px;
+    padding:5px 26px 5px 11px;
+    font-size:11px;
+    font-weight:700;
+    text-transform:uppercase;
+    letter-spacing:.4px;
+    cursor:pointer;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='8' height='6'><path d='M0 0L4 6L8 0Z' fill='%238A93A8'/></svg>");
+    background-repeat:no-repeat;
+    background-position:right 10px center;
+}
+.unit-estado-select.disponible{ background-color:rgba(0,200,116,.12); color:var(--green); }
+.unit-estado-select.servicio{ background-color:rgba(255,179,0,.12); color:var(--amber); }
+.unit-estado-select.mantenimiento{ background-color:rgba(138,147,168,.14); color:var(--text-light); }
+.unit-estado-select.fuera{ background-color:rgba(255,59,48,.14); color:var(--primary); }
+
+.unit-borrar{
+    background:none;
+    border:none;
+    color:var(--text-mute);
+    cursor:pointer;
+    padding:6px 8px;
+    border-radius:8px;
+    transition:.2s;
+    flex-shrink:0;
+}
+.unit-borrar:hover{
+    color:var(--primary);
+    background:rgba(255,59,48,.1);
+}
+
+.unit-vacio{
+    color:var(--text-mute);
+    font-size:13px;
+    padding:8px 4px;
+}
+
+.panel-form-inline{
+    display:flex;
+    gap:8px;
+    margin-top:14px;
+    flex-wrap:wrap;
+}
+.panel-form-inline input{
+    flex:1;
+    min-width:140px;
+    background:rgba(255,255,255,.04);
+    border:1px solid rgba(255,255,255,.08);
+    border-radius:10px;
+    padding:8px 12px;
+    color:var(--white);
+    font-size:13px;
+}
+.panel-form-inline input::placeholder{
+    color:var(--text-mute);
+}
+.panel-form-inline button{
+    background:var(--primary);
+    color:#fff;
+    border:none;
+    border-radius:10px;
+    padding:8px 16px;
+    font-size:13px;
+    font-weight:600;
+    cursor:pointer;
+    white-space:nowrap;
+}
+.panel-form-inline button:hover{
+    background:var(--primary-dark);
+}
+
 /* bitácora / actividad reciente */
 .activity{
     list-style:none;

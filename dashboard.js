@@ -3,6 +3,22 @@
 =============================================*/
 
 import { protegerPagina } from "./shared/auth.js";
+import {
+    listarUnidades,
+    crearUnidad,
+    actualizarUnidad,
+    eliminarUnidad,
+    ESTADOS_UNIDAD,
+    claseEstadoUnidad
+} from "./shared/unidades.js";
+import {
+    listarPersonalCuerpo,
+    crearPersonaCuerpo,
+    actualizarPersonaCuerpo,
+    eliminarPersonaCuerpo,
+    ESTADOS_PERSONAL,
+    claseEstadoPersonal
+} from "./shared/personalCuerpo.js";
 
 document.addEventListener("DOMContentLoaded", async () => {
 
@@ -15,6 +31,11 @@ document.addEventListener("DOMContentLoaded", async () => {
     iniciarSistema();
 
     cargarDashboard();
+
+    cargarUnidades();
+    cargarPersonalCuerpo();
+    configurarFormulariosRecursos();
+    configurarAccionesRecursos();
 
 });
 
@@ -167,6 +188,236 @@ function abrirInspecciones(){
 function abrirEstadisticas(){
 
     location.href = "modules/estadisticas/index.html";
+
+}
+
+/*=============================================
+ UNIDADES Y PERSONAL (Panel General)
+ Antes eran 4 tarjetas de unidades escritas fijas en el HTML, sin
+ ninguna base de datos detrás: no se podían agregar, editar ni
+ borrar, y el formulario de Emergencia tampoco las veía (tenía su
+ propia lista fija, por separado). Ahora ambas viven en Firestore
+ ("unidades" y "personal_cuerpo") y las lee también el formulario de
+ Emergencia (ver modules/emergencia/app.js), así que agregar/borrar/
+ cambiar el estado de una unidad o de una persona aquí se refleja
+ allá.
+=============================================*/
+
+function escaparTexto(texto) {
+    const div = document.createElement("div");
+    div.textContent = texto ?? "";
+    return div.innerHTML;
+}
+
+async function cargarUnidades() {
+
+    const contenedor = document.getElementById("unidadesLista");
+    if (!contenedor) return;
+
+    try {
+
+        const unidades = await listarUnidades();
+        renderizarUnidades(unidades);
+
+    } catch (error) {
+
+        console.error("[dashboard] No se pudieron cargar las unidades:", error);
+        contenedor.innerHTML = `<p class="unit-vacio">No se pudo cargar la flota (revisa tu conexión).</p>`;
+
+    }
+
+}
+
+function renderizarUnidades(unidades) {
+
+    const contenedor = document.getElementById("unidadesLista");
+    if (!contenedor) return;
+
+    if (!unidades.length) {
+        contenedor.innerHTML = `<p class="unit-vacio">Aún no hay unidades registradas. Agrega la primera abajo.</p>`;
+        return;
+    }
+
+    contenedor.innerHTML = unidades.map(u => `
+        <div class="unit-row" data-id="${u.id}">
+            <i class="fa-solid fa-truck-medical unit-icon"></i>
+            <div class="unit-info">
+                <div class="unit-name">${escaparTexto(u.nombre)}</div>
+                <div class="unit-crew">${Number(u.tripulantes) || 0} tripulantes</div>
+            </div>
+            <select class="unit-estado-select ${claseEstadoUnidad(u.estado)}" data-id="${u.id}" data-tipo="unidad">
+                ${ESTADOS_UNIDAD.map(e => `<option value="${e.valor}" ${e.valor === u.estado ? "selected" : ""}>${e.valor}</option>`).join("")}
+            </select>
+            <button type="button" class="unit-borrar" data-id="${u.id}" data-tipo="unidad" title="Eliminar unidad">
+                <i class="fa-solid fa-trash"></i>
+            </button>
+        </div>
+    `).join("");
+
+}
+
+async function cargarPersonalCuerpo() {
+
+    const contenedor = document.getElementById("personalLista");
+    if (!contenedor) return;
+
+    try {
+
+        const personal = await listarPersonalCuerpo();
+        renderizarPersonalCuerpo(personal);
+
+    } catch (error) {
+
+        console.error("[dashboard] No se pudo cargar el personal:", error);
+        contenedor.innerHTML = `<p class="unit-vacio">No se pudo cargar el personal (revisa tu conexión).</p>`;
+
+    }
+
+}
+
+function renderizarPersonalCuerpo(personal) {
+
+    const contenedor = document.getElementById("personalLista");
+    if (!contenedor) return;
+
+    if (!personal.length) {
+        contenedor.innerHTML = `<p class="unit-vacio">Aún no hay personal registrado. Agrega el primero abajo.</p>`;
+        return;
+    }
+
+    contenedor.innerHTML = personal.map(p => `
+        <div class="unit-row" data-id="${p.id}">
+            <i class="fa-solid fa-user unit-icon"></i>
+            <div class="unit-info">
+                <div class="unit-name">${escaparTexto(p.nombre)}</div>
+            </div>
+            <select class="unit-estado-select ${claseEstadoPersonal(p.estado)}" data-id="${p.id}" data-tipo="persona">
+                ${ESTADOS_PERSONAL.map(e => `<option value="${e.valor}" ${e.valor === p.estado ? "selected" : ""}>${e.valor}</option>`).join("")}
+            </select>
+            <button type="button" class="unit-borrar" data-id="${p.id}" data-tipo="persona" title="Eliminar persona">
+                <i class="fa-solid fa-trash"></i>
+            </button>
+        </div>
+    `).join("");
+
+}
+
+function configurarFormulariosRecursos() {
+
+    const formUnidad = document.getElementById("formNuevaUnidad");
+
+    formUnidad?.addEventListener("submit", async (e) => {
+
+        e.preventDefault();
+
+        const nombre = document.getElementById("nuevaUnidadNombre").value.trim();
+        const tripulantes = document.getElementById("nuevaUnidadTripulantes").value;
+
+        if (!nombre) return;
+
+        try {
+
+            await crearUnidad({ nombre, tripulantes });
+            formUnidad.reset();
+            cargarUnidades();
+
+        } catch (error) {
+
+            console.error("[dashboard] No se pudo guardar la unidad:", error);
+            alert("No se pudo guardar la unidad. Revisa tu conexión.");
+
+        }
+
+    });
+
+    const formPersona = document.getElementById("formNuevaPersona");
+
+    formPersona?.addEventListener("submit", async (e) => {
+
+        e.preventDefault();
+
+        const nombre = document.getElementById("nuevaPersonaNombre").value.trim();
+
+        if (!nombre) return;
+
+        try {
+
+            await crearPersonaCuerpo({ nombre });
+            formPersona.reset();
+            cargarPersonalCuerpo();
+
+        } catch (error) {
+
+            console.error("[dashboard] No se pudo guardar la persona:", error);
+            alert("No se pudo guardar la persona. Revisa tu conexión.");
+
+        }
+
+    });
+
+}
+
+// Delegación de eventos: los selects de estado y los botones de
+// borrar se regeneran cada vez que se recarga la lista, así que se
+// enganchan una sola vez sobre "document" en vez de reenlazarlos
+// cada render.
+function configurarAccionesRecursos() {
+
+    document.addEventListener("change", async (e) => {
+
+        const select = e.target.closest(".unit-estado-select");
+        if (!select) return;
+
+        const { id, tipo } = select.dataset;
+        const nuevoEstado = select.value;
+
+        try {
+
+            if (tipo === "unidad") {
+                await actualizarUnidad(id, { estado: nuevoEstado });
+                select.className = `unit-estado-select ${claseEstadoUnidad(nuevoEstado)}`;
+            } else {
+                await actualizarPersonaCuerpo(id, { estado: nuevoEstado });
+                select.className = `unit-estado-select ${claseEstadoPersonal(nuevoEstado)}`;
+            }
+
+        } catch (error) {
+
+            console.error("[dashboard] No se pudo actualizar el estado:", error);
+            alert("No se pudo actualizar el estado. Revisa tu conexión.");
+
+        }
+
+    });
+
+    document.addEventListener("click", async (e) => {
+
+        const boton = e.target.closest(".unit-borrar");
+        if (!boton) return;
+
+        const { id, tipo } = boton.dataset;
+        const etiqueta = tipo === "unidad" ? "esta unidad" : "esta persona";
+
+        if (!confirm(`¿Eliminar ${etiqueta}? Esta acción no se puede deshacer.`)) return;
+
+        try {
+
+            if (tipo === "unidad") {
+                await eliminarUnidad(id);
+                cargarUnidades();
+            } else {
+                await eliminarPersonaCuerpo(id);
+                cargarPersonalCuerpo();
+            }
+
+        } catch (error) {
+
+            console.error("[dashboard] No se pudo eliminar:", error);
+            alert("No se pudo eliminar. Revisa tu conexión.");
+
+        }
+
+    });
 
 }
 
