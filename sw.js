@@ -4,7 +4,7 @@
    y sea instalable como PWA.
 ======================================================================== */
 
-const SW_VERSION = 'v56'; // v55 -> v56: recuperados de la versión inicial 8 bomberos y 4 tipos de evento que faltaban en Emergencia; corregido el bug de TomSelect que borraba el último bombero/vehículo seleccionado al seguir escribiendo (faltaba el onItemAdd de la versión original); quitado el dictado por voz (SpeechRecognition) de Descripción y Novedades; teclado numérico en Afectados y Víctimas Fatales
+const SW_VERSION = 'v57'; // v56 -> v57: Censos ahora permite descargar cada censo como PDF (pdf.js, mismo criterio visual que Inspecciones) y exportar TODOS los censos a Excel en 3 hojas: Censos/Integrantes/Mascotas (excel.js, vía SheetJS). Sin este cambio de versión, dispositivos que ya tenían la app instalada seguirían usando la caché vieja y no verían los botones nuevos ni podrían usarlos sin conexión.
 const STATIC_CACHE = `bomberos-static-${SW_VERSION}`;
 const DYNAMIC_CACHE = `bomberos-dynamic-${SW_VERSION}`;
 const CACHES_VIGENTES = [STATIC_CACHE, DYNAMIC_CACHE];
@@ -108,6 +108,8 @@ const FILES = [
     "./modules/censos/firebase.js",
     "./modules/censos/listado.js",
     "./modules/censos/persistencia.js",
+    "./modules/censos/pdf.js",
+    "./modules/censos/excel.js",
 
     "./icons/icon-192-v4.png",
     "./icons/icon-512-v4.png"
@@ -147,7 +149,11 @@ const EXTERNOS = [
     // Módulo Estadísticas: Chart.js no estaba precacheado — si el
     // usuario nunca había visitado esta página en línea, los gráficos
     // fallaban al abrirla sin conexión.
-    "https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"
+    "https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js",
+
+    // Módulo Censos: SheetJS para la exportación a Excel de todos los
+    // censos. jsPDF ya estaba arriba (usado también por Inspecciones).
+    "https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"
 ];
 
 // Nunca cachear llamadas a Firebase (Firestore/Storage/Auth): deben ir
