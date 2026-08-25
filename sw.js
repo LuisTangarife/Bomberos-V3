@@ -4,7 +4,7 @@
    y sea instalable como PWA.
 ======================================================================== */
 
-const SW_VERSION = 'v58'; // v57 -> v58: Emergencia — se quitó el botón "Generar Solicitud" (y su función, generateCertificate, ya sin uso); se quitó la vista previa del certificado que se abría de golpe al presionar "Guardar Reporte" (era código redundante: el PDF real ya lo genera generatePDFBase64 con su propia copia oculta del certificado, sin depender de esa vista previa); y se bloqueó el gesto de pull-to-refresh (overscroll-behavior-y: none) en la página de Emergencia para que un swipe hacia abajo por error ya no recargue la página y borre el formulario a medio llenar.
+const SW_VERSION = 'v59'; // v58 -> v59: Emergencia — solo se exige la ubicación por coordenadas GPS para guardar (antes eran obligatorios fecha, horas, lugar, dirección, evento, vehículos y descripción); y "↩ Cargar" un reporte guardado + "Guardar Reporte" ahora ACTUALIZA ese mismo reporte en vez de crear un duplicado (saveToIDB pasó de add() a put(), que con keyPath+autoIncrement funciona igual para reportes nuevos y actualiza en su lugar cuando se le pasa el id existente).
 const STATIC_CACHE = `bomberos-static-${SW_VERSION}`;
 const DYNAMIC_CACHE = `bomberos-dynamic-${SW_VERSION}`;
 const CACHES_VIGENTES = [STATIC_CACHE, DYNAMIC_CACHE];
