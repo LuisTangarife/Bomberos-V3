@@ -1,5 +1,9 @@
 const API_URL = 'https://script.google.com/macros/s/AKfycbwBN6YZgbZ_NGLiidV9F2dpLNW_Bq0Cr0xyUCtPnvZXJDsyBp6EyTgV0vZCEOSEB6rFvA/exec'
 let currentPrintHTML = '';
+// Reporte que se está editando (id en IndexedDB). null = reporte nuevo.
+// Antes "Cargar" nunca guardaba esto, así que "Guardar Reporte" siempre
+// creaba uno nuevo con store.add() en vez de actualizar el existente.
+let currentEditId = null;
 window.uploadedPhotos = [];
 // ── SERVICE WORKER REGISTRATION ──────────────────────────────────────────
 if ('serviceWorker' in navigator) {
@@ -84,10 +88,19 @@ function saveToIDB(data) {
       ...data,
       synced: navigator.onLine,
       pending: !navigator.onLine,
-      createdAt: Date.now()
+      // Si es un reporte nuevo (sin createdAt heredado) se marca ahora.
+      // Si se está editando uno existente, el createdAt original ya
+      // viene en "data" (ver saveReport) y no se pisa.
+      createdAt: data.createdAt || Date.now(),
+      updatedAt: Date.now()
     };
 
-    const request = store.add(report);
+    // put() actualiza el registro si "report.id" ya existe en la base
+    // (esto es lo que permite editar sin duplicar). Si "report.id" no
+    // viene definido, con keyPath+autoIncrement put() se comporta
+    // exactamente igual que add(): genera un id nuevo. Por eso alcanza
+    // con este único método para los dos casos (nuevo / edición).
+    const request = store.put(report);
 
     request.onsuccess = e => {
       resolve(e.target.result);
@@ -1112,17 +1125,15 @@ return data;
 }
 function validateForm(data){
 
+  // Antes se exigían casi todos los campos de texto del formulario
+  // (fecha, horas, lugar, dirección, evento, vehículos, descripción).
+  // Ahora solo se exige la ubicación por coordenadas GPS: es el único
+  // dato que de verdad no se puede reconstruir después si falta, y el
+  // que más le importa al Cuerpo de Bomberos para ubicar la emergencia.
   const required=[
 
-    ['fecha','Fecha'],
-    ['horaReporte','Hora de Reporte'],
-    ['horaLlegada','Hora de Llegada'],
-    ['horaFinal','Hora Final'],
-    ['lugar','Lugar'],
-    ['direccion','Dirección'],
-    ['evento','Evento'],
-    ['vehiculos','Vehículos'],
-    ['descripcion','Descripción']
+    ['latitud','Latitud'],
+    ['longitud','Longitud']
 
   ];
 
@@ -1133,11 +1144,10 @@ function validateForm(data){
     if(
       value===undefined ||
       value===null ||
-      value==='' ||
-      (Array.isArray(value) && !value.length)
+      value===''
     ){
 
-      return `⚠️ El campo "${label}" es obligatorio.`;
+      return `⚠️ Debes obtener la ubicación GPS ("${label}" vacío) antes de guardar.`;
 
     }
 
@@ -1151,6 +1161,43 @@ async function saveReport() {
   const data = getFormData();
 
   data.photos = window.uploadedPhotos || [];
+
+  // Si estamos editando un reporte existente (llegamos aquí vía
+  // "↩ Cargar"), hay que decírselo a saveToIDB() para que actualice en
+  // vez de crear otro. Además, "Cargar" no repuebla los selectores de
+  // vehículos/personal (son TomSelect y no se reconstruyen al cargar
+  // el formulario), así que si el usuario no volvió a seleccionarlos
+  // a mano, data.vehiculos/data.personal llegan vacíos aquí — sin esta
+  // protección, guardar borraría silenciosamente esos datos del
+  // reporte original. Se conservan los del reporte original salvo que
+  // el formulario sí traiga algo nuevo.
+  if (currentEditId) {
+
+    data.id = currentEditId;
+
+    try {
+
+      const existentes = await getAllFromIDB();
+      const original = existentes.find(r => r.id === currentEditId);
+
+      if (original) {
+
+        if (!data.vehiculos.length) data.vehiculos = original.vehiculos || [];
+        if (!data.personal.length) data.personal = original.personal || [];
+        if (!data.firmasBomberos || !data.firmasBomberos.length) {
+          data.firmasBomberos = original.firmasBomberos || [];
+        }
+        // Conserva la fecha de creación real; saveToIDB solo pone
+        // updatedAt nuevo.
+        data.createdAt = original.createdAt;
+
+      }
+
+    } catch (err) {
+      console.error('No se pudo recuperar el reporte original antes de actualizar:', err);
+    }
+
+  }
 
   const err = validateForm(data);
 
@@ -1267,6 +1314,11 @@ async function saveReport() {
 
 function clearForm() {
 
+  // Vuelve a modo "reporte nuevo": si venía de editar uno existente
+  // (vía "↩ Cargar"), un "Guardar Reporte" después de Limpiar ya no
+  // debe actualizar ese reporte, sino crear uno nuevo.
+  currentEditId = null;
+
   document.getElementById('lugar').value       = '';
   document.getElementById('direccion').value   = '';
   document.getElementById('latitud').value     = '';
@@ -1360,6 +1412,17 @@ async function loadReport(id){
     all.find(x=>x.id===id);
 
   if(!r) return;
+
+  // Marca este reporte como "en edición": saveReport()/saveToIDB()
+  // usan currentEditId para actualizar el registro en vez de crear
+  // uno nuevo al presionar "Guardar Reporte".
+  currentEditId = id;
+
+  const fb = document.getElementById('saveFeedback');
+  if (fb) {
+    fb.textContent = `✏️ Editando el reporte #${id}. Al guardar se actualizará este mismo reporte.`;
+    fb.className = 'save-feedback ok';
+  }
 
   document.getElementById('fecha').value =
     r.fecha || '';
