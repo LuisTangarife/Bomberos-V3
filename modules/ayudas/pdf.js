@@ -15,28 +15,28 @@ const ANCHO_PAGINA = 210;   // A4 mm
 const ALTO_PAGINA = 297;    // A4 mm
 const ANCHO_UTIL = ANCHO_PAGINA - MARGEN * 2;
 
-let logoBase64Cache = null;
+const cacheImagenes = {};
 
-async function cargarLogoBase64() {
+async function cargarImagenBase64(ruta) {
 
-    if (logoBase64Cache) return logoBase64Cache;
+    if (cacheImagenes[ruta]) return cacheImagenes[ruta];
 
     try {
 
-        const respuesta = await fetch("./assets/logo-bomberos-villamaria.png");
+        const respuesta = await fetch(ruta);
         const blob = await respuesta.blob();
 
-        logoBase64Cache = await new Promise((resolve, reject) => {
+        cacheImagenes[ruta] = await new Promise((resolve, reject) => {
             const lector = new FileReader();
             lector.onload = () => resolve(lector.result);
             lector.onerror = reject;
             lector.readAsDataURL(blob);
         });
 
-        return logoBase64Cache;
+        return cacheImagenes[ruta];
 
     } catch (error) {
-        console.warn("[ayudas/pdf] No se pudo cargar el logo, se genera el PDF sin él:", error);
+        console.warn(`[ayudas/pdf] No se pudo cargar la imagen ${ruta}, se genera el PDF sin ella:`, error);
         return null;
     }
 
@@ -63,9 +63,12 @@ export async function generarPDFAyuda(ayuda) {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF({ unit: "mm", format: "a4" });
 
-    const logo = await cargarLogoBase64();
+    const [escudoVillamaria, escudoColombia] = await Promise.all([
+        cargarImagenBase64("./assets/escudo-bomberos-villamaria.png"),
+        cargarImagenBase64("./assets/escudo-bomberos-colombia.png")
+    ]);
 
-    let y = dibujarEncabezado(doc, ayuda, logo);
+    let y = dibujarEncabezado(doc, ayuda, escudoVillamaria, escudoColombia);
 
     y = dibujarTitulo(doc, `FORMATO DE ENTREGA DE ${(ayuda.tipoKit || "KIT").toUpperCase()}`, y);
     y = dibujarSubtitulo(doc, "Emergencia por evento sísmico — Alcaldía de Villamaría", y);
@@ -125,18 +128,64 @@ export async function generarPDFAyuda(ayuda) {
    BLOQUES DE DIBUJO
 ------------------------------------------------------------------------ */
 
-function dibujarEncabezado(doc, ayuda, logo) {
+const NIT_BOMBEROS = "NIT. 890.804.607-05";
 
-    if (logo) {
+function dibujarEncabezado(doc, ayuda, escudoVillamaria, escudoColombia) {
+
+    const NEGRO = [18, 29, 31];
+    const AMARILLO = [249, 233, 24];
+
+    // Barra amarilla vertical detrás del escudo (igual al membrete oficial)
+    doc.setFillColor(AMARILLO[0], AMARILLO[1], AMARILLO[2]);
+    doc.rect(0, 0, 16, 30, "F");
+
+    if (escudoVillamaria) {
         try {
-            // Logo nuevo (Bomberos Villamaría) mide 2046x579 px (relación ~3.53:1).
-            doc.addImage(logo, "PNG", 0, 0, ANCHO_PAGINA, ANCHO_PAGINA / 3.53);
+            // Escudo Bomberos Villamaría: proporción real ~574x579 (casi cuadrado)
+            const escAncho = 24;
+            const escAlto = escAncho * (579 / 574);
+            doc.addImage(escudoVillamaria, "PNG", 3, 2, escAncho, escAlto);
         } catch (error) {
-            console.warn("[ayudas/pdf] No se pudo dibujar el logo en el PDF:", error);
+            console.warn("[ayudas/pdf] No se pudo dibujar el escudo de Villamaría:", error);
         }
     }
 
-    return logo ? 67 : 20;
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(10);
+    doc.setTextColor(NEGRO[0], NEGRO[1], NEGRO[2]);
+    doc.text("Benemérito Cuerpo de", 30, 8);
+    doc.text("Bomberos Voluntarios", 30, 13);
+
+    doc.setFontSize(14);
+    doc.text("Villamaría, Caldas", 30, 20);
+
+    doc.setDrawColor(NEGRO[0], NEGRO[1], NEGRO[2]);
+    doc.setLineWidth(0.5);
+    doc.line(30, 23, 105, 23);
+
+    if (escudoColombia) {
+        try {
+            // Escudo Bomberos Colombia: proporción real ~1621x1806
+            const colAncho = 18;
+            const colAlto = colAncho * (1806 / 1621);
+            const colX = ANCHO_PAGINA - MARGEN - colAncho;
+            doc.addImage(escudoColombia, "PNG", colX, 2, colAncho, colAlto);
+
+            doc.setFont("helvetica", "bold");
+            doc.setFontSize(8.5);
+            doc.setTextColor(NEGRO[0], NEGRO[1], NEGRO[2]);
+            doc.text(NIT_BOMBEROS, ANCHO_PAGINA - MARGEN, 2 + colAlto + 4, { align: "right" });
+        } catch (error) {
+            console.warn("[ayudas/pdf] No se pudo dibujar el escudo de Bomberos Colombia:", error);
+        }
+    }
+
+    const lineaY = 32;
+    doc.setDrawColor(NEGRO[0], NEGRO[1], NEGRO[2]);
+    doc.setLineWidth(0.8);
+    doc.line(0, lineaY, ANCHO_PAGINA, lineaY);
+
+    return lineaY + 9;
 
 }
 
