@@ -4,7 +4,7 @@
    y sea instalable como PWA.
 ======================================================================== */
 
-const SW_VERSION = 'v62'; // v61 -> v62: Nuevo módulo "Ayudas Humanitarias" (modules/ayudas/) — registro de entrega de kits (Alimentario, Aseo, Cocina, Noche, Mascota) calcado del formato oficial de la Alcaldía de Villamaría / Secretaría de Desarrollo Social. Mismo patrón que Censos (Firestore + respaldo local + modo invitado), con firmas digitales por canvas (beneficiario y responsable, adaptado de Inspecciones) y certificado descargable en PDF que replica el texto y el logo del formato oficial. Diseño propio en verde institucional, distinto al de los demás módulos. El enlace "Ayudas Humanitarias" del menú lateral, que antes era un "Próximamente", ahora apunta de verdad al módulo.
+const SW_VERSION = 'v63'; // v62 -> v63: Rediseño del formulario de Ayudas Humanitarias — el selector de tipo de kit dejó de ser un <select> plano y pasó a ser 5 fichas tocables con ícono y efecto de "sello" al elegir una (kit-selector/kit-tile en styles.css); los títulos de sección ahora son rótulos con borde punteado color kraft en vez de <legend> planos; y antes de Constancia/Firmas se agregó un separador estilo "talonario de recibido" (línea punteada + tijeras). También se corrigió un bug real encontrado al revisar el diseño: la clase "campo-observaciones" se usaba en el HTML pero nunca existía en el CSS, así que el campo de Observaciones se veía con estilos por defecto del navegador, mal alineado.
 const STATIC_CACHE = `bomberos-static-${SW_VERSION}`;
 const DYNAMIC_CACHE = `bomberos-dynamic-${SW_VERSION}`;
 const CACHES_VIGENTES = [STATIC_CACHE, DYNAMIC_CACHE];
