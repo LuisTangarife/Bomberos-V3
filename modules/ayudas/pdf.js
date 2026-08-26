@@ -10,9 +10,9 @@
    capturadas en el formulario cuando existen.
 ======================================================================== */
 
-const MARGEN = 16;
-const ANCHO_PAGINA = 210;   // A4 mm
-const ALTO_PAGINA = 297;    // A4 mm
+const MARGEN = 30;
+const ANCHO_PAGINA = 215.9;   // Letter mm (igual al membrete original)
+const ALTO_PAGINA = 279.4;    // Letter mm
 const ANCHO_UTIL = ANCHO_PAGINA - MARGEN * 2;
 
 const cacheImagenes = {};
@@ -61,17 +61,19 @@ export async function generarPDFAyuda(ayuda) {
     }
 
     const { jsPDF } = window.jspdf;
-    const doc = new jsPDF({ unit: "mm", format: "a4" });
+    const doc = new jsPDF({ unit: "mm", format: "letter" });
 
-    const [escudoVillamaria, escudoColombia] = await Promise.all([
-        cargarImagenBase64("./assets/escudo-bomberos-villamaria.png"),
-        cargarImagenBase64("./assets/escudo-bomberos-colombia.png")
+    const [fondoMembrete, bannerSuperior, escudoColombia, franjaEsquina] = await Promise.all([
+        cargarImagenBase64("./assets/membrete-fondo.jpg"),
+        cargarImagenBase64("./assets/banner-superior.png"),
+        cargarImagenBase64("./assets/escudo-bomberos-colombia.png"),
+        cargarImagenBase64("./assets/franja-esquina.png")
     ]);
 
-    let y = dibujarEncabezado(doc, ayuda, escudoVillamaria, escudoColombia);
+    let y = dibujarEncabezado(doc, ayuda, fondoMembrete, bannerSuperior, escudoColombia, franjaEsquina);
 
     y = dibujarTitulo(doc, `FORMATO DE ENTREGA DE ${(ayuda.tipoKit || "KIT").toUpperCase()}`, y);
-    y = dibujarSubtitulo(doc, "Emergencia por evento sísmico — Cuerpo de Bomberos Voluntarios de Villamaría", y);
+    y = dibujarSubtitulo(doc, "Emergencia por evento sísmico — Alcaldía de Villamaría", y);
 
     y += 4;
     y = dibujarFilaEtiquetaValor(doc, "Fecha", texto(ayuda.fecha), y);
@@ -130,62 +132,55 @@ export async function generarPDFAyuda(ayuda) {
 
 const NIT_BOMBEROS = "NIT. 890.804.607-05";
 
-function dibujarEncabezado(doc, ayuda, escudoVillamaria, escudoColombia) {
+function dibujarEncabezado(doc, ayuda, fondoMembrete, bannerSuperior, escudoColombia, franjaEsquina) {
 
-    const NEGRO = [18, 29, 31];
-    const AMARILLO = [249, 233, 24];
-
-    // Barra amarilla vertical detrás del escudo (igual al membrete oficial)
-    doc.setFillColor(AMARILLO[0], AMARILLO[1], AMARILLO[2]);
-    doc.rect(0, 0, 16, 30, "F");
-
-    if (escudoVillamaria) {
+    // Fondo: marca de agua + bloques amarillos, todo horneado en una sola imagen
+    // (image3.jpg en el docx original), anclada casi en la esquina superior
+    // izquierda de la página (x≈0.4mm, y≈0.3mm), cubriendo 215.4 x 221.4mm.
+    if (fondoMembrete) {
         try {
-            // Escudo Bomberos Villamaría: proporción real ~574x579 (casi cuadrado)
-            const escAncho = 24;
-            const escAlto = escAncho * (579 / 574);
-            doc.addImage(escudoVillamaria, "PNG", 3, 2, escAncho, escAlto);
+            doc.addImage(fondoMembrete, "JPEG", 0.4, 0.3, 215.4, 221.4);
         } catch (error) {
-            console.warn("[ayudas/pdf] No se pudo dibujar el escudo de Villamaría:", error);
+            console.warn("[ayudas/pdf] No se pudo dibujar el fondo del membrete:", error);
         }
     }
 
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(10);
-    doc.setTextColor(NEGRO[0], NEGRO[1], NEGRO[2]);
-    doc.text("Benemérito Cuerpo de", 30, 8);
-    doc.text("Bomberos Voluntarios", 30, 13);
+    // Banner superior (escudo + texto "Benemérito Cuerpo de Bomberos
+    // Voluntarios / Villamaría, Caldas"), imagen única, 83.1 x 23.5mm.
+    if (bannerSuperior) {
+        try {
+            doc.addImage(bannerSuperior, "PNG", 24.6, 11, 83.1, 23.5);
+        } catch (error) {
+            console.warn("[ayudas/pdf] No se pudo dibujar el banner superior:", error);
+        }
+    }
 
-    doc.setFontSize(14);
-    doc.text("Villamaría, Caldas", 30, 20);
-
-    doc.setDrawColor(NEGRO[0], NEGRO[1], NEGRO[2]);
-    doc.setLineWidth(0.5);
-    doc.line(30, 23, 105, 23);
-
+    // Escudo Bomberos Colombia, 21.1 x 23.5mm, más NIT debajo alineado a la derecha.
     if (escudoColombia) {
         try {
-            // Escudo Bomberos Colombia: proporción real ~1621x1806
-            const colAncho = 18;
-            const colAlto = colAncho * (1806 / 1621);
-            const colX = ANCHO_PAGINA - MARGEN - colAncho;
-            doc.addImage(escudoColombia, "PNG", colX, 2, colAncho, colAlto);
+            doc.addImage(escudoColombia, "PNG", 164.5, 11, 21.1, 23.5);
 
             doc.setFont("helvetica", "bold");
-            doc.setFontSize(8.5);
-            doc.setTextColor(NEGRO[0], NEGRO[1], NEGRO[2]);
-            doc.text(NIT_BOMBEROS, ANCHO_PAGINA - MARGEN, 2 + colAlto + 4, { align: "right" });
+            doc.setFontSize(9);
+            doc.setTextColor(19, 29, 31);
+            doc.text(NIT_BOMBEROS, ANCHO_PAGINA - MARGEN, 11 + 23.5 + 4, { align: "right" });
         } catch (error) {
             console.warn("[ayudas/pdf] No se pudo dibujar el escudo de Bomberos Colombia:", error);
         }
     }
 
-    const lineaY = 32;
-    doc.setDrawColor(NEGRO[0], NEGRO[1], NEGRO[2]);
-    doc.setLineWidth(0.8);
-    doc.line(0, lineaY, ANCHO_PAGINA, lineaY);
+    // Franja amarilla adicional en la esquina inferior izquierda, igual al
+    // "franja-esquina" del footer original (refuerza el bloque que ya trae
+    // el fondo, por si el fondo no alcanza a cubrir hasta el borde).
+    if (franjaEsquina) {
+        try {
+            doc.addImage(franjaEsquina, "PNG", 0, 215.5, 12.4, 64.4);
+        } catch (error) {
+            console.warn("[ayudas/pdf] No se pudo dibujar la franja de esquina:", error);
+        }
+    }
 
-    return lineaY + 9;
+    return 11 + 23.5 + 9;
 
 }
 
@@ -325,7 +320,7 @@ function dibujarPiePagina(doc) {
         doc.setTextColor(120, 120, 120);
 
         doc.text(
-            "Cuerpo de Bomberos Voluntarios de Villamaría",
+            "Secretaría de Desarrollo Social — Alcaldía de Villamaría",
             ANCHO_PAGINA / 2,
             ALTO_PAGINA - 10,
             { align: "center" }
