@@ -180,6 +180,26 @@
                         <textarea id="observaciones" rows="3" placeholder="Novedades relacionadas con la entrega..."></textarea>
                     </label>
 
+                    <p class="form-note" style="margin-top:14px;">Foto de la entrega</p>
+
+                    <div class="foto-entrega-acciones">
+                        <button type="button" id="btnFotoCamara" class="btn-secundario">
+                            <i class="fa-solid fa-camera"></i> Tomar foto
+                        </button>
+                        <button type="button" id="btnFotoGaleria" class="btn-secundario">
+                            <i class="fa-solid fa-images"></i> Galería
+                        </button>
+                    </div>
+
+                    <input type="file" id="fotoEntregaInput" accept="image/*" capture="environment" hidden>
+
+                    <div id="fotoEntregaPreview" class="foto-entrega-preview">
+                        <div class="foto-entrega-placeholder">
+                            <i class="fa-solid fa-image"></i>
+                            <span>Aún no hay foto de esta entrega</span>
+                        </div>
+                    </div>
+
                 </fieldset>
 
                 <div class="recibo-separador"><i class="fa-solid fa-scissors"></i> Talonario de recibido</div>

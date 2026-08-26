@@ -46,6 +46,10 @@ export const state = {
         responsable: null
     },
 
+    // Foto única de evidencia de la entrega (base64), mismo mecanismo
+    // que las firmas: sin Firebase Storage, viaja dentro del documento.
+    foto: null,
+
     estado: {
         cargando: false,
         guardando: false

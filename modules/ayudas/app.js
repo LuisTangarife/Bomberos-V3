@@ -22,6 +22,11 @@ import {
     restaurarFirma,
     redimensionarCanvasFirmas
 } from "./firmas.js";
+import {
+    inicializarFotoEntrega,
+    renderizarFotoEntrega,
+    quitarFotoEntrega
+} from "./fotos.js";
 
 document.addEventListener("DOMContentLoaded", iniciarAplicacion);
 
@@ -47,6 +52,7 @@ async function iniciarAplicacion() {
     configurarEventos();
     configurarTema();
     inicializarFirmas();
+    inicializarFotoEntrega();
 
     await cargarAyudas();
 
@@ -209,6 +215,8 @@ function recopilarDatosFormulario() {
         firmaBeneficiario: state.firmas.beneficiario || null,
         firmaResponsable: state.firmas.responsable || null,
 
+        foto: state.foto || null,
+
         pending: !navigator.onLine,
         synced: navigator.onLine
 
@@ -241,6 +249,9 @@ function poblarFormulario(ayuda) {
     state.firmas.beneficiario = ayuda.firmaBeneficiario || null;
     state.firmas.responsable = ayuda.firmaResponsable || null;
 
+    state.foto = ayuda.foto || null;
+    renderizarFotoEntrega();
+
     requestAnimationFrame(() => {
         redimensionarCanvasFirmas();
         restaurarFirma("beneficiario");
@@ -265,6 +276,7 @@ export function nuevoFormularioAyuda() {
 
     if (UI.form) UI.form.reset();
     limpiarTodasLasFirmas();
+    quitarFotoEntrega();
     seleccionarKit("");
     marcarRadio("censado", "No");
     actualizarCampoNumCenso();

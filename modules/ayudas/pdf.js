@@ -105,6 +105,9 @@ export async function generarPDFAyuda(ayuda) {
     }
     y += 2;
 
+    y = dibujarFotoEntrega(doc, ayuda.foto, y);
+    y += 2;
+
     y = asegurarEspacio(doc, y, 24);
     y = dibujarTituloSeccion(doc, "Constancia", y);
     y = dibujarLineaTabla(
@@ -181,6 +184,58 @@ function dibujarEncabezado(doc, ayuda, fondoMembrete, bannerSuperior, escudoColo
     }
 
     return 11 + 23.5 + 9;
+
+}
+
+function dibujarFotoEntrega(doc, fotoDataUrl, y) {
+
+    if (!fotoDataUrl) return y;
+
+    const ALTO_MAXIMO = 65;
+    const ANCHO_MAXIMO = ANCHO_UTIL;
+
+    y = asegurarEspacio(doc, y, ALTO_MAXIMO + 12);
+
+    try {
+
+        // A diferencia de los logos institucionales (proporción fija y
+        // conocida de antemano), esta foto la toma el usuario con su
+        // cámara: puede llegar vertical, horizontal o cuadrada. Hay que
+        // preguntarle a jsPDF la proporción real en vez de asumir una.
+        const propiedades = doc.getImageProperties(fotoDataUrl);
+        const ratio = propiedades.width / propiedades.height;
+
+        let ancho = ANCHO_MAXIMO;
+        let alto = ancho / ratio;
+
+        if (alto > ALTO_MAXIMO) {
+            alto = ALTO_MAXIMO;
+            ancho = alto * ratio;
+        }
+
+        const x = MARGEN + (ANCHO_UTIL - ancho) / 2;
+
+        doc.setDrawColor(18, 29, 31);
+        doc.setLineWidth(0.3);
+        doc.rect(x - 0.5, y - 0.5, ancho + 1, alto + 1);
+
+        // fotos.js comprime a JPEG cuando puede, pero si la compresión
+        // falla (formato no soportado, etc.) conserva el archivo
+        // original con su mime type real — hay que leerlo del propio
+        // data URL en vez de asumir JPEG siempre, o jsPDF puede fallar
+        // al decodificar.
+        const coincidenciaFormato = /^data:image\/(\w+);/.exec(fotoDataUrl);
+        const formato = (coincidenciaFormato?.[1] || "jpeg").toUpperCase();
+
+        doc.addImage(fotoDataUrl, formato, x, y, ancho, alto);
+
+        y += alto + 5;
+
+    } catch (error) {
+        console.warn("[ayudas/pdf] No se pudo dibujar la foto de la entrega:", error);
+    }
+
+    return y;
 
 }
 
