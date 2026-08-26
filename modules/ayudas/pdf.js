@@ -71,7 +71,7 @@ export async function generarPDFAyuda(ayuda) {
     let y = dibujarEncabezado(doc, ayuda, escudoVillamaria, escudoColombia);
 
     y = dibujarTitulo(doc, `FORMATO DE ENTREGA DE ${(ayuda.tipoKit || "KIT").toUpperCase()}`, y);
-    y = dibujarSubtitulo(doc, "Emergencia por evento sísmico — Alcaldía de Villamaría", y);
+    y = dibujarSubtitulo(doc, "Emergencia por evento sísmico — Cuerpo de Bomberos Voluntarios de Villamaría", y);
 
     y += 4;
     y = dibujarFilaEtiquetaValor(doc, "Fecha", texto(ayuda.fecha), y);
@@ -325,7 +325,7 @@ function dibujarPiePagina(doc) {
         doc.setTextColor(120, 120, 120);
 
         doc.text(
-            "Secretaría de Desarrollo Social — Alcaldía de Villamaría",
+            "Cuerpo de Bomberos Voluntarios de Villamaría",
             ANCHO_PAGINA / 2,
             ALTO_PAGINA - 10,
             { align: "center" }
