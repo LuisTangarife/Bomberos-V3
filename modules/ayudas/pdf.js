@@ -105,21 +105,12 @@ export async function generarPDFAyuda(ayuda) {
     }
     y += 2;
 
-    y = dibujarFotoEntrega(doc, ayuda.foto, y);
-    y += 2;
-
-    y = asegurarEspacio(doc, y, 24);
-    y = dibujarTituloSeccion(doc, "Constancia", y);
-    y = dibujarLineaTabla(
-        doc,
-        `Declaro que recibí a satisfacción ${(ayuda.tipoKit || "el kit").toLowerCase()} entregado por la Alcaldía de Villamaría — Secretaría de Desarrollo Social, en el marco de la atención humanitaria por la emergencia.`,
-        y
-    );
-    y += 4;
-
-    y = asegurarEspacio(doc, y, 55);
-    y = dibujarBloqueFirma(doc, "Firma beneficiario", ayuda.firmaBeneficiario, texto(ayuda.beneficiarioCedula), y);
-    y = dibujarBloqueFirma(doc, "Firma responsable entrega", ayuda.firmaResponsable, texto(ayuda.responsableCedula), y, ayuda.responsableNombre);
+    // Constancia + foto + firmas se tratan como UN solo bloque que nunca
+    // se parte entre páginas. La foto va pegada a las firmas a propósito:
+    // una página con solo la firma (sin nada que la ate a esta entrega
+    // en particular) es fácil de recortar y reusar en otro documento.
+    // Con la foto ahí, la página queda "amarrada" a esta entrega puntual.
+    y = dibujarBloqueConstanciaYFirmas(doc, ayuda, y);
 
     dibujarPiePagina(doc);
 
@@ -194,8 +185,6 @@ function dibujarFotoEntrega(doc, fotoDataUrl, y) {
     const ALTO_MAXIMO = 65;
     const ANCHO_MAXIMO = ANCHO_UTIL;
 
-    y = asegurarEspacio(doc, y, ALTO_MAXIMO + 12);
-
     try {
 
         // A diferencia de los logos institucionales (proporción fija y
@@ -236,6 +225,70 @@ function dibujarFotoEntrega(doc, fotoDataUrl, y) {
     }
 
     return y;
+
+}
+
+function dibujarBloqueConstanciaYFirmas(doc, ayuda, y) {
+
+    const textoDeclaracion =
+        `Declaro que recibí a satisfacción ${(ayuda.tipoKit || "el kit").toLowerCase()} entregado por la Alcaldía de Villamaría — Secretaría de Desarrollo Social, en el marco de la atención humanitaria por la emergencia.`;
+
+    // --- Medir cada pieza SIN dibujar nada todavía ---
+
+    const ALTURA_TITULO = 11;
+
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(9);
+    const lineasDeclaracion = doc.splitTextToSize(textoDeclaracion, ANCHO_UTIL - 4);
+    const alturaDeclaracion = Math.max(4.6, lineasDeclaracion.length * 4.2) + 4; // +4 del gap que ya traía
+
+    const alturaFoto = medirAlturaFoto(doc, ayuda.foto);
+
+    const ALTURA_FIRMA_BENEFICIARIO = 35;
+    const ALTURA_FIRMA_RESPONSABLE = 40; // lleva una línea extra: nombre impreso
+
+    const alturaTotal = ALTURA_TITULO + alturaDeclaracion + alturaFoto
+        + ALTURA_FIRMA_BENEFICIARIO + ALTURA_FIRMA_RESPONSABLE;
+
+    // Una sola decisión de salto de página para TODO el bloque: si no
+    // cabe completo, se va entero a la página siguiente — nunca se
+    // dibuja la mitad aquí y la mitad allá.
+    y = asegurarEspacio(doc, y, alturaTotal);
+
+    // --- Ahora sí, dibujar en el orden real ---
+
+    y = dibujarTituloSeccion(doc, "Constancia", y);
+    y = dibujarLineaTabla(doc, textoDeclaracion, y);
+    y += 4;
+
+    y = dibujarFotoEntrega(doc, ayuda.foto, y);
+
+    y = dibujarBloqueFirma(doc, "Firma beneficiario", ayuda.firmaBeneficiario, texto(ayuda.beneficiarioCedula), y);
+    y = dibujarBloqueFirma(doc, "Firma responsable entrega", ayuda.firmaResponsable, texto(ayuda.responsableCedula), y, ayuda.responsableNombre);
+
+    return y;
+
+}
+
+function medirAlturaFoto(doc, fotoDataUrl) {
+
+    if (!fotoDataUrl) return 0;
+
+    const ALTO_MAXIMO = 65;
+
+    try {
+        const propiedades = doc.getImageProperties(fotoDataUrl);
+        const ratio = propiedades.width / propiedades.height;
+
+        let alto = ANCHO_UTIL / ratio;
+        if (alto > ALTO_MAXIMO) alto = ALTO_MAXIMO;
+
+        return alto + 7; // +7 = margen del marco (5) + espacio antes de firmas (2)
+
+    } catch (error) {
+        console.warn("[ayudas/pdf] No se pudo medir la foto de la entrega:", error);
+        return 0;
+    }
 
 }
 
