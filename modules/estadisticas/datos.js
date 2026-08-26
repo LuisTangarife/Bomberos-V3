@@ -4,8 +4,10 @@
 
    Todo lo que hay aquí se calcula sobre lo que YA existe en las
    colecciones reales del proyecto:
-     - "emergencias"   (modules/emergencia/firebase.js)
-     - "inspecciones"  (modules/inspecciones/firebase.js)
+     - "emergencias"        (modules/emergencia/firebase.js)
+     - "inspecciones"       (modules/inspecciones/firebase.js)
+     - "censos"             (modules/censos/firebase.js)
+     - "ayudas_humanitarias" (modules/ayudas/firebase.js)
 
    No hay datos inventados ni valores de relleno: si una colección está
    vacía o un campo no viene diligenciado en un reporte, la métrica
@@ -17,6 +19,8 @@
 
 import { listarEmergencias } from "../emergencia/firebase.js";
 import { listarInspecciones } from "../inspecciones/firebase.js";
+import { listarCensosFirestore } from "../censos/firebase.js";
+import { listarAyudasFirestore } from "../ayudas/firebase.js";
 
 /* =========================================================
    CARGA
@@ -24,12 +28,14 @@ import { listarInspecciones } from "../inspecciones/firebase.js";
 
 export async function cargarDatos() {
 
-    // Ambas colecciones se piden en paralelo; si una falla (permisos,
-    // sin internet) no debe tumbar la otra — por eso Promise.allSettled
-    // en vez de Promise.all.
-    const [resEmergencias, resInspecciones] = await Promise.allSettled([
+    // Las cuatro colecciones se piden en paralelo; si una falla
+    // (permisos, sin internet) no debe tumbar a las demás — por eso
+    // Promise.allSettled en vez de Promise.all.
+    const [resEmergencias, resInspecciones, resCensos, resAyudas] = await Promise.allSettled([
         listarEmergencias(),
-        listarInspecciones()
+        listarInspecciones(),
+        listarCensosFirestore(),
+        listarAyudasFirestore()
     ]);
 
     if (resEmergencias.status === 'rejected') {
@@ -40,12 +46,24 @@ export async function cargarDatos() {
         console.error('[estadisticas] No se pudieron cargar inspecciones:', resInspecciones.reason);
     }
 
+    if (resCensos.status === 'rejected') {
+        console.error('[estadisticas] No se pudieron cargar censos:', resCensos.reason);
+    }
+
+    if (resAyudas.status === 'rejected') {
+        console.error('[estadisticas] No se pudieron cargar ayudas humanitarias:', resAyudas.reason);
+    }
+
     return {
         emergencias: resEmergencias.status === 'fulfilled' ? resEmergencias.value : [],
         inspecciones: resInspecciones.status === 'fulfilled' ? resInspecciones.value : [],
+        censos: resCensos.status === 'fulfilled' ? resCensos.value : [],
+        ayudas: resAyudas.status === 'fulfilled' ? resAyudas.value : [],
         errores: {
             emergencias: resEmergencias.status === 'rejected',
-            inspecciones: resInspecciones.status === 'rejected'
+            inspecciones: resInspecciones.status === 'rejected',
+            censos: resCensos.status === 'rejected',
+            ayudas: resAyudas.status === 'rejected'
         }
     };
 
@@ -519,5 +537,110 @@ export function indiceRiesgoPorBarrio(inspecciones) {
         }))
         .sort((a, b) => b.indice - a.indice)
         .slice(0, 8);
+
+}
+
+/* =========================================================
+   HELPER: conteo sobre campos MULTIVALOR (arrays), como
+   infraestructuraAfectada u origenFenomeno en Censos, donde un mismo
+   registro puede marcar varias opciones a la vez — a diferencia de
+   contarPor(), que asume un solo valor escalar por registro.
+========================================================= */
+
+function contarPorMultivalor(lista, obtenerArray) {
+
+    const conteos = new Map();
+
+    lista.forEach(item => {
+        const valores = obtenerArray(item);
+        if (!Array.isArray(valores)) return;
+        valores.forEach(valor => {
+            if (valor === null || valor === undefined || valor === '') return;
+            conteos.set(valor, (conteos.get(valor) || 0) + 1);
+        });
+    });
+
+    return [...conteos.entries()]
+        .map(([clave, total]) => ({ clave, total }))
+        .sort((a, b) => b.total - a.total);
+
+}
+
+/* =========================================================
+   ANÁLISIS: CENSOS
+========================================================= */
+
+export function analizarCensos(censos) {
+
+    const total = censos.length;
+
+    const totalPersonasCensadas = censos.reduce(
+        (suma, c) => suma + (Array.isArray(c.integrantes) ? c.integrantes.length : 0),
+        0
+    );
+
+    const totalMascotas = censos.reduce(
+        (suma, c) => suma + (Array.isArray(c.mascotas)
+            ? c.mascotas.reduce((s, m) => s + (Number(m.cantidad) || 1), 0)
+            : 0),
+        0
+    );
+
+    const recomendacionesEvacuar = censos.filter(c => c.recomendacionEvacuacion === 'SI').length;
+
+    const porBarrioVereda = contarPor(censos, c => c.barrioVereda || c.municipio).slice(0, 10);
+
+    const porTipoOcupante = contarPor(censos, c => c.tipoOcupante);
+
+    const infraestructuraAfectada = contarPorMultivalor(censos, c => c.infraestructuraAfectada).slice(0, 8);
+
+    const pendientesSync = censos.filter(c => c.pending === true).length;
+
+    return {
+        total,
+        totalPersonasCensadas,
+        totalMascotas,
+        recomendacionesEvacuar,
+        porcentajeEvacuar: total ? Math.round((recomendacionesEvacuar / total) * 100) : null,
+        porBarrioVereda,
+        porTipoOcupante,
+        infraestructuraAfectada,
+        pendientesSync
+    };
+
+}
+
+/* =========================================================
+   ANÁLISIS: AYUDAS HUMANITARIAS
+========================================================= */
+
+export function analizarAyudas(ayudas) {
+
+    const total = ayudas.length;
+
+    const totalKitsEntregados = ayudas.reduce(
+        (suma, a) => suma + (Number(a.cantidadEntregada) || 0),
+        0
+    );
+
+    const porTipoKit = contarPor(ayudas, a => a.tipoKit);
+
+    const beneficiariosUnicos = new Set(
+        ayudas.map(a => (a.beneficiarioCedula || '').trim()).filter(Boolean)
+    ).size;
+
+    const censados = ayudas.filter(a => a.censado === 'Sí').length;
+
+    const pendientesSync = ayudas.filter(a => a.pending === true).length;
+
+    return {
+        total,
+        totalKitsEntregados,
+        porTipoKit,
+        beneficiariosUnicos,
+        censados,
+        porcentajeCensados: total ? Math.round((censados / total) * 100) : null,
+        pendientesSync
+    };
 
 }

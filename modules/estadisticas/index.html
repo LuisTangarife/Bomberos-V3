@@ -48,6 +48,12 @@
                 <button data-vista="inspecciones" onclick="cambiarVista('inspecciones')">
                     <i class="fa-solid fa-building-shield"></i> Inspecciones
                 </button>
+                <button data-vista="censos" onclick="cambiarVista('censos')">
+                    <i class="fa-solid fa-people-roof"></i> Censos
+                </button>
+                <button data-vista="ayudas" onclick="cambiarVista('ayudas')">
+                    <i class="fa-solid fa-box-open"></i> Ayudas Humanitarias
+                </button>
                 <button data-vista="predictivo" onclick="cambiarVista('predictivo')">
                     <i class="fa-solid fa-wand-magic-sparkles"></i> Proyección
                 </button>
@@ -151,6 +157,55 @@
                         <h3><i class="fa-solid fa-map-pin"></i> Índice de riesgo por barrio</h3>
                         <div class="subtitulo">Conteo ponderado (3× resultados "No cumple" + hallazgos de riesgo) — no es un modelo predictivo, es una priorización simple para visitas de seguimiento</div>
                         <div id="listaRiesgoBarrio"></div>
+                    </div>
+
+                </div>
+
+            </section>
+
+            <!-- ============ VISTA CENSOS ============ -->
+            <section id="vistaCensos" class="vista" style="display:none">
+
+                <div class="kpi-grid" id="kpiCensos"></div>
+
+                <div class="charts-grid">
+
+                    <div class="chart-card ancho">
+                        <h3><i class="fa-solid fa-map-pin"></i> Censos por barrio / vereda</h3>
+                        <div class="subtitulo">Top 10 con más censos registrados</div>
+                        <div class="lienzo"><canvas id="chartCensosBarrio"></canvas></div>
+                    </div>
+
+                    <div class="chart-card">
+                        <h3><i class="fa-solid fa-house-crack"></i> Infraestructura afectada</h3>
+                        <div class="subtitulo">Un mismo censo puede marcar varias opciones</div>
+                        <div class="lienzo"><canvas id="chartCensosAfectacion"></canvas></div>
+                    </div>
+
+                    <div class="chart-card">
+                        <h3><i class="fa-solid fa-house-user"></i> Tipo de ocupante</h3>
+                        <div class="lienzo"><canvas id="chartCensosOcupante"></canvas></div>
+                    </div>
+
+                </div>
+
+            </section>
+
+            <!-- ============ VISTA AYUDAS HUMANITARIAS ============ -->
+            <section id="vistaAyudas" class="vista" style="display:none">
+
+                <div class="kpi-grid" id="kpiAyudas"></div>
+
+                <div class="charts-grid">
+
+                    <div class="chart-card">
+                        <h3><i class="fa-solid fa-boxes-packing"></i> Entregas por tipo de kit</h3>
+                        <div class="lienzo"><canvas id="chartAyudasTipo"></canvas></div>
+                    </div>
+
+                    <div class="chart-card">
+                        <h3><i class="fa-solid fa-clipboard-check"></i> Beneficiarios censados vs. pendientes</h3>
+                        <div class="lienzo"><canvas id="chartAyudasCenso"></canvas></div>
                     </div>
 
                 </div>

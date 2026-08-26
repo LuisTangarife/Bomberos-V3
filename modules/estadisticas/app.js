@@ -11,6 +11,8 @@ import {
     proyeccionLineal,
     analizarEmergencias,
     analizarInspecciones,
+    analizarCensos,
+    analizarAyudas,
     indiceRiesgoPorBarrio
 } from "./datos.js";
 
@@ -71,30 +73,36 @@ document.addEventListener("DOMContentLoaded", async () => {
     renderSidebar("estadisticas");
     renderHeader("Reportes y Estadísticas");
 
-    const { emergencias, inspecciones, errores } = await cargarDatos();
+    const { emergencias, inspecciones, censos, ayudas, errores } = await cargarDatos();
 
-    mostrarAvisoFuente(emergencias, inspecciones, errores);
+    mostrarAvisoFuente(emergencias, inspecciones, censos, ayudas, errores);
 
     const anE = analizarEmergencias(emergencias);
     const anI = analizarInspecciones(inspecciones);
+    const anC = analizarCensos(censos);
+    const anA = analizarAyudas(ayudas);
     const serieEmergencias = serieMensual(emergencias, 'fecha');
     const serieInspecciones = serieMensual(inspecciones, 'fecha');
     const proyeccion = proyeccionLineal(serieEmergencias, 3);
     const riesgoBarrios = indiceRiesgoPorBarrio(inspecciones);
 
-    renderVistaGeneral(anE, anI, serieEmergencias, serieInspecciones);
+    renderVistaGeneral(anE, anI, anC, anA, serieEmergencias, serieInspecciones);
     renderVistaEmergencias(anE);
     renderVistaInspecciones(anI, riesgoBarrios);
+    renderVistaCensos(anC);
+    renderVistaAyudas(anA);
     renderVistaPredictivo(serieEmergencias, proyeccion);
 
 });
 
-function mostrarAvisoFuente(emergencias, inspecciones, errores) {
+function mostrarAvisoFuente(emergencias, inspecciones, censos, ayudas, errores) {
 
     const aviso = document.getElementById('avisoFuente');
     const texto = document.getElementById('avisoFuenteTexto');
 
-    if (errores.emergencias || errores.inspecciones) {
+    const huboError = errores.emergencias || errores.inspecciones || errores.censos || errores.ayudas;
+
+    if (huboError) {
         aviso.classList.add('alerta');
         texto.textContent =
             'No se pudieron cargar todos los datos (revisa la conexión o los permisos de Firestore). ' +
@@ -102,16 +110,17 @@ function mostrarAvisoFuente(emergencias, inspecciones, errores) {
         return;
     }
 
-    if (!emergencias.length && !inspecciones.length) {
+    if (!emergencias.length && !inspecciones.length && !censos.length && !ayudas.length) {
         aviso.classList.add('alerta');
         texto.textContent =
-            'Todavía no hay reportes guardados en "emergencias" ni en "inspecciones" — en cuanto se registre ' +
-            'el primero, esta pantalla se llena sola.';
+            'Todavía no hay reportes guardados en ninguna colección — en cuanto se registre ' +
+            'el primero (emergencia, inspección, censo o entrega de ayuda), esta pantalla se llena sola.';
         return;
     }
 
     texto.textContent =
-        `${emergencias.length} emergencia(s) y ${inspecciones.length} inspección(es) reales, ` +
+        `${emergencias.length} emergencia(s), ${inspecciones.length} inspección(es), ` +
+        `${censos.length} censo(s) y ${ayudas.length} entrega(s) de ayuda humanitaria reales, ` +
         `tomadas en vivo de Firestore.`;
 
 }
@@ -163,11 +172,13 @@ function renderKPI(idContenedor, items) {
    VISTA GENERAL
 ========================================================= */
 
-function renderVistaGeneral(anE, anI, serieEmergencias, serieInspecciones) {
+function renderVistaGeneral(anE, anI, anC, anA, serieEmergencias, serieInspecciones) {
 
     renderKPI('kpiGeneral', [
         { clase: 'emergency', icono: 'fa-fire-extinguisher', etiqueta: 'Emergencias', valor: anE.total, nota: 'Total histórico' },
         { clase: 'inspection', icono: 'fa-building-shield', etiqueta: 'Inspecciones', valor: anI.total, nota: 'Total histórico' },
+        { clase: 'census', icono: 'fa-people-roof', etiqueta: 'Censos', valor: anC.total, nota: `${anC.totalPersonasCensadas} persona(s) censada(s)` },
+        { clase: 'help', icono: 'fa-box-open', etiqueta: 'Ayudas Humanitarias', valor: anA.total, nota: `${anA.totalKitsEntregados} kit(s) entregado(s)` },
         { clase: 'help', icono: 'fa-user-injured', etiqueta: 'Víctimas + lesionados', valor: anE.totalVictimas + anE.totalLesionados, nota: `${anE.conVictimas} emergencia(s) con personas afectadas` },
         { clase: 'census', icono: 'fa-percent', etiqueta: 'Cumplimiento inspecciones', valor: anI.tasaCumplimiento !== null ? anI.tasaCumplimiento + '%' : '—', nota: 'No "No cumple" / total' }
     ]);
@@ -499,6 +510,118 @@ function renderRiesgoBarrio(items) {
             ${items.map(i => `${i.barrio}: ${i.inspecciones} inspección(es), ${i.noCumple} "No cumple", ${i.hallazgos} hallazgo(s) de riesgo.`).join(' · ')}
         </div>
     `;
+
+}
+
+/* =========================================================
+   VISTA CENSOS
+========================================================= */
+
+function renderVistaCensos(anC) {
+
+    renderKPI('kpiCensos', [
+        { clase: 'census', icono: 'fa-people-roof', etiqueta: 'Censos registrados', valor: anC.total, nota: 'Total histórico' },
+        { clase: 'census', icono: 'fa-user-group', etiqueta: 'Personas censadas', valor: anC.totalPersonasCensadas, nota: 'Suma de integrantes de núcleo familiar' },
+        { clase: 'emergency', icono: 'fa-triangle-exclamation', etiqueta: 'Con recomendación de evacuar', valor: anC.recomendacionesEvacuar, nota: anC.porcentajeEvacuar !== null ? `${anC.porcentajeEvacuar}% del total` : 'Sin datos' },
+        { clase: 'help', icono: 'fa-paw', etiqueta: 'Mascotas registradas', valor: anC.totalMascotas, nota: `${anC.pendientesSync} censo(s) pendiente(s) de sincronizar` }
+    ]);
+
+    if (!anC.porBarrioVereda.length) {
+        marcarVacio('chartCensosBarrio', 'Todavía no hay censos con barrio/vereda diligenciado.');
+    } else {
+        dibujar('chartCensosBarrio', {
+            type: 'bar',
+            data: {
+                labels: anC.porBarrioVereda.map(b => b.clave),
+                datasets: [{
+                    label: 'Censos',
+                    data: anC.porBarrioVereda.map(b => b.total),
+                    backgroundColor: COLORES.green,
+                    borderRadius: 6
+                }]
+            },
+            options: { ...OPCIONES_BASE, indexAxis: 'y', plugins: { ...OPCIONES_BASE.plugins, legend: { display: false } } }
+        });
+    }
+
+    if (!anC.infraestructuraAfectada.length) {
+        marcarVacio('chartCensosAfectacion', 'Todavía no hay censos con infraestructura afectada marcada.');
+    } else {
+        dibujar('chartCensosAfectacion', {
+            type: 'bar',
+            data: {
+                labels: anC.infraestructuraAfectada.map(a => a.clave),
+                datasets: [{
+                    label: 'Censos',
+                    data: anC.infraestructuraAfectada.map(a => a.total),
+                    backgroundColor: PALETA,
+                    borderRadius: 6
+                }]
+            },
+            options: { ...OPCIONES_BASE, plugins: { ...OPCIONES_BASE.plugins, legend: { display: false } } }
+        });
+    }
+
+    if (!anC.porTipoOcupante.length) {
+        marcarVacio('chartCensosOcupante', 'Todavía no hay censos con tipo de ocupante diligenciado.');
+    } else {
+        dibujar('chartCensosOcupante', {
+            type: 'doughnut',
+            data: {
+                labels: anC.porTipoOcupante.map(o => o.clave),
+                datasets: [{ data: anC.porTipoOcupante.map(o => o.total), backgroundColor: PALETA }]
+            },
+            options: { ...OPCIONES_BASE, scales: undefined }
+        });
+    }
+
+}
+
+/* =========================================================
+   VISTA AYUDAS HUMANITARIAS
+========================================================= */
+
+function renderVistaAyudas(anA) {
+
+    renderKPI('kpiAyudas', [
+        { clase: 'help', icono: 'fa-box-open', etiqueta: 'Entregas registradas', valor: anA.total, nota: 'Total histórico' },
+        { clase: 'help', icono: 'fa-boxes-stacked', etiqueta: 'Kits entregados', valor: anA.totalKitsEntregados, nota: 'Suma de cantidades entregadas' },
+        { clase: 'census', icono: 'fa-id-card', etiqueta: 'Beneficiarios únicos', valor: anA.beneficiariosUnicos, nota: 'Por número de cédula' },
+        { clase: 'inspection', icono: 'fa-clipboard-check', etiqueta: 'Beneficiarios censados', valor: anA.censados, nota: anA.porcentajeCensados !== null ? `${anA.porcentajeCensados}% del total` : 'Sin datos' }
+    ]);
+
+    if (!anA.porTipoKit.length) {
+        marcarVacio('chartAyudasTipo', 'Todavía no hay entregas registradas con tipo de kit.');
+    } else {
+        dibujar('chartAyudasTipo', {
+            type: 'doughnut',
+            data: {
+                labels: anA.porTipoKit.map(k => k.clave),
+                datasets: [{
+                    data: anA.porTipoKit.map(k => k.total),
+                    backgroundColor: [COLORES.green, COLORES.amber, COLORES.blue, COLORES.violet, COLORES.cyan]
+                }]
+            },
+            options: { ...OPCIONES_BASE, scales: undefined }
+        });
+    }
+
+    if (!anA.total) {
+        marcarVacio('chartAyudasCenso', 'Todavía no hay entregas registradas.');
+    } else {
+        dibujar('chartAyudasCenso', {
+            type: 'bar',
+            data: {
+                labels: ['Censados', 'No censados', 'Pendientes de sincronizar'],
+                datasets: [{
+                    data: [anA.censados, anA.total - anA.censados, anA.pendientesSync],
+                    backgroundColor: [COLORES.green, COLORES.textLight, COLORES.amber],
+                    borderRadius: 8
+                }]
+            },
+            options: { ...OPCIONES_BASE, indexAxis: 'y', plugins: { ...OPCIONES_BASE.plugins, legend: { display: false } } }
+        });
+    }
 
 }
 
