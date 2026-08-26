@@ -45,7 +45,7 @@ export function inicializarMapa() {
     // sigue sirviendo el tile pero con la marca de agua "API KEY REQUIRED"
     // encima — el mapa no se rompe, pero queda ilegible.
     // Clave gratuita (hasta 5M solicitudes/mes): https://carto.com/basemaps/apikey
-    const CARTO_API_KEY = "PEGA_AQUI_TU_KEY_GRATUITA";
+    const CARTO_API_KEY = "cb1_280b_1_d79a1b1044db738dc6281ea8";
 
     window.L.tileLayer(
         `https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png?key=${CARTO_API_KEY}`,
