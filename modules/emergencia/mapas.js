@@ -40,8 +40,15 @@ export function inicializarMapa() {
         attributionControl: true
     }).setView(CENTRO_DEFECTO, ZOOM_DEFECTO);
 
+    // CARTO empezó a exigir API key para sus basemaps raster gratuitos
+    // (antes de esto, la URL sin key funcionaba anónima). Sin key, CARTO
+    // sigue sirviendo el tile pero con la marca de agua "API KEY REQUIRED"
+    // encima — el mapa no se rompe, pero queda ilegible.
+    // Clave gratuita (hasta 5M solicitudes/mes): https://carto.com/basemaps/apikey
+    const CARTO_API_KEY = "PEGA_AQUI_TU_KEY_GRATUITA";
+
     window.L.tileLayer(
-        "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
+        `https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png?key=${CARTO_API_KEY}`,
         {
             attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
             maxZoom: 19,
