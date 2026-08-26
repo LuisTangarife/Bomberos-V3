@@ -23,7 +23,7 @@ async function cargarLogoBase64() {
 
     try {
 
-        const respuesta = await fetch("./assets/logo-villamaria.png");
+        const respuesta = await fetch("./assets/logo-bomberos-villamaria.png");
         const blob = await respuesta.blob();
 
         logoBase64Cache = await new Promise((resolve, reject) => {
@@ -129,14 +129,14 @@ function dibujarEncabezado(doc, ayuda, logo) {
 
     if (logo) {
         try {
-            // El banner original mide 1585x223 px (relación ~7.1:1).
-            doc.addImage(logo, "PNG", 0, 0, ANCHO_PAGINA, ANCHO_PAGINA / 7.1);
+            // Logo nuevo (Bomberos Villamaría) mide 2046x579 px (relación ~3.53:1).
+            doc.addImage(logo, "PNG", 0, 0, ANCHO_PAGINA, ANCHO_PAGINA / 3.53);
         } catch (error) {
             console.warn("[ayudas/pdf] No se pudo dibujar el logo en el PDF:", error);
         }
     }
 
-    return logo ? 38 : 20;
+    return logo ? 67 : 20;
 
 }
 
@@ -167,12 +167,12 @@ function dibujarSubtitulo(doc, subtitulo, y) {
 
 function dibujarTituloSeccion(doc, titulo, y) {
 
-    doc.setFillColor(224, 242, 231); // verde institucional muy claro
+    doc.setFillColor(255, 247, 199); // amarillo institucional muy claro (logo Bomberos)
     doc.rect(MARGEN, y, ANCHO_UTIL, 7, "F");
 
     doc.setFont("helvetica", "bold");
     doc.setFontSize(10.5);
-    doc.setTextColor(30, 90, 60);
+    doc.setTextColor(18, 29, 31); // navy del logo Bomberos
     doc.text(titulo, MARGEN + 2, y + 5);
 
     return y + 11;
