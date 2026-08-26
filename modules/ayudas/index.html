@@ -104,28 +104,43 @@
                 <!-- ENCABEZADO -->
                 <fieldset class="form-section">
                     <legend>Datos de la entrega</legend>
-                    <div class="form-grid cols-3">
+                    <div class="seccion-rotulo"><i class="fa-solid fa-box-open"></i> Datos de la entrega</div>
 
-                        <label>Tipo de kit<span class="req">*</span>
-                            <select id="tipoKit" required>
-                                <option value="">Seleccione...</option>
-                                <option value="Kit Alimentario">🧺 Kit Alimentario</option>
-                                <option value="Kit Aseo">🧼 Kit Aseo</option>
-                                <option value="Kit Cocina">🍳 Kit Cocina</option>
-                                <option value="Kit Noche">🛏️ Kit Noche</option>
-                                <option value="Kit Mascota">🐾 Kit Mascota</option>
-                            </select>
-                        </label>
+                    <p class="form-note">Tipo de kit <span class="req">*</span></p>
+                    <div class="kit-selector" id="kitSelector">
+                        <button type="button" class="kit-tile" data-valor="Kit Alimentario">
+                            <i class="fa-solid fa-basket-shopping"></i>
+                            <span>Alimentario</span>
+                        </button>
+                        <button type="button" class="kit-tile" data-valor="Kit Aseo">
+                            <i class="fa-solid fa-pump-soap"></i>
+                            <span>Aseo</span>
+                        </button>
+                        <button type="button" class="kit-tile" data-valor="Kit Cocina">
+                            <i class="fa-solid fa-utensils"></i>
+                            <span>Cocina</span>
+                        </button>
+                        <button type="button" class="kit-tile" data-valor="Kit Noche">
+                            <i class="fa-solid fa-bed"></i>
+                            <span>Noche</span>
+                        </button>
+                        <button type="button" class="kit-tile" data-valor="Kit Mascota">
+                            <i class="fa-solid fa-paw"></i>
+                            <span>Mascota</span>
+                        </button>
+                    </div>
+                    <input type="hidden" id="tipoKit">
 
+                    <div class="form-grid cols-3" style="margin-top:14px;">
                         <label>Fecha<input type="date" id="fecha"></label>
-                        <label>Lugar<input type="text" id="lugar" placeholder="Sector, barrio o punto de entrega"></label>
-
+                        <label class="span-2">Lugar<input type="text" id="lugar" placeholder="Sector, barrio o punto de entrega"></label>
                     </div>
                 </fieldset>
 
                 <!-- DATOS DEL BENEFICIARIO -->
                 <fieldset class="form-section">
                     <legend>Datos del beneficiario</legend>
+                    <div class="seccion-rotulo"><i class="fa-solid fa-user"></i> Datos del beneficiario</div>
                     <div class="form-grid cols-3">
 
                         <label class="span-2">Nombre<span class="req">*</span>
@@ -155,6 +170,7 @@
                 <!-- ENTREGA -->
                 <fieldset class="form-section">
                     <legend>Entrega</legend>
+                    <div class="seccion-rotulo"><i class="fa-solid fa-boxes-stacked"></i> Entrega</div>
 
                     <div class="form-grid cols-3">
                         <label>Cantidad entregada (kits)<input type="number" min="1" id="cantidadEntregada" value="1"></label>
@@ -166,9 +182,12 @@
 
                 </fieldset>
 
+                <div class="recibo-separador"><i class="fa-solid fa-scissors"></i> Talonario de recibido</div>
+
                 <!-- CONSTANCIA / RESPONSABLE -->
                 <fieldset class="form-section">
                     <legend>Constancia</legend>
+                    <div class="seccion-rotulo"><i class="fa-solid fa-signature"></i> Constancia</div>
                     <p class="form-note">
                         Declara que recibió a satisfacción el kit entregado por la Alcaldía de
                         Villamaría — Secretaría de Desarrollo Social, en el marco de la

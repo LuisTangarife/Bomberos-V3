@@ -119,6 +119,31 @@ function configurarEventos() {
         radio.addEventListener("change", actualizarCampoNumCenso);
     });
 
+    configurarSelectorKit();
+
+}
+
+/* ========================================================================
+   SELECTOR DE KIT (fichas tocables)
+======================================================================== */
+
+function configurarSelectorKit() {
+
+    document.querySelectorAll("#kitSelector .kit-tile").forEach(ficha => {
+        ficha.addEventListener("click", () => seleccionarKit(ficha.dataset.valor));
+    });
+
+}
+
+function seleccionarKit(valor) {
+
+    const input = document.getElementById("tipoKit");
+    if (input) input.value = valor;
+
+    document.querySelectorAll("#kitSelector .kit-tile").forEach(ficha => {
+        ficha.classList.toggle("activo", ficha.dataset.valor === valor);
+    });
+
 }
 
 function actualizarCampoNumCenso() {
@@ -194,6 +219,7 @@ function recopilarDatosFormulario() {
 function poblarFormulario(ayuda) {
 
     asignar("tipoKit", ayuda.tipoKit);
+    seleccionarKit(ayuda.tipoKit || "");
     asignar("fecha", ayuda.fecha);
     asignar("lugar", ayuda.lugar);
 
@@ -239,6 +265,7 @@ export function nuevoFormularioAyuda() {
 
     if (UI.form) UI.form.reset();
     limpiarTodasLasFirmas();
+    seleccionarKit("");
     marcarRadio("censado", "No");
     actualizarCampoNumCenso();
     fechaHoyPorDefecto();

@@ -31,6 +31,14 @@
     --ayuda-primario: #1FA75A;
     --ayuda-primario-oscuro: #0F6B38;
 
+    /* Kraft / cartón cálido — el color de una caja real de ayuda,
+       usado en las fichas de tipo de kit y en los "rótulos" de
+       sección; es la apuesta visual distintiva de este módulo. */
+    --ayuda-kraft: #C9A575;
+    --ayuda-kraft-oscuro: #8C6D42;
+    --ayuda-kraft-bg: rgba(201,165,117,.14);
+    --ayuda-kraft-borde: rgba(201,165,117,.4);
+
     --ayuda-badge-alerta-bg: rgba(255,80,66,.22);
     --ayuda-badge-alerta-fg: #FF8A7A;
     --ayuda-badge-pendiente-bg: rgba(255,200,0,.20);
@@ -59,6 +67,11 @@ html[data-tema="claro"]{
 
     --ayuda-primario: #1B8A4B;
     --ayuda-primario-oscuro: #0C5C31;
+
+    --ayuda-kraft: #A9793D;
+    --ayuda-kraft-oscuro: #6E4E24;
+    --ayuda-kraft-bg: rgba(169,121,61,.10);
+    --ayuda-kraft-borde: rgba(169,121,61,.35);
 
     --ayuda-badge-alerta-bg: #FFE3DF;
     --ayuda-badge-alerta-fg: #B3261E;
@@ -370,16 +383,37 @@ label .req {
 
 .form-section {
     border: 1px solid var(--ayuda-border);
-    border-radius: 12px;
-    padding: 18px;
-    margin-bottom: 18px;
+    border-radius: 14px;
+    padding: 22px 18px 18px;
+    margin-bottom: 20px;
     background: var(--ayuda-bg-section);
+    position: relative;
 }
 
-.form-section legend {
-    padding: 0 8px;
-    color: var(--ayuda-primario);
-    font-weight: 700;
+/* El "legend" nativo se oculta: cada fieldset trae su propio rótulo
+   como primer hijo (.seccion-rotulo, ver index.html) para poder darle
+   un ícono y el look de etiqueta troquelada de caja. */
+.form-section > legend {
+    display: none;
+}
+
+.seccion-rotulo {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 5px 14px 5px 10px;
+    margin: -32px 0 16px 0;
+    background: var(--ayuda-kraft-bg);
+    border: 1.5px dashed var(--ayuda-kraft-borde);
+    border-radius: 6px 14px 6px 14px;
+    color: var(--ayuda-kraft);
+    font-family: "Fjalla One", "Inter", sans-serif;
+    font-size: 1rem;
+    letter-spacing: .03em;
+    text-transform: uppercase;
+}
+
+.seccion-rotulo i {
     font-size: .95rem;
 }
 
@@ -390,6 +424,34 @@ label .req {
     margin: 8px 0 6px;
     text-transform: uppercase;
     letter-spacing: .04em;
+}
+
+.campo-observaciones {
+    display: block;
+    margin-top: 14px;
+    color: var(--ayuda-text-light);
+    font-size: .82rem;
+    font-weight: 600;
+}
+
+.campo-observaciones textarea {
+    display: block;
+    width: 100%;
+    margin-top: 6px;
+    padding: 10px 11px;
+    border-radius: 8px;
+    border: 1px solid var(--ayuda-border);
+    background: var(--ayuda-bg-input);
+    color: var(--ayuda-text);
+    font-size: .88rem;
+    font-family: inherit;
+    resize: vertical;
+}
+
+.campo-observaciones textarea:focus {
+    outline: none;
+    border-color: var(--ayuda-border-hover);
+    background: var(--ayuda-bg-input-hover);
 }
 
 .form-grid {
@@ -656,4 +718,102 @@ html[data-tema="claro"] .ayuda-kit-badge {
 .clear-signature {
     margin-top: 10px;
 }
+
+/* ========================================================================
+   SELECTOR DE KIT — fichas tocables en vez de <select>. Es el elemento
+   distintivo de este módulo: cada ficha se ve y se comporta como una
+   etiqueta de caja de bodega; al elegirla, se "sella" con un check y
+   una leve rotación, como un sello de recibido.
+======================================================================== */
+
+.kit-selector {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(96px, 1fr));
+    gap: 10px;
+    margin: 4px 0 6px;
+}
+
+.kit-tile {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: 16px 6px 12px;
+    border: 2px dashed var(--ayuda-kraft-borde);
+    border-radius: 10px;
+    background: var(--ayuda-kraft-bg);
+    color: var(--ayuda-text-light);
+    cursor: pointer;
+    font-family: inherit;
+    font-size: .74rem;
+    font-weight: 700;
+    text-align: center;
+    line-height: 1.2;
+    transition: transform .15s, border-color .15s, background .15s;
+    position: relative;
+}
+
+.kit-tile i {
+    font-size: 1.5rem;
+    color: var(--ayuda-kraft);
+    transition: color .15s;
+}
+
+.kit-tile:hover {
+    border-color: var(--ayuda-primario);
+    transform: translateY(-2px);
+}
+
+.kit-tile.activo {
+    border: 2px solid var(--ayuda-primario);
+    background: rgba(31,167,90,.16);
+    color: var(--ayuda-text);
+    transform: rotate(-1.5deg);
+}
+
+.kit-tile.activo i {
+    color: var(--ayuda-primario);
+}
+
+.kit-tile.activo::after {
+    content: "\2713";
+    position: absolute;
+    top: -9px;
+    right: -7px;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: var(--ayuda-primario);
+    color: #fff;
+    font-size: .7rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 6px rgba(0,0,0,.35);
+}
+
+/* ========================================================================
+   SEPARADOR "TALONARIO" — antes de Constancia/Firmas, para que la
+   sección de recibo se sienta como el trozo que se desprende del
+   formulario, igual que un recibo de entrega real.
+======================================================================== */
+
+.recibo-separador {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 26px 0 18px;
+    color: var(--ayuda-text-mute);
+    font-size: .72rem;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+}
+
+.recibo-separador::before,
+.recibo-separador::after {
+    content: "";
+    flex: 1;
+    border-top: 2px dashed var(--ayuda-border);
+}
+
 
