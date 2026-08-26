@@ -32,6 +32,16 @@ export const state = {
     // Listado local de censos ya guardados en este dispositivo
     censos: [],
 
+    // Firmas digitales (canvas) — mismo mecanismo que Ayudas/Inspecciones
+    canvas: {
+        funcionario: null,
+        encuestado: null
+    },
+    firmas: {
+        funcionario: null,
+        encuestado: null
+    },
+
     estado: {
         cargando: false,
         guardando: false

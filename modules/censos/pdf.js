@@ -154,10 +154,7 @@ export async function generarPDFCenso(censo) {
         y += 2;
     }
 
-    y = asegurarEspacio(doc, y, 30);
-    y = dibujarTituloSeccion(doc, "11. Firmas", y);
-    y = dibujarFilaEtiquetaValor(doc, "Funcionario", `${texto(censo.funcionarioNombre)} — C.C. ${texto(censo.funcionarioCedula)}`, y);
-    y = dibujarFilaEtiquetaValor(doc, "Encuestado", `${texto(censo.encuestadoNombre)} — C.C. ${texto(censo.encuestadoCedula)}`, y);
+    y = dibujarBloqueFirmas(doc, censo, y);
 
     dibujarPiePagina(doc);
 
@@ -260,6 +257,61 @@ function dibujarLineaTabla(doc, texto, y) {
     y += Math.max(4.6, lineas.length * 4.2);
 
     return asegurarEspacio(doc, y, 8);
+
+}
+
+function dibujarBloqueFirmas(doc, censo, y) {
+
+    const ALTURA_TITULO = 11;
+
+    // Igual que en Ayudas: título + ambas firmas se miden como UN bloque
+    // antes de dibujar nada, para que nunca quede una firma sola al
+    // principio de una página sin nada que la acompañe (título, nombre,
+    // cédula) — el mismo criterio de "firma nunca sola" que ya se aplicó
+    // en el certificado de Ayudas.
+    const alturaFuncionario = censo.funcionarioNombre ? 40 : 35;
+    const alturaEncuestado = censo.encuestadoNombre ? 40 : 35;
+    const alturaTotal = ALTURA_TITULO + alturaFuncionario + alturaEncuestado;
+
+    y = asegurarEspacio(doc, y, alturaTotal);
+
+    y = dibujarTituloSeccion(doc, "11. Firmas", y);
+    y = dibujarBloqueFirma(doc, "Firma del funcionario", censo.firmaFuncionario, texto(censo.funcionarioCedula), y, censo.funcionarioNombre);
+    y = dibujarBloqueFirma(doc, "Firma del encuestado", censo.firmaEncuestado, texto(censo.encuestadoCedula), y, censo.encuestadoNombre);
+
+    return y;
+
+}
+
+function dibujarBloqueFirma(doc, etiqueta, firmaDataUrl, cedula, y, nombreImpreso = "") {
+
+    doc.setFont("helvetica", "normal");
+    doc.setDrawColor(150, 150, 150);
+    doc.line(MARGEN + 2, y + 18, MARGEN + 82, y + 18);
+
+    if (firmaDataUrl) {
+        try {
+            doc.addImage(firmaDataUrl, "PNG", MARGEN + 4, y, 60, 17);
+        } catch (error) {
+            console.warn(`[censos/pdf] No se pudo dibujar la firma "${etiqueta}":`, error);
+        }
+    }
+
+    doc.setFontSize(9);
+    doc.setTextColor(30, 30, 30);
+    doc.text(etiqueta, MARGEN + 2, y + 23);
+
+    if (nombreImpreso) {
+        doc.setFont("helvetica", "bold");
+        doc.text(texto(nombreImpreso), MARGEN + 2, y + 28);
+        doc.setFont("helvetica", "normal");
+    }
+
+    doc.setFontSize(8.5);
+    doc.setTextColor(90, 90, 90);
+    doc.text(`C.C.: ${texto(cedula)}`, MARGEN + 2, y + (nombreImpreso ? 33 : 28));
+
+    return y + (nombreImpreso ? 40 : 35);
 
 }
 

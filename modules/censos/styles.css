@@ -386,6 +386,46 @@ label .req {
     letter-spacing: .04em;
 }
 
+/* ========================================================================
+   FIRMAS DIGITALES (canvas) — mismo mecanismo que Ayudas/Inspecciones,
+   con los tokens propios de este módulo (--censo-*).
+======================================================================== */
+
+.signature-grid {
+    display: grid;
+    gap: 24px;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    margin-top: 16px;
+}
+
+.signature-grid canvas {
+    width: 100%;
+    height: 180px;
+    display: block;
+    border: 2px dashed var(--censo-border);
+    border-radius: 14px;
+    background: #f8f9fb; /* fijo, no --censo-bg-input: el trazo es negro y en tema oscuro sería invisible */
+    cursor: crosshair;
+    touch-action: none;
+    transition: .25s;
+}
+
+.signature-grid canvas:hover {
+    border-color: var(--censo-border-hover);
+}
+
+.signature-block label.signature-label {
+    display: block;
+    margin-bottom: 6px;
+    font-weight: 600;
+    color: var(--censo-text-light);
+    font-size: 0.9rem;
+}
+
+.clear-signature {
+    margin-top: 10px;
+}
+
 .form-grid {
     display: grid;
     gap: 14px;

@@ -17,6 +17,12 @@ import { cargarCensos, guardarCenso } from "./persistencia.js";
 import { renderizarListado, filtrarListado } from "./listado.js";
 import { anunciar } from "../../shared/voz.js";
 import { exportarCensosExcel } from "./excel.js";
+import {
+    inicializarFirmas,
+    limpiarTodasLasFirmas,
+    restaurarFirma,
+    redimensionarCanvasFirmas
+} from "./firmas.js";
 
 let contadorIntegrantes = 0;
 
@@ -43,6 +49,7 @@ async function iniciarAplicacion() {
 
     configurarEventos();
     configurarTema();
+    inicializarFirmas();
     agregarFilaIntegrante();
 
     await cargarCensos();
@@ -397,6 +404,9 @@ function recopilarDatosFormulario() {
         encuestadoCedula: valorCampo("encuestadoCedula"),
         encuestadoNombre: valorCampo("encuestadoNombre"),
 
+        firmaFuncionario: state.firmas.funcionario || null,
+        firmaEncuestado: state.firmas.encuestado || null,
+
         pending: !navigator.onLine,
         synced: navigator.onLine
 
@@ -495,6 +505,15 @@ function poblarFormulario(censo) {
     asignar("encuestadoCedula", censo.encuestadoCedula);
     asignar("encuestadoNombre", censo.encuestadoNombre);
 
+    state.firmas.funcionario = censo.firmaFuncionario || null;
+    state.firmas.encuestado = censo.firmaEncuestado || null;
+
+    requestAnimationFrame(() => {
+        redimensionarCanvasFirmas();
+        restaurarFirma("funcionario");
+        restaurarFirma("encuestado");
+    });
+
 }
 
 function fechaHoyPorDefecto() {
@@ -523,6 +542,7 @@ export function nuevoFormularioCenso() {
     state.editando = false;
 
     if (UI.form) UI.form.reset();
+    limpiarTodasLasFirmas();
     if (UI.tablaIntegrantes) UI.tablaIntegrantes.innerHTML = "";
     agregarFilaIntegrante();
     actualizarBloquePropietario();
@@ -614,6 +634,7 @@ function mostrarVistaFormulario() {
     if (UI.vistaListado) UI.vistaListado.classList.remove("activa");
     if (UI.vistaFormulario) UI.vistaFormulario.classList.add("activa");
     window.scrollTo({ top: 0, behavior: "smooth" });
+    requestAnimationFrame(redimensionarCanvasFirmas);
 }
 
 function mostrarVistaListado() {
