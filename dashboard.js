@@ -64,23 +64,36 @@ function marcarSinDatos(idContador, mensaje = "Módulo sin datos aún") {
 async function cargarDashboard(){
 
     marcarSinDatos("totalAPH");
-    marcarSinDatos("totalAyudas");
-    marcarSinDatos("totalCensos");
 
     try {
 
-        const [{ listarEmergencias }, { listarInspecciones }] = await Promise.all([
+        const [
+            { listarEmergencias },
+            { listarInspecciones },
+            { listarCensosFirestore },
+            { listarAyudasFirestore }
+        ] = await Promise.all([
             import("./modules/emergencia/firebase.js"),
-            import("./modules/inspecciones/firebase.js")
+            import("./modules/inspecciones/firebase.js"),
+            import("./modules/censos/firebase.js"),
+            import("./modules/ayudas/firebase.js")
         ]);
 
-        const [emergencias, inspecciones] = await Promise.all([
+        const [emergencias, inspecciones, censos, ayudas] = await Promise.all([
             listarEmergencias().catch(error => {
                 console.error("[dashboard] No se pudieron cargar emergencias:", error);
                 return null;
             }),
             listarInspecciones().catch(error => {
                 console.error("[dashboard] No se pudieron cargar inspecciones:", error);
+                return null;
+            }),
+            listarCensosFirestore().catch(error => {
+                console.error("[dashboard] No se pudieron cargar censos:", error);
+                return null;
+            }),
+            listarAyudasFirestore().catch(error => {
+                console.error("[dashboard] No se pudieron cargar ayudas humanitarias:", error);
                 return null;
             })
         ]);
@@ -116,9 +129,43 @@ async function cargarDashboard(){
 
         }
 
+        if (Array.isArray(censos)) {
+
+            document.getElementById("totalCensos").textContent = censos.length;
+
+        } else {
+
+            marcarSinDatos("totalCensos", "No se pudo cargar (revisa conexión)");
+
+        }
+
+        if (Array.isArray(ayudas)) {
+
+            // "Entregadas" se refiere a kits entregados, no a número de
+            // registros — una misma familia puede aparecer en varias
+            // entregas (kit alimentario, kit aseo, etc.), así que el
+            // conteo útil aquí es la suma de cantidadEntregada.
+            const totalKits = ayudas.reduce(
+                (suma, a) => suma + (Number(a.cantidadEntregada) || 0),
+                0
+            );
+
+            document.getElementById("totalAyudas").textContent = totalKits;
+
+        } else {
+
+            marcarSinDatos("totalAyudas", "No se pudo cargar (revisa conexión)");
+
+        }
+
     } catch (error) {
 
         console.error("[dashboard] Error cargando datos reales del panel:", error);
+
+        marcarSinDatos("totalEmergencias", "No se pudo cargar (revisa conexión)");
+        marcarSinDatos("totalInspecciones", "No se pudo cargar (revisa conexión)");
+        marcarSinDatos("totalCensos", "No se pudo cargar (revisa conexión)");
+        marcarSinDatos("totalAyudas", "No se pudo cargar (revisa conexión)");
 
     }
 
