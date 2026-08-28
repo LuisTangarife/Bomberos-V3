@@ -25,6 +25,7 @@ window.renderCertificate = renderCertificate;
 window.printCertificate = printCertificate;
 window.closeModal = closeModal;
 window.descargarWord = descargarWord;
+window.descargarReporteDirecto = descargarReporteDirecto; // ← nuevo
 
 let emergencias = [];
 let cargando = false;
