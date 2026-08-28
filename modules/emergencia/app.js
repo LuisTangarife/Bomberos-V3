@@ -4,6 +4,12 @@ let currentPrintHTML = '';
 // Antes "Cargar" nunca guardaba esto, así que "Guardar Reporte" siempre
 // creaba uno nuevo con store.add() en vez de actualizar el existente.
 let currentEditId = null;
+
+// Datos del último reporte guardado con éxito en esta sesión del
+// formulario (saveReport()). El botón "Descargar Reporte" los usa
+// para generar el Word sin tener que volver a leer el formulario ni
+// ir a buscarlo al gestor.
+let ultimoReporteGuardado = null;
 window.uploadedPhotos = [];
 // ── SERVICE WORKER REGISTRATION ──────────────────────────────────────────
 if ('serviceWorker' in navigator) {
@@ -1294,6 +1300,11 @@ async function saveReport() {
     fb.textContent = '✅ Reporte guardado correctamente';
     fb.className = 'save-feedback ok';
 
+    // Se guarda para que el botón "Descargar Reporte" pueda generar el
+    // Word de este reporte sin volver a leer el formulario.
+    ultimoReporteGuardado = data;
+    mostrarBotonDescarga(true);
+
     // Aviso por voz (Web Speech API, sin costo). app.js es un script
     // clásico (no módulo), por eso el import es dinámico aquí en vez
     // de un import estático arriba del archivo.
@@ -1301,25 +1312,11 @@ async function saveReport() {
         anunciar(`Nuevo reporte de emergencia registrado. Evento: ${data.evento}. Dirección: ${data.direccion}.`);
     });
 
-    // gestor.html (vista consolidada de todos los dispositivos) ahora
-    // exige sesión. Un invitado que acaba de guardar su reporte NO debe
-    // ser expulsado a login justo después de terminar: se queda en el
-    // formulario, donde ya ve su reporte en "Reportes Guardados"
-    // (guardado localmente arriba con saveToIDB). Solo el personal con
-    // cuenta pasa al gestor consolidado, como antes.
-    const { esperarEstadoAuth } = await import("../../shared/auth.js");
-    const usuarioActual = await esperarEstadoAuth();
-
-    // Esperar un momento para que el usuario vea el mensaje
-    setTimeout(() => {
-
-        if (usuarioActual) {
-            window.location.href = "./gestor.html";
-        }
-        // Invitado: no se redirige. El reporte recién guardado ya
-        // aparece en la lista local de esta misma página.
-
-    }, 1200);
+    // El formulario ya NO redirige automáticamente al guardar (ni a
+    // invitados ni a personal con cuenta): el usuario se queda aquí,
+    // viendo su reporte en "Reportes Guardados" y con la opción de
+    // descargarlo, hasta que él mismo presione "Gestor de Emergencias"
+    // para regresar.
 
   } catch (err) {
 
@@ -1332,12 +1329,77 @@ async function saveReport() {
 
 }
 
+// Muestra u oculta el botón "Descargar Reporte" de la barra de
+// acciones. Solo tiene sentido una vez hay un reporte guardado en
+// esta sesión (ultimoReporteGuardado).
+function mostrarBotonDescarga(visible) {
+
+  const btn = document.getElementById('btnDescargarReporte');
+  if (!btn) return;
+
+  btn.style.display = visible ? '' : 'none';
+
+}
+
+/**
+ * Descarga el Word del último reporte guardado en esta sesión del
+ * formulario. Reutiliza window.descargarReporteDirecto (expuesto por
+ * gestor.js desde certificados.js) — el MISMO generador de Word que
+ * usa "Descargar Word" en el Gestor de Emergencias, así que el
+ * documento es idéntico; aquí solo se dispara la descarga de una vez,
+ * sin abrir el modal de vista previa.
+ */
+async function descargarReporteActual() {
+
+  const fb = document.getElementById('saveFeedback');
+
+  if (!ultimoReporteGuardado) {
+    if (fb) {
+      fb.textContent = 'Primero guarda el reporte para poder descargarlo.';
+      fb.className = 'save-feedback err';
+    }
+    return;
+  }
+
+  const btn = document.getElementById('btnDescargarReporte');
+
+  try {
+
+    if (btn) btn.disabled = true;
+    if (fb) {
+      fb.textContent = 'Generando descarga...';
+      fb.className = 'save-feedback ok';
+    }
+
+    await window.descargarReporteDirecto(ultimoReporteGuardado);
+
+    if (fb) fb.textContent = '✅ Reporte guardado correctamente';
+
+  } catch (err) {
+
+    console.error('No se pudo descargar el reporte:', err);
+    if (fb) {
+      fb.textContent = '❌ No se pudo generar la descarga del reporte';
+      fb.className = 'save-feedback err';
+    }
+
+  } finally {
+    if (btn) btn.disabled = false;
+  }
+
+}
+
 function clearForm() {
 
   // Vuelve a modo "reporte nuevo": si venía de editar uno existente
   // (vía "↩ Cargar"), un "Guardar Reporte" después de Limpiar ya no
   // debe actualizar ese reporte, sino crear uno nuevo.
   currentEditId = null;
+
+  // El botón de descarga vuelve a ocultarse: aplica al reporte que se
+  // acaba de dejar atrás, no al formulario en blanco.
+  ultimoReporteGuardado = null;
+  mostrarBotonDescarga(false);
 
   document.getElementById('lugar').value       = '';
   document.getElementById('direccion').value   = '';
@@ -1437,6 +1499,11 @@ async function loadReport(id){
   // usan currentEditId para actualizar el registro en vez de crear
   // uno nuevo al presionar "Guardar Reporte".
   currentEditId = id;
+
+  // También permite descargar este reporte tal como está guardado,
+  // sin necesidad de volver a presionar "Guardar Reporte" primero.
+  ultimoReporteGuardado = r;
+  mostrarBotonDescarga(true);
 
   const fb = document.getElementById('saveFeedback');
   if (fb) {

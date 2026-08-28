@@ -298,6 +298,26 @@ export function descargarWord() {
 
 }
 
+/**
+ * Genera y descarga el Word del reporte SIN abrir el modal de vista
+ * previa. Reutiliza exactamente el mismo generador que usa el modal
+ * (generarDocumentoWordBlob) y la misma rutina de descarga que usa
+ * "Descargar Word" en el gestor (descargarBlobWord) — es el mismo
+ * documento, solo que aquí se descarga de una vez, sin mostrarlo antes
+ * en pantalla.
+ * Pensada para el botón "Descargar Reporte" del formulario de registro,
+ * justo después de guardar.
+ */
+export async function descargarReporteDirecto(data) {
+
+  const docNum = generarDocNum();
+
+  const { blob, nombreArchivo } = await generarDocumentoWordBlob(data, docNum);
+
+  descargarBlobWord(blob, nombreArchivo);
+
+}
+
 export function closeModal() {
   document.getElementById('certModal').style.display = 'none';
   document.body.style.overflow = '';

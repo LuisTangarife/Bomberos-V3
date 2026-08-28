@@ -19,13 +19,13 @@ import { inicializarMapa, renderizarMapa } from "./mapas.js";
 import { actualizarClima } from "./clima.js";
 import { protegerPagina } from "../../shared/auth.js";
 
-import { renderCertificate, printCertificate, closeModal, descargarWord } from "./certificados.js";
+import { renderCertificate, printCertificate, closeModal, descargarWord, descargarReporteDirecto } from "./certificados.js";
 
 window.renderCertificate = renderCertificate;
 window.printCertificate = printCertificate;
 window.closeModal = closeModal;
 window.descargarWord = descargarWord;
-window.descargarReporteDirecto = descargarReporteDirecto; // ← nuevo
+window.descargarReporteDirecto = descargarReporteDirecto;
 
 let emergencias = [];
 let cargando = false;
