@@ -167,6 +167,14 @@
                         </label>
                         <label>Núcleo #<input type="text" id="nucleo"></label>
                         <label class="span-3">Dirección<input type="text" id="direccion"></label>
+                        <label>Latitud<input type="text" id="censoLatitud" placeholder="0.000000" readonly></label>
+                        <label>Longitud<input type="text" id="censoLongitud" placeholder="0.000000" readonly></label>
+                        <div class="span-3">
+                            <button type="button" class="btn-secundario" id="btnUbicacionCenso">
+                                <i class="fa-solid fa-location-dot"></i> Obtener ubicación GPS
+                            </button>
+                            <span id="estadoUbicacionCenso" class="censo-location-status"></span>
+                        </div>
                     </div>
 
                     <p class="form-note">Tipo de predio</p>

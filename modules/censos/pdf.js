@@ -45,6 +45,9 @@ export async function generarPDFCenso(censo) {
     y = dibujarFilaEtiquetaValor(doc, "Barrio / Vereda", texto(censo.barrioVereda), y);
     y = dibujarFilaEtiquetaValor(doc, "Núcleo #", texto(censo.nucleo), y);
     y = dibujarFilaEtiquetaValor(doc, "Dirección", texto(censo.direccion), y);
+    if (censo.latitud && censo.longitud) {
+        y = dibujarFilaEtiquetaValor(doc, "Coordenadas GPS", `${censo.latitud}, ${censo.longitud}`, y);
+    }
     y = dibujarFilaEtiquetaValor(doc, "Tipo de predio", texto(censo.tipoPredio), y);
     if (censo.tipoPredio && censo.tipoPredio !== "Vivienda") {
         y = dibujarFilaEtiquetaValor(doc, "Nombre del establecimiento", texto(censo.nombreEstablecimiento), y);

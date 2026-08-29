@@ -151,6 +151,10 @@ function configurarEventos() {
         selectBarrio.addEventListener("change", actualizarCampoBarrioOtro);
     }
 
+    if (UI.btnUbicacion) {
+        UI.btnUbicacion.addEventListener("click", obtenerUbicacionCenso);
+    }
+
 }
 
 function actualizarBloqueEstablecimiento() {
@@ -321,6 +325,49 @@ function valorRadio(nombreGrupo) {
     return document.querySelector(`input[name='${nombreGrupo}']:checked`)?.value || "";
 }
 
+// ── GEOLOCALIZACIÓN ─────────────────────────────────────────────────────
+// Mismo mecanismo que usa el módulo de Emergencias (navigator.geolocation),
+// adaptado a los ids del formulario de Censos.
+function obtenerUbicacionCenso() {
+
+    const btn = UI.btnUbicacion;
+    const estado = UI.estadoUbicacion;
+
+    if (!navigator.geolocation) {
+        estado.textContent = "⚠️ Geolocalización no soportada en este dispositivo.";
+        estado.className = "censo-location-status error";
+        return;
+    }
+
+    btn.disabled = true;
+    estado.textContent = "⏳ Obteniendo ubicación...";
+    estado.className = "censo-location-status";
+
+    navigator.geolocation.getCurrentPosition(
+        pos => {
+            const lat = pos.coords.latitude.toFixed(6);
+            const lng = pos.coords.longitude.toFixed(6);
+            document.getElementById("censoLatitud").value = lat;
+            document.getElementById("censoLongitud").value = lng;
+            btn.disabled = false;
+            estado.textContent = `✔ Coordenadas: ${lat}, ${lng} — Precisión: ±${Math.round(pos.coords.accuracy)}m`;
+            estado.className = "censo-location-status success";
+        },
+        err => {
+            btn.disabled = false;
+            const mensajes = {
+                1: "Permiso de ubicación denegado. Active el GPS.",
+                2: "No se pudo obtener la posición. Verifique el GPS.",
+                3: "Tiempo de espera agotado. Intente de nuevo."
+            };
+            estado.textContent = "⚠️ " + (mensajes[err.code] || "Error desconocido.");
+            estado.className = "censo-location-status error";
+        },
+        { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
+    );
+
+}
+
 function valorCampo(id) {
     return document.getElementById(id)?.value.trim() || "";
 }
@@ -338,6 +385,8 @@ function recopilarDatosFormulario() {
         municipio: valorCampo("municipio"),
         corregimiento: valorCampo("corregimiento"),
         direccion: valorCampo("direccion"),
+        latitud: valorCampo("censoLatitud"),
+        longitud: valorCampo("censoLongitud"),
         nucleo: valorCampo("nucleo"),
         tipoPredio: valorRadio("tipoPredio"),
         nombreEstablecimiento: valorCampo("nombreEstablecimiento"),
@@ -434,6 +483,8 @@ function poblarFormulario(censo) {
     asignar("municipio", censo.municipio);
     asignar("corregimiento", censo.corregimiento);
     asignar("direccion", censo.direccion);
+    asignar("censoLatitud", censo.latitud);
+    asignar("censoLongitud", censo.longitud);
     asignar("nucleo", censo.nucleo);
 
     marcarRadio("tipoPredio", censo.tipoPredio || "Vivienda");
@@ -543,6 +594,10 @@ export function nuevoFormularioCenso() {
 
     if (UI.form) UI.form.reset();
     limpiarTodasLasFirmas();
+    if (UI.estadoUbicacion) {
+        UI.estadoUbicacion.textContent = "";
+        UI.estadoUbicacion.className = "censo-location-status";
+    }
     if (UI.tablaIntegrantes) UI.tablaIntegrantes.innerHTML = "";
     agregarFilaIntegrante();
     actualizarBloquePropietario();

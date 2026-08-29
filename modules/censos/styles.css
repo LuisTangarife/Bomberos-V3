@@ -330,6 +330,15 @@ html[data-tema="claro"] .censo-page{ color-scheme: light; }
     border-color: var(--censo-border-hover);
 }
 
+.censo-location-status {
+    display: inline-block;
+    margin-left: 10px;
+    font-size: 0.85rem;
+}
+
+.censo-location-status.success { color: #2e7d32; }
+.censo-location-status.error   { color: #c62828; }
+
 /* ========================================================================
    FORMULARIO
 ======================================================================== */

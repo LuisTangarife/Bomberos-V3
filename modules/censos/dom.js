@@ -27,7 +27,11 @@ export const UI = {
     btnAgregarMascota: null,
 
     // Bloque "propietario" (solo si el jefe es inquilino/otro)
-    bloquePropietario: null
+    bloquePropietario: null,
+
+    // Ubicación GPS
+    btnUbicacion: null,
+    estadoUbicacion: null
 
 };
 
@@ -53,5 +57,8 @@ export function inicializarDOM() {
     UI.btnAgregarMascota = document.getElementById("btnAgregarMascota");
 
     UI.bloquePropietario = document.getElementById("bloquePropietario");
+
+    UI.btnUbicacion = document.getElementById("btnUbicacionCenso");
+    UI.estadoUbicacion = document.getElementById("estadoUbicacionCenso");
 
 }
