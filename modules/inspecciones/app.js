@@ -33,6 +33,7 @@ import { inicializarFirmas, redimensionarCanvasFirmas } from "./firmas.js";
 import { inicializarFotos } from "./fotos.js";
 import { iniciarAutoGuardado } from "./autoguardado.js";
 import { inicializarScrollTop, mostrarToast } from "./utilidades.js";
+import { listarCatalogo, reconstruirSelectDesdeCatalogo } from "../../shared/catalogos.js";
 import { inicializarListado } from "./listado.js";
 import { generarPDF } from "./pdf.js";
 
@@ -114,6 +115,7 @@ async function iniciarAplicacion() {
         inicializarProgreso();
         inicializarFirmas();
         inicializarFotos();
+        cargarCatalogoTipoInspeccion();
 
         iniciarAutoGuardado();
         await cargarInspecciones();
@@ -134,6 +136,28 @@ async function iniciarAplicacion() {
             "\n\nRevisa la consola (F12) para más detalle, o recarga la página."
         );
 
+    }
+
+}
+
+// Igual que unidades/personal en el Panel General: si el catálogo
+// tiene contenido en Firestore, reemplaza la lista fija del HTML.
+async function cargarCatalogoTipoInspeccion() {
+
+    try {
+
+        const items = await listarCatalogo("inspecciones", "tipoInspeccion");
+
+        if (items.length) {
+            reconstruirSelectDesdeCatalogo(
+                document.getElementById("tipoInspeccion"),
+                items,
+                { placeholder: "Seleccione..." }
+            );
+        }
+
+    } catch (error) {
+        console.warn("[inspecciones] No se pudo cargar el catálogo de tipo de inspección, se usa la lista fija del HTML:", error);
     }
 
 }
