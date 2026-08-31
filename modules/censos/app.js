@@ -200,6 +200,11 @@ function configurarEventos() {
         radio.addEventListener("change", actualizarBloqueEstablecimiento);
     });
 
+    // Mostrar/ocultar el campo de compañía aseguradora según si tiene póliza
+    document.querySelectorAll("input[name='tienePoliza']").forEach(radio => {
+        radio.addEventListener("change", actualizarBloqueCompaniaSeguro);
+    });
+
     // Barrio/Vereda: "Otro" habilita el campo de texto libre (no obligatorio)
     const selectBarrio = document.getElementById("barrioVeredaSelect");
     if (selectBarrio) {
@@ -219,6 +224,24 @@ function actualizarBloqueEstablecimiento() {
 
     const bloque = document.getElementById("bloqueEstablecimiento");
     if (bloque) bloque.style.display = esVivienda ? "none" : "block";
+
+}
+
+function actualizarBloqueCompaniaSeguro() {
+
+    const seleccionado = UI.form?.querySelector("input[name='tienePoliza']:checked");
+    const tienePoliza = seleccionado?.value === "Si";
+
+    const bloque = document.getElementById("bloqueCompaniaSeguro");
+    if (bloque) bloque.style.display = tienePoliza ? "grid" : "none";
+
+    // Si el usuario marca "No" después de haber escrito una compañía,
+    // se limpia — no debe quedar guardado un dato que contradice la
+    // respuesta actual.
+    if (!tienePoliza) {
+        const campo = document.getElementById("companiaSeguro");
+        if (campo) campo.value = "";
+    }
 
 }
 
@@ -446,6 +469,8 @@ function recopilarDatosFormulario() {
         tipoPredio: valorRadio("tipoPredio"),
         nombreEstablecimiento: valorCampo("nombreEstablecimiento"),
         tipoActividadEconomica: valorCampo("tipoActividadEconomica"),
+        tienePoliza: valorRadio("tienePoliza") || "No",
+        companiaSeguro: valorCampo("companiaSeguro"),
         barrioVereda: document.getElementById("barrioVeredaSelect")?.value === "Otro"
             ? valorCampo("barrioVeredaOtro")
             : (document.getElementById("barrioVeredaSelect")?.value || ""),
@@ -549,6 +574,10 @@ function poblarFormulario(censo) {
     asignar("nombreEstablecimiento", censo.nombreEstablecimiento);
     asignar("tipoActividadEconomica", censo.tipoActividadEconomica);
     actualizarBloqueEstablecimiento();
+
+    marcarRadio("tienePoliza", censo.tienePoliza || "No");
+    asignar("companiaSeguro", censo.companiaSeguro);
+    actualizarBloqueCompaniaSeguro();
 
     // Barrio/Vereda: si el valor guardado coincide con una opción del
     // desplegable se selecciona directo; si no (censos guardados antes
@@ -666,6 +695,7 @@ export function nuevoFormularioCenso() {
 
     if (UI.tablaMascotas) UI.tablaMascotas.innerHTML = "";
     actualizarBloqueEstablecimiento();
+    actualizarBloqueCompaniaSeguro();
     actualizarCampoBarrioOtro();
 
     fechaHoyPorDefecto();

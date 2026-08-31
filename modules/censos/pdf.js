@@ -53,6 +53,10 @@ export async function generarPDFCenso(censo) {
         y = dibujarFilaEtiquetaValor(doc, "Nombre del establecimiento", texto(censo.nombreEstablecimiento), y);
         y = dibujarFilaEtiquetaValor(doc, "Actividad económica", texto(censo.tipoActividadEconomica), y);
     }
+    y = dibujarFilaEtiquetaValor(doc, "¿Cuenta con póliza o seguro?", censo.tienePoliza === "Si" ? "Sí" : "No", y);
+    if (censo.tienePoliza === "Si") {
+        y = dibujarFilaEtiquetaValor(doc, "Compañía aseguradora", texto(censo.companiaSeguro), y);
+    }
     y += 2;
 
     y = asegurarEspacio(doc, y, 20);

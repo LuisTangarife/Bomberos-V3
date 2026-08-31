@@ -37,6 +37,8 @@ export function exportarCensosExcel(censos) {
         "Tipo de predio": censo.tipoPredio || "",
         "Nombre establecimiento": censo.nombreEstablecimiento || "",
         "Actividad económica": censo.tipoActividadEconomica || "",
+        "¿Tiene póliza o seguro?": censo.tienePoliza === "Si" ? "Sí" : "No",
+        "Compañía aseguradora": censo.companiaSeguro || "",
 
         "Jefe — Cédula": censo.jefeCedula || "",
         "Jefe — Nombre": censo.jefeNombre || "",
