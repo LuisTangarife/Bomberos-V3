@@ -53,6 +53,7 @@ async function iniciarAplicacion() {
     configurarTema();
     inicializarFirmas();
     inicializarFotoEntrega();
+    cargarCatalogoKits();
 
     await cargarAyudas();
 
@@ -126,6 +127,63 @@ function configurarEventos() {
     });
 
     configurarSelectorKit();
+
+}
+
+const ICONOS_KIT = {
+    "Kit Alimentario": "fa-basket-shopping",
+    "Kit Aseo": "fa-pump-soap",
+    "Kit Cocina": "fa-utensils",
+    "Kit Noche": "fa-bed",
+    "Kit Mascota": "fa-paw"
+};
+
+// Igual que unidades/personal en el Panel General: si el catálogo
+// "Tipo de kit" tiene contenido en Firestore, reemplaza las fichas
+// fijas del HTML. Los 5 tipos originales conservan su ícono propio;
+// cualquier tipo nuevo que se agregue desde el panel usa un ícono
+// genérico de caja, porque no hay forma de que un administrador
+// elija un ícono de FontAwesome desde un campo de texto simple.
+async function cargarCatalogoKits() {
+
+    try {
+
+        const { listarCatalogo } = await import("../../shared/catalogos.js");
+        const items = await listarCatalogo("ayudas", "tipoKit");
+
+        if (!items.length) return; // sin catálogo propio todavía: se queda con las 5 fichas del HTML
+
+        const contenedor = document.getElementById("kitSelector");
+        if (!contenedor) return;
+
+        contenedor.innerHTML = items.map(item => {
+
+            const icono = ICONOS_KIT[item.valor] || "fa-box";
+            const etiqueta = item.valor.replace(/^Kit\s+/i, "");
+
+            return `
+                <div class="kit-tile" data-valor="${item.valor.replace(/"/g, "&quot;")}">
+                    <button type="button" class="kit-tile-toggle">
+                        <i class="fa-solid ${icono}"></i>
+                        <span>${etiqueta}</span>
+                    </button>
+                    <label class="kit-tile-cantidad">Cantidad
+                        <input type="number" min="1" value="1" class="kit-cantidad-input">
+                    </label>
+                </div>
+            `;
+
+        }).join("");
+
+        // Las fichas son elementos nuevos: hay que volver a engancharles
+        // los eventos (los de las fichas viejas, que ya no existen en
+        // el DOM, simplemente se pierden — no queda ningún listener
+        // huérfano).
+        configurarSelectorKit();
+
+    } catch (error) {
+        console.warn("[ayudas] No se pudo cargar el catálogo de tipos de kit, se usan las fichas fijas del HTML:", error);
+    }
 
 }
 
