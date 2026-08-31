@@ -773,7 +773,7 @@ PANEL INFERIOR
     display:grid;
     grid-template-columns:1fr 1fr 1.1fr;
     gap:22px;
-    align-items:start;
+    align-items:stretch;
 }
 
 .panel{
@@ -783,6 +783,8 @@ PANEL INFERIOR
     backdrop-filter:blur(20px);
     border:1px solid var(--border);
     box-shadow:var(--shadow);
+    display:flex;
+    flex-direction:column;
 }
 
 .panel h2{
@@ -805,6 +807,7 @@ PANEL INFERIOR
     display:grid;
     grid-template-columns:repeat(auto-fit,minmax(120px,1fr));
     gap:12px;
+    margin:auto 0; /* centra el bloque de botones cuando el panel es más alto que su contenido */
 }
 
 .quick-grid button{
@@ -840,6 +843,26 @@ PANEL INFERIOR
     display:flex;
     flex-direction:column;
     gap:6px;
+    max-height:280px;
+    overflow-y:auto;
+    padding-right:4px;
+}
+
+.units,
+.activity{
+    scrollbar-width:thin;
+    scrollbar-color:rgba(255,255,255,.18) transparent;
+}
+
+.units::-webkit-scrollbar,
+.activity::-webkit-scrollbar{
+    width:6px;
+}
+
+.units::-webkit-scrollbar-thumb,
+.activity::-webkit-scrollbar-thumb{
+    background:rgba(255,255,255,.18);
+    border-radius:10px;
 }
 
 .unit-row{
@@ -1031,6 +1054,9 @@ PANEL INFERIOR
     display:flex;
     flex-direction:column;
     gap:2px;
+    max-height:280px;
+    overflow-y:auto;
+    padding-right:4px;
 }
 
 .activity li{
