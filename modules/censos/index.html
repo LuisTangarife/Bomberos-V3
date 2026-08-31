@@ -408,17 +408,41 @@
                     </div>
                 </fieldset>
 
-                <!-- 10. OBSERVACIONES -->
+                <!-- 10. EVIDENCIA FOTOGRÁFICA -->
                 <fieldset class="form-section">
-                    <legend>10. Observaciones generales</legend>
+                    <legend>10. Evidencia fotográfica</legend>
+
+                    <div class="foto-censo-acciones">
+                        <button type="button" id="btnFotoCensoCamara" class="btn-secundario">
+                            <i class="fa-solid fa-camera"></i> Tomar foto
+                        </button>
+                        <button type="button" id="btnFotoCensoGaleria" class="btn-secundario">
+                            <i class="fa-solid fa-images"></i> Galería
+                        </button>
+                    </div>
+
+                    <input type="file" id="fotoCensoInput" accept="image/*" capture="environment" hidden>
+
+                    <div id="fotoCensoPreview" class="foto-censo-preview">
+                        <div class="foto-censo-placeholder">
+                            <i class="fa-solid fa-image"></i>
+                            <span>Aún no hay foto de este censo</span>
+                        </div>
+                    </div>
+
+                </fieldset>
+
+                <!-- 11. OBSERVACIONES -->
+                <fieldset class="form-section">
+                    <legend>11. Observaciones generales</legend>
                     <label class="campo-completo">
                         <textarea id="observaciones" rows="4"></textarea>
                     </label>
                 </fieldset>
 
-                <!-- 11. FIRMAS -->
+                <!-- 12. FIRMAS -->
                 <fieldset class="form-section">
-                    <legend>11. Firmas</legend>
+                    <legend>12. Firmas</legend>
                     <div class="form-grid cols-2">
                         <div>
                             <p class="form-note">Funcionario</p>

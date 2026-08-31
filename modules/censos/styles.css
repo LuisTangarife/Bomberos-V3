@@ -435,6 +435,87 @@ label .req {
     margin-top: 10px;
 }
 
+/* ========================================================================
+   EVIDENCIA FOTOGRÁFICA — mismo mecanismo visual que Ayudas, con los
+   tokens propios de este módulo (--censo-*).
+======================================================================== */
+
+.foto-censo-acciones {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 6px;
+}
+
+.foto-censo-preview {
+    margin-top: 12px;
+    border: 2px dashed var(--censo-border);
+    border-radius: 14px;
+    min-height: 160px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    position: relative;
+    background: #f8f9fb;
+    transition: border-color .25s;
+}
+
+.foto-censo-preview:hover {
+    border-color: var(--censo-border-hover);
+}
+
+.foto-censo-preview.tiene-foto {
+    border-style: solid;
+    border-color: var(--censo-border-hover);
+}
+
+.foto-censo-placeholder {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    color: var(--censo-text-light);
+    font-size: .85rem;
+    padding: 24px;
+    text-align: center;
+}
+
+.foto-censo-placeholder i {
+    font-size: 1.8rem;
+    opacity: .6;
+}
+
+.foto-censo-preview img {
+    width: 100%;
+    max-height: 320px;
+    object-fit: contain;
+    display: block;
+    background: #000;
+}
+
+.foto-censo-quitar {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: none;
+    background: rgba(0,0,0,.65);
+    color: #fff;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: .9rem;
+    transition: background .2s;
+}
+
+.foto-censo-quitar:hover {
+    background: #c0392b;
+}
+
 .form-grid {
     display: grid;
     gap: 14px;

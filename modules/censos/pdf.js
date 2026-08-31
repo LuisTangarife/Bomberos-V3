@@ -150,9 +150,11 @@ export async function generarPDFCenso(censo) {
     y = dibujarFilaEtiquetaValor(doc, "Fecha y hora", fechaTexto.trim() || "—", y);
     y += 2;
 
+    y = dibujarFotoCenso(doc, censo.foto, y);
+
     if (censo.observaciones) {
         y = asegurarEspacio(doc, y, 20);
-        y = dibujarTituloSeccion(doc, "10. Observaciones generales", y);
+        y = dibujarTituloSeccion(doc, "11. Observaciones generales", y);
         y = dibujarLineaTabla(doc, texto(censo.observaciones), y);
         y += 2;
     }
@@ -278,7 +280,7 @@ function dibujarBloqueFirmas(doc, censo, y) {
 
     y = asegurarEspacio(doc, y, alturaTotal);
 
-    y = dibujarTituloSeccion(doc, "11. Firmas", y);
+    y = dibujarTituloSeccion(doc, "12. Firmas", y);
     y = dibujarBloqueFirma(doc, "Firma del funcionario", censo.firmaFuncionario, texto(censo.funcionarioCedula), y, censo.funcionarioNombre);
     y = dibujarBloqueFirma(doc, "Firma del encuestado", censo.firmaEncuestado, texto(censo.encuestadoCedula), y, censo.encuestadoNombre);
 
@@ -315,6 +317,62 @@ function dibujarBloqueFirma(doc, etiqueta, firmaDataUrl, cedula, y, nombreImpres
     doc.text(`C.C.: ${texto(cedula)}`, MARGEN + 2, y + (nombreImpreso ? 33 : 28));
 
     return y + (nombreImpreso ? 40 : 35);
+
+}
+
+function dibujarFotoCenso(doc, fotoDataUrl, y) {
+
+    if (!fotoDataUrl) return y;
+
+    const ALTO_MAXIMO = 65;
+    const ALTURA_TITULO = 11;
+
+    // Título + foto se miden juntos y se saltan de página como un solo
+    // bloque — mismo criterio que en Ayudas: que el título "10. Evidencia
+    // fotográfica" nunca quede en una página y la imagen en la siguiente.
+    let alturaFoto = ALTO_MAXIMO;
+    try {
+        const propiedades = doc.getImageProperties(fotoDataUrl);
+        alturaFoto = Math.min(ALTO_MAXIMO, ANCHO_UTIL / (propiedades.width / propiedades.height));
+    } catch (error) {
+        console.warn("[censos/pdf] No se pudo leer la proporción de la foto:", error);
+    }
+
+    y = asegurarEspacio(doc, y, ALTURA_TITULO + alturaFoto + 10);
+
+    y = dibujarTituloSeccion(doc, "10. Evidencia fotográfica", y);
+
+    try {
+
+        const propiedades = doc.getImageProperties(fotoDataUrl);
+        const ratio = propiedades.width / propiedades.height;
+
+        let ancho = ANCHO_UTIL;
+        let alto = ancho / ratio;
+
+        if (alto > ALTO_MAXIMO) {
+            alto = ALTO_MAXIMO;
+            ancho = alto * ratio;
+        }
+
+        const x = MARGEN + (ANCHO_UTIL - ancho) / 2;
+
+        doc.setDrawColor(18, 29, 31);
+        doc.setLineWidth(0.3);
+        doc.rect(x - 0.5, y - 0.5, ancho + 1, alto + 1);
+
+        const coincidenciaFormato = /^data:image\/(\w+);/.exec(fotoDataUrl);
+        const formato = (coincidenciaFormato?.[1] || "jpeg").toUpperCase();
+
+        doc.addImage(fotoDataUrl, formato, x, y, ancho, alto);
+
+        y += alto + 7;
+
+    } catch (error) {
+        console.warn("[censos/pdf] No se pudo dibujar la foto del censo:", error);
+    }
+
+    return y;
 
 }
 

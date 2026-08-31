@@ -18,6 +18,11 @@ import { renderizarListado, filtrarListado } from "./listado.js";
 import { anunciar } from "../../shared/voz.js";
 import { exportarCensosExcel } from "./excel.js";
 import {
+    inicializarFotoCenso,
+    renderizarFotoCenso,
+    quitarFotoCenso
+} from "./fotos.js";
+import {
     inicializarFirmas,
     limpiarTodasLasFirmas,
     restaurarFirma,
@@ -50,6 +55,7 @@ async function iniciarAplicacion() {
     configurarEventos();
     configurarTema();
     inicializarFirmas();
+    inicializarFotoCenso();
     agregarFilaIntegrante();
 
     await cargarCensos();
@@ -444,10 +450,13 @@ function recopilarDatosFormulario() {
         fechaMinutos: valorCampo("fechaMinutos"),
         fechaAmPm: valorRadio("fechaAmPm"),
 
-        // 10. Observaciones
+        // 10. Evidencia fotográfica
+        foto: state.foto || null,
+
+        // 11. Observaciones
         observaciones: valorCampo("observaciones"),
 
-        // 11. Firmas
+        // 12. Firmas
         funcionarioCedula: valorCampo("funcionarioCedula"),
         funcionarioNombre: valorCampo("funcionarioNombre"),
         encuestadoCedula: valorCampo("encuestadoCedula"),
@@ -559,6 +568,9 @@ function poblarFormulario(censo) {
     state.firmas.funcionario = censo.firmaFuncionario || null;
     state.firmas.encuestado = censo.firmaEncuestado || null;
 
+    state.foto = censo.foto || null;
+    renderizarFotoCenso();
+
     requestAnimationFrame(() => {
         redimensionarCanvasFirmas();
         restaurarFirma("funcionario");
@@ -594,6 +606,7 @@ export function nuevoFormularioCenso() {
 
     if (UI.form) UI.form.reset();
     limpiarTodasLasFirmas();
+    quitarFotoCenso();
     if (UI.estadoUbicacion) {
         UI.estadoUbicacion.textContent = "";
         UI.estadoUbicacion.className = "censo-location-status";

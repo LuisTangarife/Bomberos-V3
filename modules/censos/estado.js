@@ -42,6 +42,10 @@ export const state = {
         encuestado: null
     },
 
+    // Foto única de evidencia del censo (base64) — mismo mecanismo que
+    // Ayudas: sin Firebase Storage, comprimida y embebida en el documento.
+    foto: null,
+
     estado: {
         cargando: false,
         guardando: false
