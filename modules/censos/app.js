@@ -22,6 +22,7 @@ import {
     renderizarFotoCenso,
     quitarFotoCenso
 } from "./fotos.js";
+import { listarCatalogo, reconstruirSelectDesdeCatalogo } from "../../shared/catalogos.js";
 import {
     inicializarFirmas,
     limpiarTodasLasFirmas,
@@ -56,6 +57,7 @@ async function iniciarAplicacion() {
     configurarTema();
     inicializarFirmas();
     inicializarFotoCenso();
+    cargarCatalogosCenso();
     agregarFilaIntegrante();
 
     await cargarCensos();
@@ -110,6 +112,53 @@ function actualizarIconoTema() {
 /* ========================================================================
    EVENTOS
 ======================================================================== */
+
+// Igual que unidades/personal en el Panel General: si el catálogo
+// tiene contenido en Firestore, reemplaza la lista fija del HTML. Si
+// está vacío o falla (sin conexión), sigue usando la lista original
+// — el formulario nunca se queda sin opciones para elegir.
+async function cargarCatalogosCenso() {
+
+    try {
+
+        const itemsBarrio = await listarCatalogo("censos", "barrioVereda");
+
+        if (itemsBarrio.length) {
+            reconstruirSelectDesdeCatalogo(
+                document.getElementById("barrioVeredaSelect"),
+                itemsBarrio,
+                {
+                    placeholder: "Seleccione...",
+                    // "Otro" no es un barrio real: es lo que activa el
+                    // campo de texto libre (ver actualizarCampoBarrioOtro
+                    // en dom.js/app.js) — se mantiene fijo al final,
+                    // fuera del catálogo editable.
+                    extra: [{ valor: "Otro", texto: "Otro (especificar)" }]
+                }
+            );
+        }
+
+    } catch (error) {
+        console.warn("[censos] No se pudo cargar el catálogo de barrio/vereda, se usa la lista fija del HTML:", error);
+    }
+
+    try {
+
+        const itemsActividad = await listarCatalogo("censos", "actividadEconomica");
+
+        if (itemsActividad.length) {
+            reconstruirSelectDesdeCatalogo(
+                document.getElementById("tipoActividadEconomica"),
+                itemsActividad,
+                { placeholder: "Seleccione..." }
+            );
+        }
+
+    } catch (error) {
+        console.warn("[censos] No se pudo cargar el catálogo de actividad económica, se usa la lista fija del HTML:", error);
+    }
+
+}
 
 function configurarEventos() {
 
