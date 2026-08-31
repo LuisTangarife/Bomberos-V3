@@ -845,6 +845,7 @@ PANEL INFERIOR
     gap:6px;
     max-height:280px;
     overflow-y:auto;
+    overflow-x:hidden;
     padding-right:4px;
 }
 
@@ -867,8 +868,9 @@ PANEL INFERIOR
 
 .unit-row{
     display:flex;
-    align-items:center;
-    gap:14px;
+    align-items:flex-start;
+    flex-wrap:wrap;
+    gap:10px 14px;
     padding:12px 10px;
     border-radius:12px;
     transition:.25s;
@@ -892,7 +894,7 @@ PANEL INFERIOR
 }
 
 .unit-info{
-    flex:1;
+    flex:1 1 130px;
     min-width:0;
 }
 
@@ -967,6 +969,7 @@ PANEL INFERIOR
    pero interactivo: cambiar el estado de una unidad/persona desde
    el propio Panel General, sin abrir nada aparte) */
 .unit-estado-select{
+    flex-shrink:0;
     appearance:none;
     -webkit-appearance:none;
     border:none;
