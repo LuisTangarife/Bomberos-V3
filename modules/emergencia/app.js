@@ -509,6 +509,28 @@ document.addEventListener('DOMContentLoaded', async () => {
             console.warn("[emergencia] No se pudo cargar el personal real, se usa la lista fija del HTML:", error);
         }
 
+        // Igual que unidades/personal: si el catálogo "Tipo de evento"
+        // tiene contenido en Firestore (alguien lo editó desde el
+        // Panel General), se usa ese en vez de la lista fija del HTML.
+        // Si está vacío o falla, se sigue usando la lista fija de
+        // siempre — nunca se queda el campo sin opciones.
+        try {
+
+            const { listarCatalogo, reconstruirSelectDesdeCatalogo } = await import("../../shared/catalogos.js");
+            const itemsEvento = await listarCatalogo("emergencia", "tipoEvento");
+
+            if (itemsEvento.length) {
+                reconstruirSelectDesdeCatalogo(
+                    document.getElementById("evento"),
+                    itemsEvento,
+                    { placeholder: "— Seleccione el tipo de evento —" }
+                );
+            }
+
+        } catch (error) {
+            console.warn("[emergencia] No se pudo cargar el catálogo de tipo de evento, se usa la lista fija del HTML:", error);
+        }
+
     })();
 
 
