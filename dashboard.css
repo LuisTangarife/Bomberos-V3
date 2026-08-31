@@ -697,19 +697,53 @@ MÓDULOS DEL SISTEMA
 .module:hover::after{ opacity:.3; }
 
 .module i{
-    width:70px;
-    height:70px;
-    border-radius:20px;
+    width:54px;
+    height:54px;
+    border-radius:16px;
     display:flex;
     justify-content:center;
     align-items:center;
-    font-size:30px;
+    font-size:22px;
     color:white;
     margin-bottom:22px;
     transition:.4s;
+    flex-shrink:0;
 }
 
 .module:hover i{ transform:rotate(-6deg) scale(1.08); }
+
+.module-top{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:14px;
+    margin-bottom:18px;
+}
+
+.module-top i{
+    margin-bottom:0; /* el margen ya lo pone .module-top, no el ícono suelto */
+}
+
+.module-stat{
+    text-align:right;
+    min-width:0;
+}
+
+.module-stat-value{
+    font-size:26px;
+    font-weight:800;
+    color:var(--white);
+    line-height:1;
+}
+
+.module-stat-label{
+    font-size:10.5px;
+    font-weight:700;
+    text-transform:uppercase;
+    letter-spacing:.4px;
+    color:var(--text-light);
+    margin-top:2px;
+}
 
 .module h3{
     font-size:20px;

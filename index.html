@@ -211,116 +211,10 @@
 
             </section>
 
-            <!-- ===================================================== -->
-            <!-- ESTADÍSTICAS -->
-            <!-- ===================================================== -->
-
-            <section class="stats-grid">
-
-                <article class="stat-card emergency">
-
-                    <div class="stat-icon">
-
-                        <i class="fa-solid fa-fire-extinguisher"></i>
-
-                    </div>
-
-                    <div>
-
-                        <small>Emergencias</small>
-
-                        <h2 id="totalEmergencias">0</h2>
-
-                        <span>Este mes</span>
-
-                    </div>
-
-                </article>
-
-                <article class="stat-card aph">
-
-                    <div class="stat-icon">
-
-                        <i class="fa-solid fa-truck-medical"></i>
-
-                    </div>
-
-                    <div>
-
-                        <small>APH</small>
-
-                        <h2 id="totalAPH">—</h2>
-
-                        <span>Registros</span>
-
-                    </div>
-
-                </article>
-
-                <article class="stat-card inspection">
-
-                    <div class="stat-icon">
-
-                        <i class="fa-solid fa-building-shield"></i>
-
-                    </div>
-
-                    <div>
-
-                        <small>Inspecciones</small>
-
-                        <h2 id="totalInspecciones">0</h2>
-
-                        <span>Completadas</span>
-
-                    </div>
-
-                </article>
-
-                <article class="stat-card help">
-
-                    <div class="stat-icon">
-
-                        <i class="fa-solid fa-box-open"></i>
-
-                    </div>
-
-                    <div>
-
-                        <small>Ayudas</small>
-
-                        <h2 id="totalAyudas">—</h2>
-
-                        <span>Entregadas</span>
-
-                    </div>
-
-                </article>
-                <article class="stat-card census">
-
-                    <div class="stat-icon">
-                
-                        <i class="fa-solid fa-people-roof"></i>
-                
-                    </div>
-                
-                    <div>
-                
-                        <small>Censos</small>
-                
-                        <h2 id="totalCensos">—</h2>
-                
-                        <span>Registros</span>
-                
-                    </div>
-                
-                </article>
-
-            </section>
-            
 
             <!-- ===================================================== -->
-            <!-- MÓDULOS -->
+            <!-- MÓDULOS (con su dato real integrado, ya no hay tarjetas
+                 de estadística sueltas duplicando el mismo número) -->
             <!-- ===================================================== -->
 
             <section class="modules">
@@ -338,95 +232,113 @@
                     <article class="module emergency"
                              onclick="location.href='./modules/emergencia/index.html'">
 
-                        <i class="fa-solid fa-fire-extinguisher"></i>
+                        <div class="module-top">
+                            <i class="fa-solid fa-fire-extinguisher"></i>
+                            <div class="module-stat">
+                                <div class="module-stat-value" id="totalEmergencias">0</div>
+                                <span class="module-stat-label">este mes</span>
+                            </div>
+                        </div>
 
                         <h3>Emergencias</h3>
 
                         <p>
-
                             Registro completo de incidentes,
                             despachos y recursos.
-
                         </p>
 
                     </article>
 
                     <article class="module aph">
 
-                        <i class="fa-solid fa-truck-medical"></i>
+                        <div class="module-top">
+                            <i class="fa-solid fa-truck-medical"></i>
+                        </div>
 
                         <h3>APH</h3>
 
                         <p>
-
                             Atención Prehospitalaria.
-
                         </p>
 
                         <span>Próximamente</span>
 
                     </article>
 
-                    <article class="module help">
+                    <article class="module help"
+                             onclick="location.href='./modules/ayudas/index.html'">
 
-                        <i class="fa-solid fa-box-open"></i>
+                        <div class="module-top">
+                            <i class="fa-solid fa-box-open"></i>
+                            <div class="module-stat">
+                                <div class="module-stat-value" id="totalAyudas">—</div>
+                                <span class="module-stat-label">entregadas</span>
+                            </div>
+                        </div>
 
                         <h3>Ayudas Humanitarias</h3>
 
                         <p>
-
                             Gestión y entrega de ayudas.
-
                         </p>
                     </article>
-                    
+
                     <article
                         class="module inspection"
                         onclick="abrirInspecciones()">
-                    
-                        <i class="fa-solid fa-building-shield"></i>
-                    
+
+                        <div class="module-top">
+                            <i class="fa-solid fa-building-shield"></i>
+                            <div class="module-stat">
+                                <div class="module-stat-value" id="totalInspecciones">0</div>
+                                <span class="module-stat-label">completadas</span>
+                            </div>
+                        </div>
+
                         <h3>Inspecciones</h3>
-                    
+
                         <p>
-                    
                             Registro de inspecciones de seguridad y visitas técnicas.
-                    
                         </p>
-                    
+
                     </article>
 
                     <article
                         class="module statistics"
                         onclick="location.href='./modules/estadisticas/index.html'">
 
-                        <i class="fa-solid fa-chart-column"></i>
+                        <div class="module-top">
+                            <i class="fa-solid fa-chart-column"></i>
+                        </div>
 
                         <h3>Estadísticas</h3>
 
                         <p>
-
                             Indicadores y reportes.
-
                         </p>
 
                     </article>
+
                     <article
                         class="module census"
                         onclick="location.href='./modules/censos/index.html'">
-                
-                    <i class="fa-solid fa-people-roof"></i>
-                
-                    <h3>Censos</h3>
-                
-                    <p>
-                
-                        Registro y consulta de censos
-                        poblacionales y caracterización.
-                
-                    </p>
-                
-                </article>
+
+                        <div class="module-top">
+                            <i class="fa-solid fa-people-roof"></i>
+                            <div class="module-stat">
+                                <div class="module-stat-value" id="totalCensos">—</div>
+                                <span class="module-stat-label">registros</span>
+                            </div>
+                        </div>
+
+                        <h3>Censos</h3>
+
+                        <p>
+                            Registro y consulta de censos
+                            poblacionales y caracterización.
+                        </p>
+
+                    </article>
 
                 </div>
 

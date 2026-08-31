@@ -192,7 +192,7 @@ async function cargarDashboard(){
 
 function animarContadores(){
 
-    const contadores = document.querySelectorAll(".stat-card h2[id]");
+    const contadores = document.querySelectorAll(".module-stat-value[id]");
 
     contadores.forEach((el) => {
 
