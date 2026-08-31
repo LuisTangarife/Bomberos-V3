@@ -494,8 +494,8 @@ ESTADÍSTICAS
 
 .stats-grid{
     display:grid;
-    grid-template-columns:repeat(auto-fit,minmax(240px,1fr));
-    gap:22px;
+    grid-template-columns:repeat(auto-fit,minmax(190px,1fr));
+    gap:18px;
 }
 
 .stat-card{
@@ -648,21 +648,21 @@ MÓDULOS DEL SISTEMA
 
 .module-grid{
     display:grid;
-    grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
-    gap:20px;
+    grid-template-columns:repeat(auto-fit,minmax(190px,1fr));
+    gap:16px;
     align-items:start;
 }
 
 .module{
     position:relative;
     overflow:hidden;
-    padding:30px;
-    border-radius:22px;
+    padding:22px;
+    border-radius:18px;
     cursor:pointer;
     display:flex;
     flex-direction:column;
     justify-content:flex-start;
-    min-height:230px;
+    min-height:170px;
     background:linear-gradient(180deg,rgba(255,255,255,.045),rgba(255,255,255,.015));
     backdrop-filter:blur(20px);
     border:1px solid var(--border);
@@ -771,7 +771,7 @@ PANEL INFERIOR
 
 .dashboard-columns{
     display:grid;
-    grid-template-columns:1fr 1fr 1.1fr;
+    grid-template-columns:minmax(0,1fr) minmax(0,1fr) minmax(0,1.1fr);
     gap:22px;
     align-items:stretch;
 }
