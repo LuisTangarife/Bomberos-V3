@@ -106,30 +106,57 @@
                     <legend>Datos de la entrega</legend>
                     <div class="seccion-rotulo"><i class="fa-solid fa-box-open"></i> Datos de la entrega</div>
 
-                    <p class="form-note">Tipo de kit <span class="req">*</span></p>
+                    <p class="form-note">Tipos de kit entregados <span class="req">*</span></p>
+                    <p class="form-note" style="font-weight:400; text-transform:none; letter-spacing:normal; opacity:.75;">
+                        Puedes seleccionar más de uno y ajustar la cantidad de cada tipo.
+                    </p>
                     <div class="kit-selector" id="kitSelector">
-                        <button type="button" class="kit-tile" data-valor="Kit Alimentario">
-                            <i class="fa-solid fa-basket-shopping"></i>
-                            <span>Alimentario</span>
-                        </button>
-                        <button type="button" class="kit-tile" data-valor="Kit Aseo">
-                            <i class="fa-solid fa-pump-soap"></i>
-                            <span>Aseo</span>
-                        </button>
-                        <button type="button" class="kit-tile" data-valor="Kit Cocina">
-                            <i class="fa-solid fa-utensils"></i>
-                            <span>Cocina</span>
-                        </button>
-                        <button type="button" class="kit-tile" data-valor="Kit Noche">
-                            <i class="fa-solid fa-bed"></i>
-                            <span>Noche</span>
-                        </button>
-                        <button type="button" class="kit-tile" data-valor="Kit Mascota">
-                            <i class="fa-solid fa-paw"></i>
-                            <span>Mascota</span>
-                        </button>
+                        <div class="kit-tile" data-valor="Kit Alimentario">
+                            <button type="button" class="kit-tile-toggle">
+                                <i class="fa-solid fa-basket-shopping"></i>
+                                <span>Alimentario</span>
+                            </button>
+                            <label class="kit-tile-cantidad">Cantidad
+                                <input type="number" min="1" value="1" class="kit-cantidad-input">
+                            </label>
+                        </div>
+                        <div class="kit-tile" data-valor="Kit Aseo">
+                            <button type="button" class="kit-tile-toggle">
+                                <i class="fa-solid fa-pump-soap"></i>
+                                <span>Aseo</span>
+                            </button>
+                            <label class="kit-tile-cantidad">Cantidad
+                                <input type="number" min="1" value="1" class="kit-cantidad-input">
+                            </label>
+                        </div>
+                        <div class="kit-tile" data-valor="Kit Cocina">
+                            <button type="button" class="kit-tile-toggle">
+                                <i class="fa-solid fa-utensils"></i>
+                                <span>Cocina</span>
+                            </button>
+                            <label class="kit-tile-cantidad">Cantidad
+                                <input type="number" min="1" value="1" class="kit-cantidad-input">
+                            </label>
+                        </div>
+                        <div class="kit-tile" data-valor="Kit Noche">
+                            <button type="button" class="kit-tile-toggle">
+                                <i class="fa-solid fa-bed"></i>
+                                <span>Noche</span>
+                            </button>
+                            <label class="kit-tile-cantidad">Cantidad
+                                <input type="number" min="1" value="1" class="kit-cantidad-input">
+                            </label>
+                        </div>
+                        <div class="kit-tile" data-valor="Kit Mascota">
+                            <button type="button" class="kit-tile-toggle">
+                                <i class="fa-solid fa-paw"></i>
+                                <span>Mascota</span>
+                            </button>
+                            <label class="kit-tile-cantidad">Cantidad
+                                <input type="number" min="1" value="1" class="kit-cantidad-input">
+                            </label>
+                        </div>
                     </div>
-                    <input type="hidden" id="tipoKit">
 
                     <div class="form-grid cols-3" style="margin-top:14px;">
                         <label>Fecha<input type="date" id="fecha"></label>
@@ -171,10 +198,6 @@
                 <fieldset class="form-section">
                     <legend>Entrega</legend>
                     <div class="seccion-rotulo"><i class="fa-solid fa-boxes-stacked"></i> Entrega</div>
-
-                    <div class="form-grid cols-3">
-                        <label>Cantidad entregada (kits)<input type="number" min="1" id="cantidadEntregada" value="1"></label>
-                    </div>
 
                     <label class="campo-observaciones">Observaciones
                         <textarea id="observaciones" rows="3" placeholder="Novedades relacionadas con la entrega..."></textarea>

@@ -5,7 +5,7 @@
 
 import { state } from "./estado.js";
 import { UI } from "./dom.js";
-import { cargarFormularioAyuda, nuevoFormularioAyuda } from "./app.js";
+import { cargarFormularioAyuda, nuevoFormularioAyuda, normalizarKits } from "./app.js";
 import { eliminarAyuda } from "./persistencia.js";
 import { generarPDFAyuda } from "./pdf.js";
 
@@ -45,22 +45,31 @@ export function renderizarListado() {
 
     UI.listadoContainer.innerHTML = ayudas.map(ayuda => {
 
-        const icono = ICONOS_KIT[ayuda.tipoKit] || "fa-solid fa-box-open";
+        const kits = normalizarKits(ayuda);
+        const totalKits = kits.reduce((total, k) => total + k.cantidad, 0);
         const beneficiario = ayuda.beneficiarioNombre || "Sin nombre";
         const lugar = ayuda.direccionSector || ayuda.lugar || "Sin ubicación";
+
+        const badgesKits = kits.length
+            ? kits.map(k => {
+                const icono = ICONOS_KIT[k.tipo] || "fa-solid fa-box-open";
+                return `<span class="ayuda-kit-badge"><i class="${icono}"></i> ${escapar(k.tipo)} × ${k.cantidad}</span>`;
+            }).join("")
+            : `<span class="ayuda-kit-badge"><i class="fa-solid fa-box-open"></i> Sin tipo</span>`;
 
         return `
             <article class="ayuda-card" data-id="${escapar(ayuda.id)}">
 
                 <div class="ayuda-card-top">
                     <span class="ayuda-codigo">${escapar(ayuda.id)}</span>
-                    <span class="ayuda-kit-badge"><i class="${icono}"></i> ${escapar(ayuda.tipoKit || "Sin tipo")}</span>
                     ${ayuda.pending ? '<span class="ayuda-badge pendiente">Pendiente sync</span>' : ""}
                 </div>
 
+                <div class="ayuda-kits-lista">${badgesKits}</div>
+
                 <h3>${escapar(beneficiario)}</h3>
                 <p class="ayuda-sub"><i class="fa-solid fa-location-dot"></i> ${escapar(lugar)}</p>
-                <p class="ayuda-sub"><i class="fa-solid fa-boxes-stacked"></i> ${escapar(ayuda.cantidadEntregada || "1")} kit(s) entregado(s)</p>
+                <p class="ayuda-sub"><i class="fa-solid fa-boxes-stacked"></i> ${totalKits} kit(s) entregado(s) en total</p>
 
                 <div class="ayuda-card-actions">
                     <button type="button" class="btn-editar-ayuda" data-id="${escapar(ayuda.id)}">

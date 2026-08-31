@@ -47,6 +47,22 @@ function texto(valor) {
     return String(valor);
 }
 
+// Igual que app.js: registros guardados antes de permitir varios kits
+// solo tienen ayuda.tipoKit + ayuda.cantidadEntregada (un único tipo).
+// El certificado tiene que poder generarse igual para esos registros
+// viejos, no solo para los nuevos con ayuda.kits.
+function obtenerKitsAyuda(ayuda) {
+
+    if (Array.isArray(ayuda?.kits) && ayuda.kits.length > 0) return ayuda.kits;
+
+    if (ayuda?.tipoKit) {
+        return [{ tipo: ayuda.tipoKit, cantidad: Number(ayuda.cantidadEntregada) || 1 }];
+    }
+
+    return [];
+
+}
+
 /* ------------------------------------------------------------------------
    GENERACIÓN DEL PDF
 ------------------------------------------------------------------------ */
@@ -70,9 +86,14 @@ export async function generarPDFAyuda(ayuda) {
         cargarImagenBase64("./assets/franja-esquina.png")
     ]);
 
+    const kits = obtenerKitsAyuda(ayuda);
+    const tituloCertificado = kits.length === 1
+        ? `FORMATO DE ENTREGA DE ${kits[0].tipo.toUpperCase()}`
+        : "FORMATO DE ENTREGA DE KITS DE AYUDA HUMANITARIA";
+
     let y = dibujarEncabezado(doc, ayuda, fondoMembrete, bannerSuperior, escudoColombia, franjaEsquina);
 
-    y = dibujarTitulo(doc, `FORMATO DE ENTREGA DE ${(ayuda.tipoKit || "KIT").toUpperCase()}`, y);
+    y = dibujarTitulo(doc, tituloCertificado, y);
     y = dibujarSubtitulo(doc, "Emergencia por evento sísmico — Cuerpo de Bomberos Voluntarios de Villamaría", y);
 
     y += 4;
@@ -94,12 +115,30 @@ export async function generarPDFAyuda(ayuda) {
 
     y = asegurarEspacio(doc, y, 30);
     y = dibujarTituloSeccion(doc, "Entrega", y);
+
+    const resumenKits = kits.length
+        ? kits.map(k => `${k.cantidad} ${k.tipo}`).join(", ")
+        : "kit(s) de ayuda humanitaria";
+
     y = dibujarLineaTabla(
         doc,
-        `Se hace entrega de ${texto(ayuda.cantidadEntregada || "1")} ${(ayuda.tipoKit || "kit").toUpperCase()} como ayuda humanitaria para la atención de la emergencia ocasionada por el evento sísmico.`,
+        `Se hace entrega de ${resumenKits} como ayuda humanitaria para la atención de la emergencia ocasionada por el evento sísmico.`,
         y
     );
-    y = dibujarFilaEtiquetaValor(doc, "Cantidad entregada", `${texto(ayuda.cantidadEntregada || "1")} kit(s)`, y);
+
+    if (kits.length > 1) {
+        // Con un solo kit, la frase de arriba ya es suficientemente clara.
+        // Con varios, además se detalla cada tipo en una fila propia —
+        // más fácil de verificar contra lo que realmente se entregó.
+        kits.forEach(k => {
+            y = dibujarFilaEtiquetaValor(doc, k.tipo, `${k.cantidad} unidad(es)`, y);
+        });
+        const totalKits = kits.reduce((total, k) => total + k.cantidad, 0);
+        y = dibujarFilaEtiquetaValor(doc, "Total kits entregados", `${totalKits} unidad(es)`, y);
+    } else if (kits.length === 1) {
+        y = dibujarFilaEtiquetaValor(doc, "Cantidad entregada", `${kits[0].cantidad} kit(s)`, y);
+    }
+
     if (ayuda.observaciones) {
         y = dibujarFilaEtiquetaValor(doc, "Observaciones", texto(ayuda.observaciones), y);
     }
@@ -115,8 +154,9 @@ export async function generarPDFAyuda(ayuda) {
     dibujarPiePagina(doc);
 
     const fechaArchivo = ayuda.fecha || new Date().toISOString().split("T")[0];
+    const nombreBase = kits.length === 1 ? kits[0].tipo : "Ayuda_Multiple";
 
-    doc.save(`${(ayuda.tipoKit || "Ayuda").replace(/\s+/g, "_")}_${ayuda.id || "SN"}_${fechaArchivo}.pdf`);
+    doc.save(`${nombreBase.replace(/\s+/g, "_")}_${ayuda.id || "SN"}_${fechaArchivo}.pdf`);
 
 }
 
@@ -230,8 +270,14 @@ function dibujarFotoEntrega(doc, fotoDataUrl, y) {
 
 function dibujarBloqueConstanciaYFirmas(doc, ayuda, y) {
 
+    const kits = obtenerKitsAyuda(ayuda);
+    const descripcionKits = kits.length === 1
+        ? kits[0].tipo.toLowerCase()
+        : "los kits de ayuda humanitaria relacionados en este documento";
+    const verboEntregado = kits.length === 1 ? "entregado" : "entregados";
+
     const textoDeclaracion =
-        `Declaro que recibí a satisfacción ${(ayuda.tipoKit || "el kit").toLowerCase()} entregado por la Alcaldía de Villamaría — Secretaría de Desarrollo Social, en el marco de la atención humanitaria por la emergencia.`;
+        `Declaro que recibí a satisfacción ${descripcionKits} ${verboEntregado} por la Alcaldía de Villamaría — Secretaría de Desarrollo Social, en el marco de la atención humanitaria por la emergencia.`;
 
     // --- Medir cada pieza SIN dibujar nada todavía ---
 

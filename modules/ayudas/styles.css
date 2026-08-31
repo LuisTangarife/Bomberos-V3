@@ -663,6 +663,13 @@ textarea:focus {
    BADGE DE TIPO DE KIT (propio de este módulo, no existe en Censos)
 ======================================================================== */
 
+.ayuda-kits-lista {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin: 6px 0;
+}
+
 .ayuda-kit-badge {
     display: inline-flex;
     align-items: center;
@@ -825,7 +832,6 @@ html[data-tema="claro"] .ayuda-kit-badge {
     border-radius: 10px;
     background: var(--ayuda-kraft-bg);
     color: var(--ayuda-text-light);
-    cursor: pointer;
     font-family: inherit;
     font-size: .74rem;
     font-weight: 700;
@@ -833,6 +839,53 @@ html[data-tema="claro"] .ayuda-kit-badge {
     line-height: 1.2;
     transition: transform .15s, border-color .15s, background .15s;
     position: relative;
+}
+
+.kit-tile-toggle {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    background: none;
+    border: none;
+    padding: 0;
+    margin: 0;
+    width: 100%;
+    color: inherit;
+    font: inherit;
+    cursor: pointer;
+}
+
+.kit-tile-cantidad {
+    display: none;
+    width: 100%;
+    font-size: .68rem;
+    font-weight: 600;
+    text-transform: none;
+    letter-spacing: normal;
+    margin-top: 2px;
+}
+
+.kit-tile.activo .kit-tile-cantidad {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+}
+
+.kit-tile-cantidad .kit-cantidad-input {
+    width: 56px;
+    text-align: center;
+    padding: 3px 4px;
+    border-radius: 6px;
+    border: 1px solid var(--ayuda-kraft-borde);
+    font-weight: 700;
+    font-size: .8rem;
+}
+
+/* El click en el número no debe "des-seleccionar" el kit */
+.kit-tile-cantidad .kit-cantidad-input {
+    cursor: text;
 }
 
 .kit-tile i {

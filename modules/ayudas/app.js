@@ -130,25 +130,88 @@ function configurarEventos() {
 }
 
 /* ========================================================================
-   SELECTOR DE KIT (fichas tocables)
+   SELECTOR DE KIT (fichas tocables, selección múltiple con cantidad)
 ======================================================================== */
 
 function configurarSelectorKit() {
 
-    document.querySelectorAll("#kitSelector .kit-tile").forEach(ficha => {
-        ficha.addEventListener("click", () => seleccionarKit(ficha.dataset.valor));
+    document.querySelectorAll("#kitSelector .kit-tile").forEach(tile => {
+
+        const boton = tile.querySelector(".kit-tile-toggle");
+        if (boton) {
+            boton.addEventListener("click", () => alternarKit(tile));
+        }
+
+        // El input de cantidad no debe propagar el click hacia el toggle
+        // (si no, tocar el número también des-seleccionaría el kit).
+        const inputCantidad = tile.querySelector(".kit-cantidad-input");
+        if (inputCantidad) {
+            inputCantidad.addEventListener("click", e => e.stopPropagation());
+            inputCantidad.addEventListener("change", () => {
+                if (Number(inputCantidad.value) < 1) inputCantidad.value = 1;
+            });
+        }
+
     });
 
 }
 
-function seleccionarKit(valor) {
+function alternarKit(tile) {
 
-    const input = document.getElementById("tipoKit");
-    if (input) input.value = valor;
+    const activo = tile.classList.toggle("activo");
 
-    document.querySelectorAll("#kitSelector .kit-tile").forEach(ficha => {
-        ficha.classList.toggle("activo", ficha.dataset.valor === valor);
+    if (activo) {
+        const inputCantidad = tile.querySelector(".kit-cantidad-input");
+        if (inputCantidad) inputCantidad.focus();
+    }
+
+}
+
+function obtenerKitsSeleccionados() {
+
+    const kits = [];
+
+    document.querySelectorAll("#kitSelector .kit-tile.activo").forEach(tile => {
+
+        const tipo = tile.dataset.valor;
+        const inputCantidad = tile.querySelector(".kit-cantidad-input");
+        const cantidad = Math.max(1, parseInt(inputCantidad?.value, 10) || 1);
+
+        kits.push({ tipo, cantidad });
+
     });
+
+    return kits;
+
+}
+
+function establecerKitsSeleccionados(kits) {
+
+    document.querySelectorAll("#kitSelector .kit-tile").forEach(tile => {
+
+        const encontrado = (kits || []).find(k => k.tipo === tile.dataset.valor);
+        const inputCantidad = tile.querySelector(".kit-cantidad-input");
+
+        tile.classList.toggle("activo", Boolean(encontrado));
+        if (inputCantidad) inputCantidad.value = encontrado?.cantidad || 1;
+
+    });
+
+}
+
+// ayuda.kits es el formato actual (varios tipos con cantidad). Registros
+// guardados antes de este cambio solo tienen ayuda.tipoKit + ayuda.
+// cantidadEntregada (un único tipo) — se migran a un arreglo de un solo
+// elemento para poder editarlos sin perder esos datos.
+export function normalizarKits(ayuda) {
+
+    if (Array.isArray(ayuda?.kits) && ayuda.kits.length > 0) return ayuda.kits;
+
+    if (ayuda?.tipoKit) {
+        return [{ tipo: ayuda.tipoKit, cantidad: Number(ayuda.cantidadEntregada) || 1 }];
+    }
+
+    return [];
 
 }
 
@@ -188,10 +251,16 @@ function marcarRadio(nombre, valor) {
 
 function recopilarDatosFormulario() {
 
+    const kits = obtenerKitsSeleccionados();
+
     return {
 
         // Encabezado
-        tipoKit: valorCampo("tipoKit"),
+        kits,
+        // Resumen derivado, para no romper el listado ni la búsqueda de
+        // registros antiguos que solo conocen tipoKit/cantidadEntregada.
+        tipoKit: kits.map(k => k.tipo).join(", "),
+        cantidadEntregada: String(kits.reduce((total, k) => total + k.cantidad, 0) || 0),
         fecha: valorCampo("fecha"),
         lugar: valorCampo("lugar"),
 
@@ -205,7 +274,6 @@ function recopilarDatosFormulario() {
         numCenso: valorCampo("numCenso"),
 
         // Entrega
-        cantidadEntregada: valorCampo("cantidadEntregada") || "1",
         observaciones: valorCampo("observaciones"),
 
         // Constancia
@@ -226,8 +294,7 @@ function recopilarDatosFormulario() {
 
 function poblarFormulario(ayuda) {
 
-    asignar("tipoKit", ayuda.tipoKit);
-    seleccionarKit(ayuda.tipoKit || "");
+    establecerKitsSeleccionados(normalizarKits(ayuda));
     asignar("fecha", ayuda.fecha);
     asignar("lugar", ayuda.lugar);
 
@@ -240,7 +307,6 @@ function poblarFormulario(ayuda) {
     asignar("numCenso", ayuda.numCenso);
     actualizarCampoNumCenso();
 
-    asignar("cantidadEntregada", ayuda.cantidadEntregada || "1");
     asignar("observaciones", ayuda.observaciones);
 
     asignar("responsableNombre", ayuda.responsableNombre);
@@ -277,7 +343,7 @@ export function nuevoFormularioAyuda() {
     if (UI.form) UI.form.reset();
     limpiarTodasLasFirmas();
     quitarFotoEntrega();
-    seleccionarKit("");
+    establecerKitsSeleccionados([]);
     marcarRadio("censado", "No");
     actualizarCampoNumCenso();
     fechaHoyPorDefecto();
@@ -325,14 +391,15 @@ async function manejarGuardar(evento) {
             return;
         }
 
-        if (!datos.tipoKit) {
-            alert("Selecciona el tipo de kit entregado.");
+        if (!datos.kits.length) {
+            alert("Selecciona al menos un tipo de kit entregado.");
             return;
         }
 
         await guardarAyuda(datos);
 
-        anunciar(`Entrega registrada. ${datos.tipoKit} para ${datos.beneficiarioNombre}.`);
+        const resumenKits = datos.kits.map(k => `${k.cantidad} ${k.tipo}`).join(", ");
+        anunciar(`Entrega registrada. ${resumenKits} para ${datos.beneficiarioNombre}.`);
 
         mostrarVistaListado();
 
