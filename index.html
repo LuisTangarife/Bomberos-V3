@@ -185,15 +185,15 @@
 
                             <!-- pista + progreso: 4 de 5 unidades disponibles (80%) -->
                             <circle class="dial-track" cx="110" cy="110" r="90"/>
-                            <circle class="dial-progress" cx="110" cy="110" r="90"
+                            <circle class="dial-progress" id="dialProgress" cx="110" cy="110" r="90"
                                     stroke-dasharray="565.5"
-                                    style="stroke-dashoffset:113.1"/>
+                                    style="stroke-dashoffset:565.5"/>
 
                         </svg>
 
                         <div class="dial-center">
                             <i class="fa-solid fa-fire-flame-curved"></i>
-                            <div class="dial-value">4/5</div>
+                            <div class="dial-value" id="dialValor">—/—</div>
                             <div class="dial-label">Unidades<br>Disponibles</div>
                         </div>
 
@@ -491,6 +491,62 @@
 
                         </button>
 
+                    </div>
+
+                </section>
+
+                <!-- CATÁLOGOS DE LOS MÓDULOS -->
+
+                <section class="panel panel-catalogos">
+
+                    <h2>
+                        <i class="fa-solid fa-list-check"></i>
+                        Catálogos de los módulos
+                    </h2>
+
+                    <p class="panel-subtexto">
+                        Agrega o quita opciones de los desplegables de cada módulo. Lo que agregues aquí
+                        aparece de inmediato para seleccionar en el formulario correspondiente.
+                    </p>
+
+                    <label class="campo-completo">
+                        ¿Qué catálogo quieres editar?
+                        <select id="selectorCatalogo"></select>
+                    </label>
+
+                    <div id="catalogoVacioAviso" class="catalogo-vacio-aviso" style="display:none;">
+                        <p>Este catálogo todavía no se ha editado — el módulo está usando su lista original.</p>
+                        <button type="button" id="btnSembrarCatalogo" class="btn-secundario">
+                            <i class="fa-solid fa-download"></i> Cargar los valores actuales para poder editarlos
+                        </button>
+                    </div>
+
+                    <div class="units" id="catalogoItemsLista"></div>
+
+                    <form id="formNuevoItemCatalogo" class="panel-form-inline">
+                        <input type="text" id="nuevoItemGrupo" placeholder="Grupo (opcional)" style="max-width:160px; display:none;">
+                        <input type="text" id="nuevoItemValor" placeholder="Nueva opción" required>
+                        <button type="submit"><i class="fa-solid fa-plus"></i> Agregar</button>
+                    </form>
+
+                </section>
+
+                <!-- ALERTAS OPERATIVAS -->
+
+                <section class="panel panel-alertas">
+
+                    <h2>
+                        <i class="fa-solid fa-triangle-exclamation"></i>
+                        Alertas operativas del mes
+                    </h2>
+
+                    <p class="panel-subtexto">
+                        Sectores con más emergencias y/o censos registrados este mes — no es un pronóstico,
+                        es un conteo de lo ya ocurrido para priorizar dónde poner atención.
+                    </p>
+
+                    <div class="units" id="alertasLista">
+                        <p class="unit-vacio">Calculando...</p>
                     </div>
 
                 </section>
