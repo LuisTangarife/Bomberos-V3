@@ -18,6 +18,23 @@ import {
 } from "./firebase.js";
 import { renderizarListado } from "./listado.js";
 
+// Firmas y foto pueden pesar varios cientos de KB en base64 cada una.
+// El navegador tiene una cuota de localStorage muchísimo más chica que
+// el límite de 1 MiB por documento de Firestore (típicamente 5-10 MiB
+// EN TOTAL para todo el sitio, no por registro) — guardar el listado
+// completo con firmas y foto de cada entrega ahí revienta esa cuota
+// después de relativamente pocos registros. Por eso el caché local
+// solo guarda los datos livianos (para poder listar sin conexión);
+// las firmas y la foto se piden a Firestore bajo demanda cuando de
+// verdad se necesitan (editar un registro puntual o generar su PDF).
+const CAMPOS_PESADOS = ["firmaBeneficiario", "firmaResponsable", "foto"];
+
+function aligerarParaCache(ayuda) {
+    const copia = { ...ayuda };
+    CAMPOS_PESADOS.forEach(campo => delete copia[campo]);
+    return copia;
+}
+
 function leerListaLocal() {
     try {
         return JSON.parse(localStorage.getItem(APP.STORAGE_KEY_LISTA)) || [];
@@ -27,26 +44,42 @@ function leerListaLocal() {
 }
 
 function guardarListaLocal(lista) {
-    localStorage.setItem(APP.STORAGE_KEY_LISTA, JSON.stringify(lista));
+    localStorage.setItem(APP.STORAGE_KEY_LISTA, JSON.stringify(lista.map(aligerarParaCache)));
 }
 
 function actualizarEnListaLocal(ayuda) {
 
-    const lista = leerListaLocal();
-    const indice = lista.findIndex(a => a.id === ayuda.id);
+    try {
 
-    if (indice >= 0) {
-        lista[indice] = ayuda;
-    } else {
-        lista.unshift(ayuda);
+        const lista = leerListaLocal();
+        const indice = lista.findIndex(a => a.id === ayuda.id);
+
+        if (indice >= 0) {
+            lista[indice] = ayuda;
+        } else {
+            lista.unshift(ayuda);
+        }
+
+        guardarListaLocal(lista);
+
+    } catch (error) {
+        // El registro YA se guardó en Firestore antes de llegar aquí
+        // (esto se llama después, ver guardarAyuda). Si el caché local
+        // falla — cuota de localStorage llena, modo privado del
+        // navegador, etc. — no se debe interrumpir el flujo ni
+        // mostrarle al usuario un error de "no se pudo guardar" que en
+        // realidad es solo del espejo local, no de la entrega en sí.
+        console.warn("[ayudas] No se pudo actualizar el caché local (el registro ya está guardado en Firestore):", error);
     }
-
-    guardarListaLocal(lista);
 
 }
 
 function quitarDeListaLocal(id) {
-    guardarListaLocal(leerListaLocal().filter(a => a.id !== id));
+    try {
+        guardarListaLocal(leerListaLocal().filter(a => a.id !== id));
+    } catch (error) {
+        console.warn("[ayudas] No se pudo actualizar el caché local tras eliminar:", error);
+    }
 }
 
 /* =========================================================
@@ -75,7 +108,11 @@ export async function cargarAyudas() {
 async function obtenerAyudasConFallback() {
     try {
         const remotas = await listarAyudasFirestore();
-        guardarListaLocal(remotas);
+        try {
+            guardarListaLocal(remotas);
+        } catch (error) {
+            console.warn("[ayudas] No se pudo actualizar el caché local del listado (no afecta los datos remotos):", error);
+        }
         return remotas;
     } catch (err) {
         console.error("No se pudo listar ayudas desde Firestore, usando copia local:", err);
@@ -110,6 +147,9 @@ export async function guardarAyuda(datos) {
         if (state.editando) {
             await actualizarAyudaFirestore(id, registro);
         } else {
+            // uid solo se fija al crear — ver la misma nota en
+            // censos/persistencia.js.
+            registro.uid = state.uid || null;
             await guardarAyudaFirestore(id, registro);
         }
 

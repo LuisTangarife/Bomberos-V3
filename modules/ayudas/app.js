@@ -35,8 +35,9 @@ async function iniciarAplicacion() {
     inicializarDOM();
 
     const usuario = await esperarEstadoAuth();
-    state.usuario = usuario ? (usuario.email || usuario.uid) : "invitado";
-    state.invitado = !usuario;
+    state.usuario = usuario.isAnonymous ? "invitado" : (usuario.email || usuario.uid);
+    state.invitado = usuario.isAnonymous;
+    state.uid = usuario.uid;
 
     if (UI.avisoInvitado) {
         UI.avisoInvitado.style.display = state.invitado ? "flex" : "none";
@@ -431,6 +432,35 @@ export function cargarFormularioAyuda(id) {
 
 }
 
+// Traduce errores técnicos del navegador/Firestore a algo que un
+// bombero en medio de una entrega pueda entender y saber qué hacer,
+// en vez de un mensaje en inglés con nombres de funciones internas
+// (como pasó con el error de cuota de almacenamiento).
+function mensajeErrorGuardado(err) {
+
+    const detalleTecnico = `${err.code || err.name || ""} ${err.message || err}`.toLowerCase();
+
+    if (detalleTecnico.includes("quota")) {
+        return "El almacenamiento del navegador está lleno.\n\n" +
+               "Esto no debería impedir guardar la entrega — si ves este mensaje, avísale a soporte técnico.";
+    }
+
+    if (detalleTecnico.includes("permission-denied") || detalleTecnico.includes("permission")) {
+        return "No tienes permiso para guardar esta entrega.\n\n" +
+               "Cierra sesión y vuelve a entrar, o avisa a soporte técnico si persiste.";
+    }
+
+    if (detalleTecnico.includes("network") || detalleTecnico.includes("unavailable") || detalleTecnico.includes("failed-precondition")) {
+        return "No hay conexión a internet en este momento.\n\n" +
+               "La entrega puede quedar guardada en este dispositivo y sincronizar cuando vuelva la señal.";
+    }
+
+    return "No se pudo guardar la entrega.\n\n" +
+           "Intenta de nuevo. Si el problema sigue, avisa a soporte técnico con este detalle: " +
+           `${err.code || err.name || "error desconocido"}.`;
+
+}
+
 async function manejarGuardar(evento) {
 
     evento.preventDefault();
@@ -464,11 +494,7 @@ async function manejarGuardar(evento) {
     } catch (err) {
 
         console.error(err);
-
-        alert(
-            "No se pudo guardar la entrega.\n\n" +
-            `Detalle: ${err.code || err.name || "error desconocido"} — ${err.message || err}`
-        );
+        alert(mensajeErrorGuardado(err));
 
     } finally {
 
