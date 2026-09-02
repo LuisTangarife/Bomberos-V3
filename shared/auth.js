@@ -9,6 +9,7 @@ import {
     getAuth,
     onAuthStateChanged,
     signInWithEmailAndPassword,
+    signInAnonymously,
     signOut
 } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js";
 
@@ -51,7 +52,11 @@ export function protegerPagina() {
 
         onAuthStateChanged(auth, usuario => {
 
-            if (!usuario) {
+            // isAnonymous existe desde que agregamos signInAnonymously()
+            // más abajo: una sesión anónima (invitado) NUNCA debe contar
+            // como "sesión real" para páginas protegidas como el
+            // dashboard — solo personal con cuenta de verdad entra aquí.
+            if (!usuario || usuario.isAnonymous) {
                 window.location.href = `${URL_LOGIN}?volver=${encodeURIComponent(window.location.href)}`;
                 return;
             }
@@ -65,17 +70,42 @@ export function protegerPagina() {
 }
 
 /**
- * Igual que protegerPagina(), pero para páginas que SÍ deben abrir sin
- * sesión (ej. formularios de Inspecciones/Emergencia). Nunca redirige:
- * resuelve con el usuario de Firebase si hay sesión, o con `null` si no
- * la hay. Quien llama esta función es responsable de restringir lo que
- * un usuario `null` puede ver (normalmente: solo sus registros locales,
- * nunca el listado completo remoto).
+ * Igual que antes, pero ahora NUNCA resuelve con `null`: si no hay
+ * sesión real, inicia sesión anónima automáticamente y resuelve con
+ * ese usuario anónimo. Esto le da a cada invitado un uid estable con
+ * el que Firestore SÍ puede identificarlo (antes, request.auth era
+ * null y no había forma de distinguir "invitado A" de "invitado B",
+ * ni de permitirle editar después SU PROPIO registro sin abrirle la
+ * puerta a editar el de cualquier otro).
+ *
+ * Quien llama debe distinguir invitado de personal real con
+ * `usuario.isAnonymous`, YA NO con `!usuario` (eso dejó de funcionar,
+ * usuario nunca es null).
  */
 export function esperarEstadoAuth() {
 
-    return new Promise(resolve => {
-        onAuthStateChanged(auth, usuario => resolve(usuario || null));
+    return new Promise((resolve, reject) => {
+
+        const cancelar = onAuthStateChanged(auth, async usuario => {
+
+            if (usuario) {
+                cancelar();
+                resolve(usuario);
+                return;
+            }
+
+            try {
+                const credencial = await signInAnonymously(auth);
+                cancelar();
+                resolve(credencial.user);
+            } catch (error) {
+                cancelar();
+                console.error("[auth] No se pudo iniciar sesión anónima (revisa que 'Anonymous' esté habilitado en Firebase Auth):", error);
+                reject(error);
+            }
+
+        });
+
     });
 
 }
