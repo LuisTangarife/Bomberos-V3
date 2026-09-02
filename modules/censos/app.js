@@ -39,8 +39,9 @@ async function iniciarAplicacion() {
     inicializarDOM();
 
     const usuario = await esperarEstadoAuth();
-    state.usuario = usuario ? (usuario.email || usuario.uid) : "invitado";
-    state.invitado = !usuario;
+    state.usuario = usuario.isAnonymous ? "invitado" : (usuario.email || usuario.uid);
+    state.invitado = usuario.isAnonymous;
+    state.uid = usuario.uid;
 
     if (UI.avisoInvitado) {
         UI.avisoInvitado.style.display = state.invitado ? "flex" : "none";
@@ -725,6 +726,35 @@ export function cargarFormularioCenso(id) {
 
 }
 
+// Traduce errores técnicos a algo que el personal en campo pueda
+// entender y saber qué hacer, en vez de un mensaje en inglés con
+// nombres de funciones internas del navegador o de Firestore.
+function mensajeErrorGuardadoCenso(err) {
+
+    const detalleTecnico = `${err.code || err.name || ""} ${err.message || err}`.toLowerCase();
+
+    if (detalleTecnico.includes("permission")) {
+        return "No se pudo guardar: sin permiso para hacerlo.\n\n" +
+               "Si es la primera vez que guardas este censo, revisa el listado — es posible que sí se haya guardado a pesar de este mensaje.\n\n" +
+               "Si estás corrigiendo un censo que ya habías guardado antes sin haber iniciado sesión, eso requiere iniciar sesión con una cuenta para poder editarlo.";
+    }
+
+    if (detalleTecnico.includes("quota")) {
+        return "El almacenamiento del navegador está lleno.\n\n" +
+               "Esto no debería impedir guardar el censo — si ves este mensaje, avísale a soporte técnico.";
+    }
+
+    if (detalleTecnico.includes("network") || detalleTecnico.includes("unavailable") || detalleTecnico.includes("failed-precondition")) {
+        return "No hay conexión a internet en este momento.\n\n" +
+               "El censo puede quedar guardado en este dispositivo y sincronizar cuando vuelva la señal.";
+    }
+
+    return "No se pudo guardar el censo.\n\n" +
+           "Intenta de nuevo. Si el problema sigue, avisa a soporte técnico con este detalle: " +
+           `${err.code || err.name || "error desconocido"}.`;
+
+}
+
 async function manejarGuardar(evento) {
 
     evento.preventDefault();
@@ -752,15 +782,7 @@ async function manejarGuardar(evento) {
     } catch (err) {
 
         console.error(err);
-
-        // Antes decía siempre lo mismo sin importar la causa real. Con
-        // el código y mensaje del error (ej. "permission-denied" si son
-        // las reglas de Firestore) puedes ver la causa exacta sin abrir
-        // la consola del navegador.
-        alert(
-            "No se pudo guardar el censo.\n\n" +
-            `Detalle: ${err.code || err.name || "error desconocido"} — ${err.message || err}`
-        );
+        alert(mensajeErrorGuardadoCenso(err));
 
     } finally {
 

@@ -110,6 +110,11 @@ export async function guardarCenso(datos) {
         if (state.editando) {
             await actualizarCensoFirestore(id, registro);
         } else {
+            // uid solo se fija al crear. Si luego alguien con cuenta
+            // real corrige este censo, NO debe pisar el uid del
+            // invitado que lo creó — eso es lo que permite que su
+            // dueño original lo siga pudiendo editar después.
+            registro.uid = state.uid || null;
             await guardarCensoFirestore(id, registro);
         }
 
