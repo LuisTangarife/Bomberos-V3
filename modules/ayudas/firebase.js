@@ -17,6 +17,7 @@ import {
     query,
     orderBy,
     getDocs,
+    getDocsFromServer,
     runTransaction,
     serverTimestamp
 } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
@@ -99,7 +100,18 @@ export async function listarAyudasFirestore() {
         orderBy("updatedAt", "desc")
     );
 
-    const snapshot = await getDocs(consulta);
+    // getDocsFromServer (no getDocs) a propósito: con
+    // persistentSingleTabManager({ forceOwnership: true }) — ver el
+    // comentario en firebase/config.js — la página que se acaba de
+    // abrir puede tomar el control del caché local antes de que ese
+    // caché termine de sincronizar con el servidor. Una consulta
+    // normal (getDocs) puede resolverse contra ese caché a medias y
+    // devolver "0 resultados" aunque sí existan datos. Forzar la
+    // lectura directa del servidor evita ese hueco. Si falla por estar
+    // sin conexión, quien llama a esta función (obtenerAyudasConFallback
+    // en persistencia.js) ya tiene su propio respaldo con la copia
+    // local.
+    const snapshot = await getDocsFromServer(consulta);
 
     return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
