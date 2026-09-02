@@ -623,6 +623,9 @@ async function guardarInspeccionRemota(inspeccion) {
     if (state.editando) {
         await actualizarInspeccionFirestore(inspeccion.id, inspeccion);
     } else {
+        // uid solo se fija al crear — igual que en censos/ayudas, para
+        // no pisar la autoría original si alguien más la corrige luego.
+        inspeccion.uid = state.uid || null;
         await guardarInspeccionFirestore(inspeccion.id, inspeccion);
     }
 

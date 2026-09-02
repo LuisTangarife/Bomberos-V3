@@ -91,8 +91,9 @@ async function iniciarAplicacion() {
         // completo de Firestore, que sigue siendo exclusivo de cuentas
         // registradas.
         const usuario = await esperarEstadoAuth();
-        state.usuario = usuario ? (usuario.email || usuario.uid) : "invitado";
-        state.invitado = !usuario;
+        state.usuario = usuario.isAnonymous ? "invitado" : (usuario.email || usuario.uid);
+        state.invitado = usuario.isAnonymous;
+        state.uid = usuario.uid;
 
         const avisoInvitado = document.getElementById("avisoInvitado");
         if (avisoInvitado) avisoInvitado.style.display = state.invitado ? "flex" : "none";
