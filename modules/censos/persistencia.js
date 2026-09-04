@@ -18,6 +18,23 @@ import {
 } from "./firebase.js";
 import { renderizarListado } from "./listado.js";
 
+// Firmas y foto pueden pesar varios cientos de KB en base64 cada una.
+// El navegador tiene una cuota de localStorage muchísimo más chica que
+// el límite de 1 MiB por documento de Firestore — guardar el listado
+// completo con firmas y foto de cada censo revienta esa cuota después
+// de relativamente pocos registros (mismo problema que ya resolvimos
+// en modules/ayudas/persistencia.js, portado aquí). El caché local
+// solo guarda los datos livianos; firmas y foto se piden a Firestore
+// bajo demanda cuando de verdad se necesitan (editar un censo puntual
+// o generar su certificado).
+const CAMPOS_PESADOS = ["firmaFuncionario", "firmaEncuestado", "foto"];
+
+function aligerarParaCache(censo) {
+    const copia = { ...censo };
+    CAMPOS_PESADOS.forEach(campo => delete copia[campo]);
+    return copia;
+}
+
 function leerListaLocal() {
     try {
         return JSON.parse(localStorage.getItem(APP.STORAGE_KEY_LISTA)) || [];
@@ -27,26 +44,40 @@ function leerListaLocal() {
 }
 
 function guardarListaLocal(lista) {
-    localStorage.setItem(APP.STORAGE_KEY_LISTA, JSON.stringify(lista));
+    localStorage.setItem(APP.STORAGE_KEY_LISTA, JSON.stringify(lista.map(aligerarParaCache)));
 }
 
 function actualizarEnListaLocal(censo) {
 
-    const lista = leerListaLocal();
-    const indice = lista.findIndex(c => c.id === censo.id);
+    try {
 
-    if (indice >= 0) {
-        lista[indice] = censo;
-    } else {
-        lista.unshift(censo);
+        const lista = leerListaLocal();
+        const indice = lista.findIndex(c => c.id === censo.id);
+
+        if (indice >= 0) {
+            lista[indice] = censo;
+        } else {
+            lista.unshift(censo);
+        }
+
+        guardarListaLocal(lista);
+
+    } catch (error) {
+        // El censo YA se guardó en Firestore antes de llegar aquí
+        // (ver guardarCenso). Si el caché local falla, no se debe
+        // interrumpir el flujo ni mostrar un error de "no se guardó"
+        // que en realidad es solo del espejo local, no del censo.
+        console.warn("[censos] No se pudo actualizar el caché local (el censo ya está guardado en Firestore):", error);
     }
-
-    guardarListaLocal(lista);
 
 }
 
 function quitarDeListaLocal(id) {
-    guardarListaLocal(leerListaLocal().filter(c => c.id !== id));
+    try {
+        guardarListaLocal(leerListaLocal().filter(c => c.id !== id));
+    } catch (error) {
+        console.warn("[censos] No se pudo actualizar el caché local tras eliminar:", error);
+    }
 }
 
 /* =========================================================
@@ -75,7 +106,11 @@ export async function cargarCensos() {
 async function obtenerCensosConFallback() {
     try {
         const remotos = await listarCensosFirestore();
-        guardarListaLocal(remotos);
+        try {
+            guardarListaLocal(remotos);
+        } catch (error) {
+            console.warn("[censos] No se pudo actualizar el caché local del listado (no afecta los datos remotos):", error);
+        }
         return remotos;
     } catch (err) {
         console.error("No se pudo listar censos desde Firestore, usando copia local:", err);
