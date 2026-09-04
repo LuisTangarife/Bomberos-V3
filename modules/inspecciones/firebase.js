@@ -25,6 +25,7 @@ import {
     query,
     orderBy,
     getDocs,
+    getDocsFromServer,
     runTransaction,
     serverTimestamp
 }
@@ -228,7 +229,11 @@ export async function listarInspecciones(){
 
     );
 
-    const snapshot = await getDocs(consulta);
+    // getDocsFromServer (no getDocs): mismo motivo que en
+    // modules/ayudas/firebase.js y modules/censos/firebase.js — evita
+    // que forceOwnership:true (ver firebase/config.js) devuelva "0
+    // resultados" contra un caché local a medio sincronizar.
+    const snapshot = await getDocsFromServer(consulta);
 
     return snapshot.docs.map(doc=>({
 
