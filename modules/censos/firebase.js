@@ -18,6 +18,7 @@ import {
     query,
     orderBy,
     getDocs,
+    getDocsFromServer,
     runTransaction,
     serverTimestamp
 } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
@@ -101,7 +102,13 @@ export async function listarCensosFirestore() {
         orderBy("updatedAt", "desc")
     );
 
-    const snapshot = await getDocs(consulta);
+    // getDocsFromServer (no getDocs): mismo motivo que en
+    // modules/ayudas/firebase.js. Con persistentSingleTabManager({
+    // forceOwnership: true }) (ver firebase/config.js), la página que
+    // se acaba de abrir puede tomar el control del caché local antes
+    // de que termine de sincronizar con el servidor, y una consulta
+    // normal puede devolver "0 resultados" aunque sí existan datos.
+    const snapshot = await getDocsFromServer(consulta);
 
     return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
