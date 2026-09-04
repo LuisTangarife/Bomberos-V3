@@ -636,14 +636,37 @@ async function guardarInspeccionRemota(inspeccion) {
 
 }
 
+// Cada inspección puede traer varias fotos completas en base64
+// (cuando APP.USAR_STORAGE es false) más las firmas — de los 4
+// módulos, este es el que más peso acumula por registro. Mismo
+// criterio que en Ayudas/Censos: el caché local solo guarda lo
+// liviano; las fotos e firmas se piden a Firestore bajo demanda.
+function aligerarParaCache(inspeccion) {
+
+    const copia = { ...inspeccion };
+
+    if (Array.isArray(copia.fotos)) {
+        copia.fotos = copia.fotos.map(foto => {
+            const { imagen, ...resto } = foto;
+            return resto;
+        });
+    }
+
+    delete copia.firmas;
+
+    return copia;
+
+}
+
 function actualizarEnListaLocal(lista, inspeccion) {
 
     const indice = lista.findIndex(item => item.id === inspeccion.id);
+    const liviana = aligerarParaCache(inspeccion);
 
     if (indice === -1) {
-        lista.push(inspeccion);
+        lista.push(liviana);
     } else {
-        lista[indice] = inspeccion;
+        lista[indice] = liviana;
     }
 
     return lista;
