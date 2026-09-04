@@ -31,6 +31,7 @@ import {
     query,
     orderBy,
     getDocs,
+    getDocsFromServer,
     writeBatch,
     serverTimestamp
 }
@@ -239,7 +240,11 @@ export async function listarEmergencias() {
         orderBy("updatedAt", "desc")
     );
 
-    const snapshot = await getDocs(consulta);
+    // getDocsFromServer (no getDocs): mismo motivo que en Ayudas,
+    // Censos e Inspecciones — evita que forceOwnership:true (ver
+    // firebase/config.js) devuelva "0 resultados" contra un caché
+    // local a medio sincronizar justo después de navegar aquí.
+    const snapshot = await getDocsFromServer(consulta);
 
     return snapshot.docs.map(doc => ({
         id: doc.id,
