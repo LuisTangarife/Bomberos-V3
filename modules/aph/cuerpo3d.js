@@ -53,8 +53,8 @@ export function inicializarCuerpo3D(contenedor, { onCambio } = {}) {
     escena.background = null;
 
     const camara = new THREE.PerspectiveCamera(35, ANCHO / ALTO, 0.1, 100);
-    camara.position.set(0, 1.05, 3.2);
-    camara.lookAt(0, 0.9, 0);
+    camara.position.set(0, 0.82, 3.5);
+    camara.lookAt(0, 0.82, 0);
 
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     renderer.setSize(ANCHO, ALTO);
@@ -112,6 +112,24 @@ export function inicializarCuerpo3D(contenedor, { onCambio } = {}) {
         cuerpo.add(ojo);
     });
 
+    const boca = new THREE.Mesh(
+        new THREE.TorusGeometry(0.02, 0.004, 6, 10, Math.PI),
+        new THREE.MeshStandardMaterial({ color: 0x8a4a42 })
+    );
+    boca.rotation.z = Math.PI;
+    boca.position.set(0, 1.575, 0.108);
+    cuerpo.add(boca);
+
+    [-1, 1].forEach(lado => {
+        const oreja = new THREE.Mesh(
+            new THREE.SphereGeometry(0.018, 10, 10),
+            MATERIAL_PIEL.clone()
+        );
+        oreja.scale.set(0.6, 1, 0.8);
+        oreja.position.set(lado * 0.112, 1.615, 0.01);
+        cuerpo.add(oreja);
+    });
+
     agregarParte("Cuello", cil(0.045, 0.055, 0.09), 0, 1.47, 0);
     agregarParte("Tórax", cil(0.165, 0.145, 0.34), 0, 1.24, 0);
     agregarParte("Abdomen", cil(0.145, 0.155, 0.20), 0, 0.98, 0);
@@ -122,38 +140,128 @@ export function inicializarCuerpo3D(contenedor, { onCambio } = {}) {
         agregarParte(`Hombro ${t}`, new THREE.SphereGeometry(0.075, 16, 16), lado * 0.22, 1.36, 0);
         agregarParte(`Brazo ${t}`, cil(0.052, 0.045, 0.30), lado * 0.245, 1.14, 0, lado * 0.06);
         agregarParte(`Antebrazo ${t}`, cil(0.042, 0.038, 0.27), lado * 0.26, 0.85, 0, lado * 0.04);
-        agregarParte(`Mano ${t}`, new THREE.SphereGeometry(0.05, 14, 14), lado * 0.265, 0.66, 0);
+        agregarMano(t, lado);
     });
 
     [1, -1].forEach(lado => {
         const t = lado > 0 ? "derecha" : "izquierda";
         agregarParte(`Pierna superior ${t}`, cil(0.095, 0.08, 0.44), lado * 0.09, 0.48, 0);
         agregarParte(`Pierna inferior ${t}`, cil(0.075, 0.055, 0.40), lado * 0.09, 0.06, 0);
-        agregarParte(`Pie ${t}`, new THREE.BoxGeometry(0.09, 0.06, 0.20), lado * 0.09, -0.17, 0.04);
+        agregarPie(t, lado);
     });
 
-    // ---- Rotación por arrastre (mouse y dedo) ----
+    // Mano con palma aplanada (no una esfera lisa) + 5 dedos, para que
+    // al inclinar el cuerpo hacia arriba/abajo se distinga la palma
+    // (cara frontal, +z) del dorso (cara trasera). El nombre clickeable
+    // sigue siendo uno solo por mano — los dedos son visuales, no
+    // partes seleccionables aparte, para no fragmentar demasiado la
+    // localización de lesiones.
+    function agregarMano(ladoTxt, lado) {
+
+        const mano = agregarParte(
+            `Mano ${ladoTxt}`,
+            new THREE.BoxGeometry(0.062, 0.075, 0.024),
+            lado * 0.265, 0.655, 0
+        );
+
+        const NUM_DEDOS = 5;
+        for (let i = 0; i < NUM_DEDOS; i++) {
+
+            const offsetX = (i - (NUM_DEDOS - 1) / 2) * 0.0115;
+            // El pulgar (dedo de los extremos hacia el cuerpo) va más
+            // corto y rotado, como en una mano real.
+            const esPulgar = (lado > 0 && i === NUM_DEDOS - 1) || (lado < 0 && i === 0);
+
+            const dedo = new THREE.Mesh(
+                cil(0.006, 0.007, esPulgar ? 0.028 : 0.038),
+                MATERIAL_PIEL.clone()
+            );
+            if (esPulgar) dedo.rotation.z = lado * Math.PI / 3.2; // el pulgar sale hacia el costado, no recto
+            dedo.position.set(
+                esPulgar ? offsetX * 1.3 : offsetX,
+                esPulgar ? 0.018 : 0.055,
+                esPulgar ? 0.01 : 0
+            );
+            mano.add(dedo);
+
+        }
+
+    }
+
+    // Pie con empeine curvo arriba y planta plana abajo (antes era una
+    // caja lisa, indistinguible arriba/abajo) + dedos marcados al
+    // frente, para que "arriba del pie" y "planta" se puedan
+    // diferenciar al inclinar el cuerpo.
+    function agregarPie(ladoTxt, lado) {
+
+        const pie = agregarParte(
+            `Pie ${ladoTxt}`,
+            new THREE.BoxGeometry(0.09, 0.05, 0.21),
+            lado * 0.09, -0.175, 0.045
+        );
+
+        // Empeine: medio cilindro pegado arriba, da la curva que
+        // distingue "arriba del pie" de la planta (plana, sin nada).
+        const empeine = new THREE.Mesh(
+            new THREE.CylinderGeometry(0.045, 0.045, 0.09, 12, 1, false, 0, Math.PI),
+            MATERIAL_PIEL.clone()
+        );
+        empeine.rotation.z = Math.PI / 2;
+        empeine.rotation.y = Math.PI / 2;
+        empeine.position.set(0, 0.025, -0.02);
+        pie.add(empeine);
+
+        // 5 dedos pequeños en la punta.
+        for (let i = 0; i < 5; i++) {
+            const dedo = new THREE.Mesh(
+                new THREE.SphereGeometry(0.011, 8, 8),
+                MATERIAL_PIEL.clone()
+            );
+            dedo.position.set((i - 2) * 0.016, 0.005, 0.1);
+            pie.add(dedo);
+        }
+
+    }
+
+    // ---- Rotación por arrastre (mouse y dedo) — dos ejes: horizontal
+    // (girar de lado, como ya había) y vertical (inclinar hacia arriba
+    // o hacia abajo, para poder ver la coronilla o la planta de los
+    // pies, que antes era imposible con un solo eje de giro).
     let arrastrando = false;
-    let anguloInicial = 0;
+    let anguloInicialY = 0;
+    let anguloInicialX = 0;
     let xInicial = 0;
+    let yInicial = 0;
     let distanciaArrastre = 0;
 
-    function posX(evento) {
-        return evento.touches ? evento.touches[0].clientX : evento.clientX;
+    const LIMITE_INCLINACION = Math.PI / 2.1; // ~85°, evita que se voltee de cabeza sin control
+
+    function posXY(evento) {
+        const p = evento.touches ? evento.touches[0] : evento;
+        return { x: p.clientX, y: p.clientY };
     }
 
     function iniciarArrastre(e) {
         arrastrando = true;
-        xInicial = posX(e);
-        anguloInicial = cuerpo.rotation.y;
+        const p = posXY(e);
+        xInicial = p.x;
+        yInicial = p.y;
+        anguloInicialY = cuerpo.rotation.y;
+        anguloInicialX = cuerpo.rotation.x;
         distanciaArrastre = 0;
     }
 
     function moverArrastre(e) {
         if (!arrastrando) return;
-        const delta = posX(e) - xInicial;
-        distanciaArrastre = Math.abs(delta);
-        cuerpo.rotation.y = anguloInicial + delta * 0.01;
+        const p = posXY(e);
+        const deltaX = p.x - xInicial;
+        const deltaY = p.y - yInicial;
+        distanciaArrastre = Math.max(Math.abs(deltaX), Math.abs(deltaY));
+
+        cuerpo.rotation.y = anguloInicialY + deltaX * 0.01;
+
+        const nuevaInclinacion = anguloInicialX + deltaY * 0.01;
+        cuerpo.rotation.x = Math.max(-LIMITE_INCLINACION, Math.min(LIMITE_INCLINACION, nuevaInclinacion));
     }
 
     function terminarArrastre(e) {
