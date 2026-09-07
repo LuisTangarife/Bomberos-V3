@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>APP Bomberos | APH</title>
+
+    <script>
+        document.documentElement.setAttribute(
+            "data-tema",
+            localStorage.getItem("aph_tema") || "oscuro"
+        );
+    </script>
+
+    <link rel="icon" href="../../icons/icon-192-v4.png">
+    <link rel="manifest" href="../../manifest.json">
+    <meta name="theme-color" content="#0891B2">
+
+    <link rel="stylesheet" href="../../shared/shared.css">
+    <link rel="stylesheet" href="styles.css">
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap"
+          rel="stylesheet">
+
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
+          rel="stylesheet">
+
+</head>
+
+<body>
+
+<div class="app-layout">
+
+    <aside id="sidebar"></aside>
+
+    <div class="content">
+
+        <header id="header"></header>
+
+        <main class="aph-page">
+
+            <!-- =======================================================
+                 PESTAÑAS: Atención APH / Consentimiento Informado
+            =========================================================== -->
+            <div class="aph-tabs">
+                <button type="button" id="tabAtencion" class="aph-tab activa">
+                    <i class="fa-solid fa-truck-medical"></i> Atención APH
+                </button>
+                <button type="button" id="tabConsentimiento" class="aph-tab">
+                    <i class="fa-solid fa-file-signature"></i> Consentimiento Informado
+                </button>
+            </div>
+
+            <!-- =======================================================
+                 PANEL: ATENCIÓN APH (Historia clínica del traslado)
+            =========================================================== -->
+            <section id="panelAtencion" class="aph-panel activo">
+
+                <!-- ---- Listado ---- -->
+                <section id="vistaListadoAtencion" class="vista activa">
+
+                    <div class="aph-toolbar">
+                        <div class="aph-toolbar-titulo">
+                            <h1><i class="fa-solid fa-truck-medical"></i> Atención Prehospitalaria</h1>
+                            <p>Historia clínica del traslado — Servicio de Transporte de Ambulancia (TAB).</p>
+
+                            <p id="avisoInvitadoAtencion" class="aviso-invitado" style="display:none;">
+                                <i class="fa-solid fa-circle-info"></i>
+                                Modo invitado: solo ves las atenciones creadas en este dispositivo.
+                            </p>
+                        </div>
+                        <button type="button" id="btnNuevaAtencion" class="btn-principal">
+                            <i class="fa-solid fa-plus"></i> Nueva Atención
+                        </button>
+                    </div>
+
+                    <input type="text" id="buscarAtencion" placeholder="Buscar por nombre, cédula, código o móvil...">
+
+                    <div id="atencionesCards" class="aph-cards">
+                        <p class="aph-vacio">Cargando...</p>
+                    </div>
+
+                </section>
+
+                <!-- ---- Formulario ---- -->
+                <section id="vistaFormularioAtencion" class="vista">
+
+                    <div class="aph-toolbar">
+                        <button type="button" id="btnVolverListadoAtencion" class="btn-secundario">
+                            <i class="fa-solid fa-arrow-left"></i> Volver
+                        </button>
+                        <h2 id="tituloFormularioAtencion">Nueva atención</h2>
+                        <button type="button" id="btnGuardarAtencion" class="btn-principal">
+                            <i class="fa-solid fa-floppy-disk"></i> Guardar
+                        </button>
+                    </div>
+
+                    <form id="formAtencion">
+
+                        <!-- 1. DATOS DEL SERVICIO -->
+                        <fieldset class="form-section">
+                            <legend>1. Datos del servicio</legend>
+                            <div class="form-grid cols-4">
+                                <label>Fecha de servicio<input type="date" id="fechaServicio"></label>
+                                <label>Móvil número<input type="text" id="movilNumero" placeholder="Ej: Móvil 3"></label>
+                                <label>Prioridad
+                                    <select id="prioridad">
+                                        <option value="">Seleccione...</option>
+                                        <option value="R">Roja (R)</option>
+                                        <option value="A">Amarilla (A)</option>
+                                        <option value="V">Verde (V)</option>
+                                        <option value="N">Negra (N)</option>
+                                        <option value="S">Sin clasificar (S)</option>
+                                    </select>
+                                </label>
+                                <label>Tipo de servicio
+                                    <select id="tipoServicio">
+                                        <option value="TAB">TAB</option>
+                                        <option value="URG">Urgencia (URG)</option>
+                                    </select>
+                                </label>
+                            </div>
+                        </fieldset>
+
+                        <!-- 2. DATOS DEL PACIENTE -->
+                        <fieldset class="form-section">
+                            <legend>2. Datos del paciente</legend>
+                            <div class="form-grid cols-3">
+                                <label class="span-2">Nombre completo<input type="text" id="pacienteNombre" class="spell-check" spellcheck="true" lang="es"></label>
+                                <label>Edad<input type="number" min="0" id="pacienteEdad"></label>
+                                <label class="span-2">Dirección<input type="text" id="pacienteDireccion"></label>
+                                <label>Fecha de nacimiento<input type="date" id="pacienteFechaNacimiento"></label>
+                                <label>Tipo de documento
+                                    <select id="pacienteTipoDoc">
+                                        <option value="CC">C.C.</option>
+                                        <option value="TI">T.I.</option>
+                                        <option value="CE">C.E.</option>
+                                        <option value="NIUP">NIUP</option>
+                                    </select>
+                                </label>
+                                <label>N.º de documento<input type="text" id="pacienteDocumento"></label>
+                                <label>Teléfono 1<input type="tel" id="pacienteTelefono1"></label>
+                                <label>Teléfono 2<input type="tel" id="pacienteTelefono2"></label>
+                                <label>Seguridad social (EPS)<input type="text" id="pacienteEps"></label>
+                                <label>SOAT<input type="text" id="pacienteSoat"></label>
+                            </div>
+                        </fieldset>
+
+                        <!-- 3. DESPACHO Y TIEMPOS -->
+                        <fieldset class="form-section">
+                            <legend>3. Despacho y tiempos</legend>
+                            <div class="form-grid cols-3">
+                                <label class="span-2">Información de despacho<input type="text" id="informacionDespacho"></label>
+                                <label>Transferido de<input type="text" id="transferidoDe"></label>
+                            </div>
+                            <div class="form-grid cols-3">
+                                <label class="radio-inline">
+                                    <input type="checkbox" id="sinPrevioReporte"> Sin previo reporte de ciudadanos
+                                </label>
+                                <label class="radio-inline">
+                                    <input type="checkbox" id="seDesconoceReportePrevio"> Se desconoce si hay previo reporte
+                                </label>
+                                <label>N.º previo de reporte<input type="text" id="numeroPrevioReporte"></label>
+                            </div>
+                            <p class="form-note">Use 24 horas</p>
+                            <div class="form-grid cols-6">
+                                <label>Salida<input type="time" id="tiempoSalida"></label>
+                                <label>Llega al sitio<input type="time" id="tiempoLlegaSitio"></label>
+                                <label>Salida sitio<input type="time" id="tiempoSalidaSitio"></label>
+                                <label>Llegada destino<input type="time" id="tiempoLlegadaDestino"></label>
+                                <label>En servicio<input type="time" id="tiempoEnServicio"></label>
+                                <label>En sede<input type="time" id="tiempoEnSede"></label>
+                            </div>
+                        </fieldset>
+
+                        <!-- 4. MOTIVO DE ATENCIÓN -->
+                        <fieldset class="form-section">
+                            <legend>4. Motivo de atención</legend>
+                            <div class="form-grid cols-2">
+                                <label>Motivo de atención<input type="text" id="motivoAtencion"></label>
+                                <label>Evaluación subjetiva<input type="text" id="evaluacionSubjetiva"></label>
+                            </div>
+                        </fieldset>
+
+                        <!-- 5. PROBLEMA PRESENTADO -->
+                        <fieldset class="form-section">
+                            <legend>5. Problema presentado</legend>
+                            <div class="aph-checkbox-grid" id="grupoProblemaPresentado">
+                                <label><input type="checkbox" value="Obstrucción de la vía aérea"> Obstrucción de la vía aérea</label>
+                                <label><input type="checkbox" value="Paro respiratorio"> Paro respiratorio</label>
+                                <label><input type="checkbox" value="Dificultad respiratoria"> Dificultad respiratoria</label>
+                                <label><input type="checkbox" value="Relacionado con cardíaco"> Relacionado con cardíaco</label>
+                                <label><input type="checkbox" value="Paro cardíaco"> Paro cardíaco</label>
+                                <label><input type="checkbox" value="Reacción alérgica"> Reacción alérgica</label>
+                                <label><input type="checkbox" value="Síncope / Lipotimia"> Síncope / Lipotimia</label>
+                                <label><input type="checkbox" value="Enf. cerebro vascular"> Enf. cerebro vascular</label>
+                                <label><input type="checkbox" value="Enf. general / malestar"> Enf. general / malestar</label>
+                                <label><input type="checkbox" value="Convulsiones"> Convulsiones</label>
+                                <label><input type="checkbox" value="Relacionado con diabetes"> Relacionado con diabetes</label>
+                                <label><input type="checkbox" value="Desorden en comportamiento"> Desorden en comportamiento</label>
+                                <label><input type="checkbox" value="Abuso de sustancia (potencial)"> Abuso de sustancia (potencial)</label>
+                                <label><input type="checkbox" value="Trauma espinal"> Trauma espinal</label>
+                                <label><input type="checkbox" value="Amputación"> Amputación</label>
+                                <label><input type="checkbox" value="Deformidad"> Deformidad</label>
+                                <label><input type="checkbox" value="Trauma contundente"> Trauma contundente</label>
+                                <label><input type="checkbox" value="Trauma penetrante"> Trauma penetrante</label>
+                                <label><input type="checkbox" value="Trauma de tejidos blandos"> Trauma de tejidos blandos</label>
+                                <label><input type="checkbox" value="Sangrado / hemorragia"> Sangrado / hemorragia</label>
+                                <label><input type="checkbox" value="Obstétrico / Ginecológico"> Obstétrico / Ginecológico</label>
+                                <label><input type="checkbox" value="Quemaduras"> Quemaduras</label>
+                                <label><input type="checkbox" value="Otros"> Otros</label>
+                            </div>
+                        </fieldset>
+
+                        <!-- 6. SIGNOS VITALES (3 tomas) -->
+                        <fieldset class="form-section">
+                            <legend>6. Signos vitales</legend>
+                            <div id="contenedorTomas"><!-- 3 bloques de toma, ver plantillaToma() en app.js --></div>
+                        </fieldset>
+
+                        <!-- 7. ANTECEDENTES PERSONALES -->
+                        <fieldset class="form-section">
+                            <legend>7. Antecedentes personales</legend>
+                            <div class="form-grid cols-2">
+                                <label>Patológicos<input type="text" id="antPatologicos"></label>
+                                <label>Quirúrgicos<input type="text" id="antQuirurgicos"></label>
+                                <label>Alérgicos<input type="text" id="antAlergicos"></label>
+                                <label>Medicamentos<input type="text" id="antMedicamentos"></label>
+                            </div>
+                        </fieldset>
+
+                        <!-- 8. EVALUACIÓN FÍSICA OBJETIVA -->
+                        <fieldset class="form-section">
+                            <legend>8. Evaluación física objetiva</legend>
+                            <label class="campo-completo">
+                                <textarea id="evaluacionFisica" rows="5"></textarea>
+                            </label>
+                        </fieldset>
+
+                        <!-- 9. MANEJO -->
+                        <fieldset class="form-section">
+                            <legend>9. Manejo</legend>
+                            <label class="campo-completo">
+                                <textarea id="manejo" rows="5"></textarea>
+                            </label>
+                        </fieldset>
+
+                        <!-- 10. LOCALIZACIÓN DE LESIONES (cuerpo 3D) -->
+                        <fieldset class="form-section">
+                            <legend>10. Localización de lesiones</legend>
+                            <p class="form-note" style="font-weight:400; text-transform:none; letter-spacing:normal; opacity:.8;">
+                                Arrastra para girar el cuerpo. Toca la parte afectada y elige el tipo de lesión.
+                            </p>
+
+                            <div class="aph-cuerpo-layout">
+                                <div id="contenedorCuerpo3D" class="aph-cuerpo3d-contenedor"></div>
+                                <div class="aph-lesiones-lista">
+                                    <p class="aph-lesiones-titulo">Lesiones marcadas</p>
+                                    <div id="listaLesiones">
+                                        <p class="aph-vacio-mini">Ninguna todavía.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </fieldset>
+
+                        <!-- 11. OBSERVACIONES -->
+                        <fieldset class="form-section">
+                            <legend>11. Observaciones</legend>
+                            <label class="campo-completo">
+                                <textarea id="observacionesAtencion" rows="3"></textarea>
+                            </label>
+                        </fieldset>
+
+                        <!-- 12. PERSONA QUE RECIBE EL PACIENTE -->
+                        <fieldset class="form-section">
+                            <legend>12. Persona que recibe el paciente</legend>
+                            <div class="form-grid cols-3">
+                                <label>Nombre<input type="text" id="recibeNombre"></label>
+                                <label>Cargo<input type="text" id="recibeCargo"></label>
+                                <label>Código<input type="text" id="recibeCodigo"></label>
+                            </div>
+                        </fieldset>
+
+                        <!-- 13. EXONERACIÓN DE RESPONSABILIDADES -->
+                        <fieldset class="form-section">
+                            <legend>13. Exoneración de responsabilidades</legend>
+                            <label class="radio-inline">
+                                <input type="checkbox" id="rechazaTraslado"> El paciente rechaza el tratamiento/traslado
+                            </label>
+                            <p class="form-note" style="font-weight:400; text-transform:none; letter-spacing:normal; opacity:.8; margin-top:8px;">
+                                Mediante la firma, el paciente declara que se niega a aceptar el tratamiento/traslado a un
+                                hospital y reconoce que el personal de la ambulancia se lo recomendó, eximiendo a dicho
+                                personal de toda responsabilidad por haber respetado sus deseos expresos.
+                            </p>
+
+                            <div id="bloqueRechazo" class="signature-grid" style="display:none;">
+
+                                <div class="signature-block">
+                                    <label class="signature-label">Firma del paciente</label>
+                                    <canvas id="firmaRechazoPaciente"></canvas>
+                                    <button type="button" class="clear-signature btn-secundario" data-firma="rechazoPaciente">
+                                        <i class="fa-solid fa-eraser"></i> Borrar firma
+                                    </button>
+                                </div>
+
+                                <div class="signature-block">
+                                    <label class="signature-label">Firma del testigo</label>
+                                    <canvas id="firmaRechazoTestigo"></canvas>
+                                    <button type="button" class="clear-signature btn-secundario" data-firma="rechazoTestigo">
+                                        <i class="fa-solid fa-eraser"></i> Borrar firma
+                                    </button>
+                                </div>
+
+                            </div>
+
+                            <label class="campo-completo" style="margin-top:12px;">Disposición
+                                <input type="text" id="disposicion">
+                            </label>
+                        </fieldset>
+
+                        <!-- 14. TRIP (personal que atendió) -->
+                        <fieldset class="form-section">
+                            <legend>14. TRIP — Personal que atendió</legend>
+                            <div class="form-grid cols-2">
+                                <label>Tipo de personal
+                                    <select id="tripTipo">
+                                        <option value="">Seleccione...</option>
+                                        <option>Auxiliar de Enfermería</option>
+                                        <option>Tecnólogo APH</option>
+                                        <option>Médico</option>
+                                        <option>Otro</option>
+                                    </select>
+                                </label>
+                                <label>Nombre<input type="text" id="tripNombre"></label>
+                            </div>
+                        </fieldset>
+
+                    </form>
+
+                </section>
+
+            </section>
+
+            <!-- =======================================================
+                 PANEL: CONSENTIMIENTO INFORMADO
+            =========================================================== -->
+            <section id="panelConsentimiento" class="aph-panel">
+
+                <!-- ---- Listado ---- -->
+                <section id="vistaListadoConsentimiento" class="vista activa">
+
+                    <div class="aph-toolbar">
+                        <div class="aph-toolbar-titulo">
+                            <h1><i class="fa-solid fa-file-signature"></i> Consentimiento Informado</h1>
+                            <p>Autorización de tratamiento y traslado en ambulancia (FT-AMB-001).</p>
+
+                            <p id="avisoInvitadoConsentimiento" class="aviso-invitado" style="display:none;">
+                                <i class="fa-solid fa-circle-info"></i>
+                                Modo invitado: solo ves los consentimientos creados en este dispositivo.
+                            </p>
+                        </div>
+                        <button type="button" id="btnNuevoConsentimiento" class="btn-principal">
+                            <i class="fa-solid fa-plus"></i> Nuevo Consentimiento
+                        </button>
+                    </div>
+
+                    <input type="text" id="buscarConsentimiento" placeholder="Buscar por nombre, cédula o código...">
+
+                    <div id="consentimientosCards" class="aph-cards">
+                        <p class="aph-vacio">Cargando...</p>
+                    </div>
+
+                </section>
+
+                <!-- ---- Formulario ---- -->
+                <section id="vistaFormularioConsentimiento" class="vista">
+
+                    <div class="aph-toolbar">
+                        <button type="button" id="btnVolverListadoConsentimiento" class="btn-secundario">
+                            <i class="fa-solid fa-arrow-left"></i> Volver
+                        </button>
+                        <h2 id="tituloFormularioConsentimiento">Nuevo consentimiento</h2>
+                        <button type="button" id="btnGuardarConsentimiento" class="btn-principal">
+                            <i class="fa-solid fa-floppy-disk"></i> Guardar
+                        </button>
+                    </div>
+
+                    <form id="formConsentimiento">
+
+                        <fieldset class="form-section">
+                            <legend>Fecha</legend>
+                            <div class="form-grid cols-3">
+                                <label>Fecha<input type="date" id="consentimientoFecha"></label>
+                            </div>
+                        </fieldset>
+
+                        <fieldset class="form-section">
+                            <legend>Texto informativo</legend>
+                            <div class="aph-texto-legal">
+                                <p><strong>Yo</strong>, identificado con el documento que registro abajo, declaro que he
+                                sido informado por el personal del <strong>Cuerpo de Bomberos Voluntarios Villamaría -
+                                Caldas</strong> sobre los procedimientos y el traslado en ambulancia que debo tener en
+                                cuenta:</p>
+                                <ol>
+                                    <li>El traslado se hace en ambulancia de transporte asistencial básico (T.A.B), acompañado por personal calificado.</li>
+                                    <li>El vehículo dispone del material necesario para la atención inicial de las funciones vitales del paciente, en situaciones críticas como alteración cardíaca, presión arterial, dificultad respiratoria, incontinencia o traumatismo, entre otros.</li>
+                                    <li>Debo tener un acompañante mayor de edad durante el desplazamiento.</li>
+                                    <li>Me han explicado los posibles riesgos para mi salud: durante el traslado pueden surgir complicaciones que conlleven a detener la ambulancia momentáneamente hasta solucionarlas mediante las técnicas necesarias. Aunque la conducción se hace acorde a la patología del paciente, existen riesgos propios del transporte (vibraciones, aceleración, desaceleración, accidente, avería, etc.)</li>
+                                </ol>
+                                <p>Aclaro que he comprendido la información y los procedimientos que realice el personal
+                                de salud del Cuerpo de Bomberos Voluntarios Villamaría - Caldas, basados en la Resolución
+                                3100 de 2019. Autorizo al personal de salud del Cuerpo al traslado asistencial a donde sea
+                                requerido.</p>
+                                <p><strong>Autorización de tratamiento de datos personales:</strong> con base en la
+                                Constitución Política de Colombia y las Leyes 1266 de 2008 y 1581 de 2012, declaro que he
+                                leído los términos y condiciones de la política de seguridad de la información y habeas
+                                data del Cuerpo de Bomberos Voluntarios Villamaría - Caldas, y autorizo la recolección,
+                                almacenamiento, uso y circulación de mis datos personales para la prestación de sus
+                                servicios.</p>
+                            </div>
+                        </fieldset>
+
+                        <fieldset class="form-section">
+                            <legend>Firmantes</legend>
+
+                            <div class="aph-firmante" data-indice="0">
+                                <div class="form-grid cols-4">
+                                    <label class="span-2">Nombre<input type="text" id="firmante1Nombre"></label>
+                                    <label>Tipo doc.
+                                        <select id="firmante1Tipo">
+                                            <option>TI</option><option>CC</option><option>CE</option><option>PAS</option><option>NUP</option>
+                                        </select>
+                                    </label>
+                                    <label>N.º documento<input type="text" id="firmante1Documento"></label>
+                                    <label>Teléfono<input type="tel" id="firmante1Telefono"></label>
+                                </div>
+                                <div class="signature-block">
+                                    <label class="signature-label">Firma</label>
+                                    <canvas id="firmaPaciente1"></canvas>
+                                    <button type="button" class="clear-signature btn-secundario" data-firma="paciente1">
+                                        <i class="fa-solid fa-eraser"></i> Borrar firma
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="aph-firmante" data-indice="1">
+                                <div class="form-grid cols-4">
+                                    <label class="span-2">Nombre (opcional)<input type="text" id="firmante2Nombre"></label>
+                                    <label>Tipo doc.
+                                        <select id="firmante2Tipo">
+                                            <option>TI</option><option>CC</option><option>CE</option><option>PAS</option><option>NUP</option>
+                                        </select>
+                                    </label>
+                                    <label>N.º documento<input type="text" id="firmante2Documento"></label>
+                                    <label>Teléfono<input type="tel" id="firmante2Telefono"></label>
+                                </div>
+                                <div class="signature-block">
+                                    <label class="signature-label">Firma</label>
+                                    <canvas id="firmaPaciente2"></canvas>
+                                    <button type="button" class="clear-signature btn-secundario" data-firma="paciente2">
+                                        <i class="fa-solid fa-eraser"></i> Borrar firma
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="aph-firmante" data-indice="2">
+                                <div class="form-grid cols-4">
+                                    <label class="span-2">Nombre (opcional)<input type="text" id="firmante3Nombre"></label>
+                                    <label>Tipo doc.
+                                        <select id="firmante3Tipo">
+                                            <option>TI</option><option>CC</option><option>CE</option><option>PAS</option><option>NUP</option>
+                                        </select>
+                                    </label>
+                                    <label>N.º documento<input type="text" id="firmante3Documento"></label>
+                                    <label>Teléfono<input type="tel" id="firmante3Telefono"></label>
+                                </div>
+                                <div class="signature-block">
+                                    <label class="signature-label">Firma</label>
+                                    <canvas id="firmaPaciente3"></canvas>
+                                    <button type="button" class="clear-signature btn-secundario" data-firma="paciente3">
+                                        <i class="fa-solid fa-eraser"></i> Borrar firma
+                                    </button>
+                                </div>
+                            </div>
+
+                        </fieldset>
+
+                        <fieldset class="form-section">
+                            <legend>Observaciones</legend>
+                            <label class="campo-completo">
+                                <textarea id="consentimientoObservaciones" rows="3"></textarea>
+                            </label>
+                        </fieldset>
+
+                    </form>
+
+                </section>
+
+            </section>
+
+        </main>
+
+    </div>
+
+</div>
+
+<script type="module" src="app.js"></script>
+
+</body>
+</html>
