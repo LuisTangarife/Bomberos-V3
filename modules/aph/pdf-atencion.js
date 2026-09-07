@@ -19,6 +19,16 @@ function textoLista(lista) {
     return lista.join(", ");
 }
 
+function textoGCS(t) {
+
+    if (t.gcsNoValorable) return "No valorable";
+    if (!t.gcsO || !t.gcsV || !t.gcsL) return `O${texto(t.gcsO)} V${texto(t.gcsV)} M${texto(t.gcsL)}`;
+
+    const total = Number(t.gcsO) + Number(t.gcsV) + Number(t.gcsL);
+    return `O${t.gcsO} V${t.gcsV} M${t.gcsL} = ${total}/15`;
+
+}
+
 export async function generarPDFAtencion(atencion) {
 
     if (!atencion) return;
@@ -100,6 +110,9 @@ export async function generarPDFAtencion(atencion) {
     y = dibujarFilaEtiquetaValor(doc, "Nombre", texto(atencion.recibeNombre), y);
     y = dibujarFilaEtiquetaValor(doc, "Cargo", texto(atencion.recibeCargo), y);
     y = dibujarFilaEtiquetaValor(doc, "Código", texto(atencion.recibeCodigo), y);
+    y += 4;
+    y = asegurarEspacio(doc, y, 35);
+    y = dibujarBloqueFirma(doc, "Firma de quien recibe", atencion.firmaRecibe, "", y);
     y += 2;
 
     if (atencion.rechazaTraslado) {
@@ -150,7 +163,7 @@ function dibujarSeccionSignosVitales(doc, tomas, y) {
         );
         y = dibujarLineaTabla(
             doc,
-            `Conciencia (AVDN): ${texto(t.conciencia)}  ·  GCS: ${t.gcsNoValorable ? "No valorable" : `O${texto(t.gcsO)} V${texto(t.gcsV)} M${texto(t.gcsL)}`}  ·  Pupilas D/I: ${texto(t.pupilaD)} / ${texto(t.pupilaI)}`,
+            `Conciencia (AVDN): ${texto(t.conciencia)}  ·  GCS: ${textoGCS(t)}  ·  Pupilas D/I: ${texto(t.pupilaD)} / ${texto(t.pupilaI)}`,
             y
         );
         y = dibujarLineaTabla(

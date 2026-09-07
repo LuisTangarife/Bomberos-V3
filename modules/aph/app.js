@@ -48,6 +48,7 @@ async function iniciarAplicacion() {
 
     registrarFirma("rechazoPaciente", "firmaRechazoPaciente", "firmas");
     registrarFirma("rechazoTestigo", "firmaRechazoTestigo", "firmas");
+    registrarFirma("recibe", "firmaRecibe", "firmas");
     registrarFirma("paciente1", "firmaPaciente1", "firmasConsentimiento", 0);
     registrarFirma("paciente2", "firmaPaciente2", "firmasConsentimiento", 1);
     registrarFirma("paciente3", "firmaPaciente3", "firmasConsentimiento", 2);
@@ -68,6 +69,40 @@ function construirTomasSignosVitales() {
     if (!contenedor) return;
 
     contenedor.innerHTML = Array.from({ length: NUM_TOMAS }, (_, i) => plantillaToma(i + 1)).join("");
+
+    contenedor.querySelectorAll(".gcs-select, .gcs-novalorable").forEach(el => {
+        el.addEventListener("change", () => actualizarTotalGCS(el.dataset.toma));
+    });
+
+}
+
+// El total solo tiene sentido si las 3 partes están elegidas — mostrar
+// una suma parcial (por ejemplo, solo Ocular+Verbal) podría leerse
+// como el GCS real del paciente y llevar a una decisión clínica
+// equivocada. Con "No valorable" marcado, se muestra ese texto en vez
+// de cualquier número, sin importar qué haya seleccionado antes.
+function actualizarTotalGCS(n) {
+
+    const campoTotal = document.getElementById(`toma${n}_gcsTotal`);
+    if (!campoTotal) return;
+
+    const noValorable = document.getElementById(`toma${n}_noValorable`)?.checked;
+
+    if (noValorable) {
+        campoTotal.value = "No valorable";
+        return;
+    }
+
+    const o = document.getElementById(`toma${n}_gcsO`)?.value;
+    const v = document.getElementById(`toma${n}_gcsV`)?.value;
+    const m = document.getElementById(`toma${n}_gcsL`)?.value;
+
+    if (!o || !v || !m) {
+        campoTotal.value = "";
+        return;
+    }
+
+    campoTotal.value = `${Number(o) + Number(v) + Number(m)} / 15`;
 
 }
 
@@ -106,11 +141,43 @@ function plantillaToma(n) {
                 </label>
             </div>
             <div class="form-grid cols-4">
-                <label>GCS — Ocular<input type="number" min="1" max="4" id="toma${n}_gcsO"></label>
-                <label>GCS — Verbal<input type="number" min="1" max="5" id="toma${n}_gcsV"></label>
-                <label>GCS — Motor<input type="number" min="1" max="6" id="toma${n}_gcsL"></label>
-                <label class="radio-inline" style="align-self:end;">
-                    <input type="checkbox" id="toma${n}_noValorable"> No valorable
+                <label>GCS — Ocular
+                    <select id="toma${n}_gcsO" class="gcs-select" data-toma="${n}">
+                        <option value="">—</option>
+                        <option value="4">Espontánea (4)</option>
+                        <option value="3">Al estímulo verbal (3)</option>
+                        <option value="2">Al dolor (2)</option>
+                        <option value="1">No hay apertura ocular (1)</option>
+                    </select>
+                </label>
+                <label>GCS — Verbal
+                    <select id="toma${n}_gcsV" class="gcs-select" data-toma="${n}">
+                        <option value="">—</option>
+                        <option value="5">Orientada, conversa (5)</option>
+                        <option value="4">Desorientada, confusa (4)</option>
+                        <option value="3">Palabras inapropiadas (3)</option>
+                        <option value="2">Sonidos incomprensibles (2)</option>
+                        <option value="1">No hay respuesta verbal (1)</option>
+                    </select>
+                </label>
+                <label>GCS — Motor
+                    <select id="toma${n}_gcsL" class="gcs-select" data-toma="${n}">
+                        <option value="">—</option>
+                        <option value="6">Obedece órdenes (6)</option>
+                        <option value="5">Localiza el dolor (5)</option>
+                        <option value="4">Flexión normal / retira (4)</option>
+                        <option value="3">Flexión anormal / descorticación (3)</option>
+                        <option value="2">Extensión / descerebración (2)</option>
+                        <option value="1">No hay respuesta motora (1)</option>
+                    </select>
+                </label>
+                <label style="justify-content:flex-end;">GCS — Total
+                    <input type="text" id="toma${n}_gcsTotal" readonly placeholder="—" class="aph-gcs-total">
+                </label>
+            </div>
+            <div class="form-grid cols-1">
+                <label class="radio-inline">
+                    <input type="checkbox" id="toma${n}_noValorable" class="gcs-novalorable" data-toma="${n}"> No valorable (paciente sedado, intubado, etc.)
                 </label>
             </div>
             <div class="form-grid cols-2">
@@ -168,6 +235,7 @@ function poblarToma(n, datos = {}) {
     asignar(`toma${n}_pielColor`, datos.pielColor);
     asignar(`toma${n}_pielTemp`, datos.pielTemp);
     asignar(`toma${n}_temperatura`, datos.temperatura);
+    actualizarTotalGCS(n);
 }
 
 /* ========================================================================
@@ -218,6 +286,11 @@ function cambiarPestana(vista) {
 function actualizarBloqueRechazo() {
     const marcado = document.getElementById("rechazaTraslado")?.checked;
     if (UI.bloqueRechazo) UI.bloqueRechazo.style.display = marcado ? "grid" : "none";
+    // El canvas de firma se inicializó cuando este bloque todavía
+    // estaba oculto (display:none), así que su área de dibujo real
+    // quedó en 0x0 — sin este redimensionar, el usuario puede tocar
+    // el canvas y no pasa nada, porque técnicamente no tiene tamaño.
+    if (marcado) requestAnimationFrame(redimensionarCanvasFirmas);
 }
 
 /* ========================================================================
@@ -294,6 +367,7 @@ function nuevoFormularioAtencion() {
     UI.formAtencion?.reset();
     limpiarFirma("rechazoPaciente");
     limpiarFirma("rechazoTestigo");
+    limpiarFirma("recibe");
     cuerpo3dApi?.limpiar();
     actualizarBloqueRechazo();
 
@@ -317,6 +391,7 @@ export function cargarFormularioAtencion(atencion) {
     requestAnimationFrame(() => {
         restaurarFirma("rechazoPaciente", atencion.firmaRechazoPaciente);
         restaurarFirma("rechazoTestigo", atencion.firmaRechazoTestigo);
+        restaurarFirma("recibe", atencion.firmaRecibe);
         cuerpo3dApi?.cargarLesiones(atencion.lesiones || []);
     });
 
@@ -451,6 +526,7 @@ function recopilarDatosAtencion() {
         recibeNombre: valorCampo("recibeNombre"),
         recibeCargo: valorCampo("recibeCargo"),
         recibeCodigo: valorCampo("recibeCodigo"),
+        firmaRecibe: state.firmas.recibe || null,
 
         rechazaTraslado: document.getElementById("rechazaTraslado")?.checked || false,
         firmaRechazoPaciente: state.firmas.rechazoPaciente || null,

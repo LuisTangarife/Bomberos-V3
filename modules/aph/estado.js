@@ -35,7 +35,8 @@ export const state = {
     // traslado (sección "Exoneración de responsabilidades").
     firmas: {
         rechazoPaciente: null,
-        rechazoTestigo: null
+        rechazoTestigo: null,
+        recibe: null
     },
 
     // Lesiones marcadas en el cuerpo 3D — ver modules/aph/cuerpo3d.js

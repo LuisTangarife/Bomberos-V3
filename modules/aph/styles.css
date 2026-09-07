@@ -10,6 +10,15 @@
 
 :root{
 
+    /* Esto es lo que de verdad arregla las opciones invisibles del
+       <select>: sin esto, el navegador puede pintar la lista
+       desplegable con su tema de sistema por defecto (casi siempre
+       claro) mientras el texto sigue tomando el color oscuro que le
+       pusimos nosotros — letras claras sobre fondo claro, invisibles.
+       color-scheme le avisa al navegador qué paleta usar en sus
+       controles nativos (selects, checkboxes, date pickers, etc). */
+    color-scheme: dark;
+
     --aph-bg-pagina: #05070c;
     --aph-bg-card: #12151f;
     --aph-bg-section: rgba(255,255,255,.03);
@@ -42,6 +51,8 @@
 }
 
 html[data-tema="claro"]{
+
+    color-scheme: light;
 
     --aph-bg-pagina: #EEF3F5;
     --aph-bg-card: #FFFFFF;
@@ -323,6 +334,14 @@ body{ background: var(--aph-bg-pagina); }
 }
 
 .form-section textarea{ resize: vertical; }
+
+/* Refuerzo por si el navegador no respeta color-scheme (algunos
+   navegadores más viejos, o ciertos Android WebView): fijar el color
+   de las opciones explícitamente, no solo confiar en la herencia. */
+.form-section select option{
+    background: var(--aph-bg-card);
+    color: var(--aph-text);
+}
 
 .campo-completo{ display: flex; flex-direction: column; gap: 6px; }
 .campo-completo textarea{ width: 100%; }
