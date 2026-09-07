@@ -36,6 +36,83 @@ function colorDeCodigo(codigo) {
     return (TIPOS_LESION.find(t => t.codigo === codigo) || TIPOS_LESION[0]).color;
 }
 
+// Textura de piel generada por código, sin descargar ninguna imagen:
+// un tono base parejo + moteado sutil aleatorio, para que la piel no
+// se vea perfectamente lisa/plástica bajo la luz. 256×256 es
+// suficiente para este tamaño de modelo y mantiene el archivo liviano
+// (nada que descargar, se dibuja en el momento).
+function crearTexturaPiel() {
+
+    const canvas = document.createElement("canvas");
+    canvas.width = 256;
+    canvas.height = 256;
+    const ctx = canvas.getContext("2d");
+
+    ctx.fillStyle = "#d8a888";
+    ctx.fillRect(0, 0, 256, 256);
+
+    for (let i = 0; i < 3200; i++) {
+        const x = Math.random() * 256;
+        const y = Math.random() * 256;
+        const sombra = Math.random() > 0.5;
+        ctx.fillStyle = sombra
+            ? `rgba(120,80,60,${Math.random() * 0.05})`
+            : `rgba(255,225,190,${Math.random() * 0.06})`;
+        ctx.beginPath();
+        ctx.arc(x, y, Math.random() * 1.6, 0, Math.PI * 2);
+        ctx.fill();
+    }
+
+    const textura = new THREE.CanvasTexture(canvas);
+    textura.wrapS = textura.wrapT = THREE.RepeatWrapping;
+    return textura;
+
+}
+
+// Perfil de una geometría girada (LatheGeometry): en vez de un
+// cilindro recto, define puntos (radio, altura) que se giran
+// alrededor del eje — así se puede dibujar un abultamiento de bíceps,
+// pantorrilla, pecho o cadera en vez de un tubo perfectamente recto.
+// "bulto" es en qué fracción de la altura (0 a 1) queda el punto más
+// ancho — en una pierna real el abultamiento de la pantorrilla queda
+// arriba, no al centro, por ejemplo.
+function perfilMiembro(radioSup, radioBulto, radioInf, alto, posicionBulto = 0.4, segmentosAlto = 6) {
+
+    const puntos = [];
+
+    for (let i = 0; i <= segmentosAlto; i++) {
+
+        const t = i / segmentosAlto;
+        let radio;
+
+        if (t <= posicionBulto) {
+            const local = t / posicionBulto;
+            radio = radioSup + (radioBulto - radioSup) * suavizar(local);
+        } else {
+            const local = (t - posicionBulto) / (1 - posicionBulto);
+            radio = radioBulto + (radioInf - radioBulto) * suavizar(local);
+        }
+
+        puntos.push(new THREE.Vector2(Math.max(0.001, radio), -t * alto));
+
+    }
+
+    return new THREE.LatheGeometry(puntos, 14);
+
+}
+
+// Interpolación suave (ease in/out) en vez de una recta entre puntos
+// — con una recta el "músculo" se ve como dos conos pegados, muy
+// artificial. Con esto la curva se redondea de verdad.
+function suavizar(t) {
+    return t * t * (3 - 2 * t);
+}
+
+function perfilTorso(puntosRadioAltura, segmentos = 18) {
+    const puntos = puntosRadioAltura.map(([r, y]) => new THREE.Vector2(r, y));
+    return new THREE.LatheGeometry(puntos, segmentos);
+}
+
 /**
  * Crea el cuerpo 3D dentro de `contenedor` (un <div>). Devuelve una
  * API para usarlo desde app.js:
@@ -61,15 +138,29 @@ export function inicializarCuerpo3D(contenedor, { onCambio } = {}) {
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
     contenedor.appendChild(renderer.domElement);
 
-    escena.add(new THREE.AmbientLight(0xffffff, 0.7));
-    const luzDir = new THREE.DirectionalLight(0xffffff, 0.85);
+    escena.add(new THREE.AmbientLight(0xffffff, 0.55));
+    const luzDir = new THREE.DirectionalLight(0xffffff, 0.9);
     luzDir.position.set(2, 4, 3);
     escena.add(luzDir);
-    const luzRelleno = new THREE.DirectionalLight(0x88aaff, 0.25);
+    const luzRelleno = new THREE.DirectionalLight(0x88aaff, 0.22);
     luzRelleno.position.set(-2, 1, -3);
     escena.add(luzRelleno);
+    // Luz de contorno detrás, para que el borde de la silueta se
+    // despegue del fondo en vez de verse plana — antes solo había dos
+    // luces frontales.
+    const luzContorno = new THREE.DirectionalLight(0xfff2e0, 0.35);
+    luzContorno.position.set(0, 2, -3);
+    escena.add(luzContorno);
 
-    const MATERIAL_PIEL = new THREE.MeshStandardMaterial({ color: 0xd8a888, roughness: 0.6 });
+    const MATERIAL_PIEL = new THREE.MeshPhysicalMaterial({
+        color: 0xd8a888,
+        roughness: 0.62,
+        clearcoat: 0.12,       // un brillo sutil, como piel real, no plástico
+        clearcoatRoughness: 0.65,
+        sheen: 0.15,
+        sheenColor: new THREE.Color(0xffe0c0),
+        map: crearTexturaPiel()
+    });
 
     const cuerpo = new THREE.Group();
     escena.add(cuerpo);
@@ -130,24 +221,78 @@ export function inicializarCuerpo3D(contenedor, { onCambio } = {}) {
         cuerpo.add(oreja);
     });
 
-    agregarParte("Cuello", cil(0.045, 0.055, 0.09), 0, 1.47, 0);
-    agregarParte("Tórax", cil(0.165, 0.145, 0.34), 0, 1.24, 0);
-    agregarParte("Abdomen", cil(0.145, 0.155, 0.20), 0, 0.98, 0);
-    agregarParte("Pelvis", cil(0.155, 0.14, 0.18), 0, 0.80, 0);
+    agregarParte("Cuello", cil(0.048, 0.052, 0.09), 0, 1.455, 0);
 
+    // Torso en 3 segmentos, cada uno con SU perfil curvo (no un
+    // cilindro recto): cadera ensanchada, cintura que se cierra,
+    // pecho que vuelve a abrirse. Los rangos de altura empalman entre
+    // sí (el tope de uno es la base del siguiente) para que no quede
+    // un escalón visible en la unión.
+    agregarParte("Pelvis", perfilTorso([[0.13, 0.71], [0.16, 0.76], [0.15, 0.89]]), 0, 0, 0);
+    agregarParte("Abdomen", perfilTorso([[0.15, 0.88], [0.125, 0.97], [0.145, 1.08]]), 0, 0, 0);
+    agregarParte("Tórax", perfilTorso([[0.145, 1.07], [0.17, 1.20], [0.155, 1.32], [0.105, 1.41]]), 0, 0, 0);
+
+    // Brazos y piernas: cadena real hombro→brazo→antebrazo→mano (y
+    // cadera→muslo→pantorrilla→pie), cada eslabón hijo del anterior.
+    // Antes cada segmento giraba sobre su propio centro (se veía como
+    // piezas de Lego flotando cerca unas de otras); ahora cada uno
+    // pivotea desde la articulación real, como un brazo de verdad.
     [1, -1].forEach(lado => {
+
         const t = lado > 0 ? "derecho" : "izquierdo";
-        agregarParte(`Hombro ${t}`, new THREE.SphereGeometry(0.075, 16, 16), lado * 0.22, 1.36, 0);
-        agregarParte(`Brazo ${t}`, cil(0.052, 0.045, 0.30), lado * 0.245, 1.14, 0, lado * 0.06);
-        agregarParte(`Antebrazo ${t}`, cil(0.042, 0.038, 0.27), lado * 0.26, 0.85, 0, lado * 0.04);
-        agregarMano(t, lado);
-    });
 
-    [1, -1].forEach(lado => {
-        const t = lado > 0 ? "derecha" : "izquierda";
-        agregarParte(`Pierna superior ${t}`, cil(0.095, 0.08, 0.44), lado * 0.09, 0.48, 0);
-        agregarParte(`Pierna inferior ${t}`, cil(0.075, 0.055, 0.40), lado * 0.09, 0.06, 0);
-        agregarPie(t, lado);
+        const hombro = new THREE.Mesh(new THREE.SphereGeometry(0.072, 16, 16), MATERIAL_PIEL.clone());
+        hombro.position.set(lado * 0.205, 1.335, 0);
+        hombro.userData.nombre = `Hombro ${t}`;
+        cuerpo.add(hombro);
+        partes.push(hombro);
+        partesPorNombre.set(`Hombro ${t}`, hombro);
+
+        const brazo = new THREE.Mesh(
+            perfilMiembro(0.052, 0.058, 0.042, 0.30, 0.35),
+            MATERIAL_PIEL.clone()
+        );
+        brazo.rotation.z = lado * 0.12; // brazo relajado, un poco separado del cuerpo
+        brazo.userData.nombre = `Brazo ${t}`;
+        hombro.add(brazo);
+        partes.push(brazo);
+        partesPorNombre.set(`Brazo ${t}`, brazo);
+
+        const antebrazo = new THREE.Mesh(
+            perfilMiembro(0.044, 0.047, 0.033, 0.27, 0.3),
+            MATERIAL_PIEL.clone()
+        );
+        antebrazo.position.set(0, -0.30, 0);
+        antebrazo.rotation.x = 0.14; // ligera flexión de codo, no un brazo perfectamente recto
+        antebrazo.userData.nombre = `Antebrazo ${t}`;
+        brazo.add(antebrazo);
+        partes.push(antebrazo);
+        partesPorNombre.set(`Antebrazo ${t}`, antebrazo);
+
+        agregarMano(t, lado, antebrazo);
+
+        const muslo = new THREE.Mesh(
+            perfilMiembro(0.10, 0.106, 0.076, 0.44, 0.35),
+            MATERIAL_PIEL.clone()
+        );
+        muslo.position.set(lado * 0.09, 0.71, 0);
+        muslo.userData.nombre = `Pierna superior ${lado > 0 ? "derecha" : "izquierda"}`;
+        cuerpo.add(muslo);
+        partes.push(muslo);
+        partesPorNombre.set(muslo.userData.nombre, muslo);
+
+        const pantorrilla = new THREE.Mesh(
+            perfilMiembro(0.073, 0.077, 0.051, 0.40, 0.3),
+            MATERIAL_PIEL.clone()
+        );
+        pantorrilla.position.set(0, -0.44, 0);
+        pantorrilla.userData.nombre = `Pierna inferior ${lado > 0 ? "derecha" : "izquierda"}`;
+        muslo.add(pantorrilla);
+        partes.push(pantorrilla);
+        partesPorNombre.set(pantorrilla.userData.nombre, pantorrilla);
+
+        agregarPie(lado > 0 ? "derecha" : "izquierda", lado, pantorrilla);
+
     });
 
     // Mano con palma aplanada (no una esfera lisa) + 5 dedos, para que
@@ -156,27 +301,29 @@ export function inicializarCuerpo3D(contenedor, { onCambio } = {}) {
     // sigue siendo uno solo por mano — los dedos son visuales, no
     // partes seleccionables aparte, para no fragmentar demasiado la
     // localización de lesiones.
-    function agregarMano(ladoTxt, lado) {
+    function agregarMano(ladoTxt, lado, padreAntebrazo) {
 
-        const mano = agregarParte(
-            `Mano ${ladoTxt}`,
-            new THREE.BoxGeometry(0.062, 0.075, 0.024),
-            lado * 0.265, 0.655, 0
+        const mano = new THREE.Mesh(
+            new THREE.BoxGeometry(0.06, 0.072, 0.022),
+            MATERIAL_PIEL.clone()
         );
+        mano.position.set(0, -0.27, 0); // en la muñeca, extremo real del antebrazo (alto=0.27)
+        mano.userData.nombre = `Mano ${ladoTxt}`;
+        padreAntebrazo.add(mano);
+        partes.push(mano);
+        partesPorNombre.set(`Mano ${ladoTxt}`, mano);
 
         const NUM_DEDOS = 5;
         for (let i = 0; i < NUM_DEDOS; i++) {
 
             const offsetX = (i - (NUM_DEDOS - 1) / 2) * 0.0115;
-            // El pulgar (dedo de los extremos hacia el cuerpo) va más
-            // corto y rotado, como en una mano real.
             const esPulgar = (lado > 0 && i === NUM_DEDOS - 1) || (lado < 0 && i === 0);
 
             const dedo = new THREE.Mesh(
                 cil(0.006, 0.007, esPulgar ? 0.028 : 0.038),
                 MATERIAL_PIEL.clone()
             );
-            if (esPulgar) dedo.rotation.z = lado * Math.PI / 3.2; // el pulgar sale hacia el costado, no recto
+            if (esPulgar) dedo.rotation.z = lado * Math.PI / 3.2;
             dedo.position.set(
                 esPulgar ? offsetX * 1.3 : offsetX,
                 esPulgar ? 0.018 : 0.055,
@@ -192,26 +339,27 @@ export function inicializarCuerpo3D(contenedor, { onCambio } = {}) {
     // caja lisa, indistinguible arriba/abajo) + dedos marcados al
     // frente, para que "arriba del pie" y "planta" se puedan
     // diferenciar al inclinar el cuerpo.
-    function agregarPie(ladoTxt, lado) {
+    function agregarPie(ladoTxt, lado, padrePantorrilla) {
 
-        const pie = agregarParte(
-            `Pie ${ladoTxt}`,
-            new THREE.BoxGeometry(0.09, 0.05, 0.21),
-            lado * 0.09, -0.175, 0.045
+        const pie = new THREE.Mesh(
+            new THREE.BoxGeometry(0.088, 0.048, 0.20),
+            MATERIAL_PIEL.clone()
         );
+        pie.position.set(0, -0.42, 0.04); // en el tobillo, extremo real de la pantorrilla (alto=0.40)
+        pie.userData.nombre = `Pie ${ladoTxt}`;
+        padrePantorrilla.add(pie);
+        partes.push(pie);
+        partesPorNombre.set(`Pie ${ladoTxt}`, pie);
 
-        // Empeine: medio cilindro pegado arriba, da la curva que
-        // distingue "arriba del pie" de la planta (plana, sin nada).
         const empeine = new THREE.Mesh(
-            new THREE.CylinderGeometry(0.045, 0.045, 0.09, 12, 1, false, 0, Math.PI),
+            new THREE.CylinderGeometry(0.043, 0.043, 0.088, 12, 1, false, 0, Math.PI),
             MATERIAL_PIEL.clone()
         );
         empeine.rotation.z = Math.PI / 2;
         empeine.rotation.y = Math.PI / 2;
-        empeine.position.set(0, 0.025, -0.02);
+        empeine.position.set(0, 0.024, -0.02);
         pie.add(empeine);
 
-        // 5 dedos pequeños en la punta.
         for (let i = 0; i < 5; i++) {
             const dedo = new THREE.Mesh(
                 new THREE.SphereGeometry(0.011, 8, 8),
