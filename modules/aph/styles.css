@@ -1,0 +1,571 @@
+/* ========================================================================
+   STYLES.CSS — Módulo APH (Atención Prehospitalaria)
+
+   Tokens propios (--aph-*), mismo patrón que Censos/Ayudas/Inspecciones
+   para que el interruptor día/noche de este módulo no afecte a los
+   demás. Color diferenciador: teal médico (#0891B2), no el rojo
+   institucional de los otros módulos — es la pieza que pediste para
+   que APH se sienta distinto y propio.
+======================================================================== */
+
+:root{
+
+    --aph-bg-pagina: transparent;
+    --aph-bg-card: #12151f;
+    --aph-bg-section: rgba(255,255,255,.03);
+    --aph-bg-input: rgba(255,255,255,.06);
+    --aph-bg-input-hover: rgba(255,255,255,.10);
+
+    --aph-text: #F4F6FB;
+    --aph-text-light: #B7BECD;
+    --aph-text-mute: #838DA3;
+
+    --aph-border: rgba(255,255,255,.12);
+    --aph-border-hover: rgba(8,145,178,.6);
+
+    --aph-acento: #0891B2;
+    --aph-acento-claro: #22D3EE;
+    --aph-acento-oscuro: #0E7490;
+
+    --aph-badge-pendiente-bg: rgba(255,200,0,.20);
+    --aph-badge-pendiente-fg: #FFD54A;
+
+    --aph-aviso-bg: #082F35;
+    --aph-aviso-fg: #67E8F9;
+    --aph-aviso-icon: #22D3EE;
+
+    --aph-roja: #FF3B30;
+    --aph-amarilla: #FFB300;
+    --aph-verde: #22C55E;
+    --aph-negra: #6B7280;
+
+}
+
+html[data-tema="claro"]{
+
+    --aph-bg-pagina: #EEF3F5;
+    --aph-bg-card: #FFFFFF;
+    --aph-bg-section: #F4F9FA;
+    --aph-bg-input: #FFFFFF;
+    --aph-bg-input-hover: #EAF4F6;
+
+    --aph-text: #12232A;
+    --aph-text-light: #4B6068;
+    --aph-text-mute: #7A8D94;
+
+    --aph-border: rgba(8,60,70,.14);
+    --aph-border-hover: rgba(8,145,178,.55);
+
+    --aph-badge-pendiente-bg: #FFF3C4;
+    --aph-badge-pendiente-fg: #8A6100;
+
+    --aph-aviso-bg: #E0F7FA;
+    --aph-aviso-fg: #0E7490;
+    --aph-aviso-icon: #0891B2;
+
+}
+
+body{ background: var(--aph-bg-pagina); }
+
+.aph-page{ padding: 24px; max-width: 1200px; margin: 0 auto; }
+
+/* ========================================================================
+   PESTAÑAS
+======================================================================== */
+
+.aph-tabs{
+    display: flex;
+    gap: 8px;
+    margin-bottom: 20px;
+    border-bottom: 1px solid var(--aph-border);
+}
+
+.aph-tab{
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 20px;
+    background: none;
+    border: none;
+    border-bottom: 3px solid transparent;
+    color: var(--aph-text-light);
+    font-weight: 700;
+    font-size: .95rem;
+    cursor: pointer;
+    transition: .2s;
+}
+
+.aph-tab:hover{ color: var(--aph-text); }
+
+.aph-tab.activa{
+    color: var(--aph-acento-claro);
+    border-bottom-color: var(--aph-acento);
+}
+
+.aph-panel{ display: none; }
+.aph-panel.activo{ display: block; }
+
+.vista{ display: none; }
+.vista.activa{ display: block; }
+
+/* ========================================================================
+   TOOLBAR / LISTADO
+======================================================================== */
+
+.aph-toolbar{
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 18px;
+    flex-wrap: wrap;
+}
+
+.aph-toolbar-titulo h1{
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 1.4rem;
+    margin: 0 0 6px;
+    color: var(--aph-text);
+}
+
+.aph-toolbar-titulo p{
+    color: var(--aph-text-light);
+    font-size: .88rem;
+    margin: 0;
+}
+
+.aviso-invitado{
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--aph-aviso-bg);
+    color: var(--aph-aviso-fg);
+    padding: 8px 14px;
+    border-radius: 10px;
+    font-size: .82rem;
+    margin-top: 10px;
+    width: fit-content;
+}
+
+.aviso-invitado i{ color: var(--aph-aviso-icon); }
+
+#buscarAtencion, #buscarConsentimiento{
+    width: 100%;
+    max-width: 420px;
+    padding: 11px 16px;
+    border-radius: 12px;
+    border: 1px solid var(--aph-border);
+    background: var(--aph-bg-input);
+    color: var(--aph-text);
+    margin-bottom: 18px;
+    font: inherit;
+}
+
+.aph-cards{
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 16px;
+}
+
+.aph-vacio{
+    color: var(--aph-text-mute);
+    padding: 30px 0;
+    grid-column: 1 / -1;
+    text-align: center;
+}
+
+.aph-vacio-mini{
+    color: var(--aph-text-mute);
+    font-size: .82rem;
+    padding: 10px 0;
+}
+
+.aph-card{
+    background: var(--aph-bg-card);
+    border: 1px solid var(--aph-border);
+    border-radius: 16px;
+    padding: 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.aph-card h3{ margin: 4px 0; font-size: 1.05rem; color: var(--aph-text); }
+
+.aph-card-top{ display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+
+.aph-codigo{
+    font-family: "JetBrains Mono", monospace;
+    font-size: .75rem;
+    color: var(--aph-text-mute);
+}
+
+.aph-prioridad{
+    font-size: .7rem;
+    font-weight: 800;
+    padding: 2px 8px;
+    border-radius: 6px;
+    color: #fff;
+}
+.aph-prioridad-roja{ background: var(--aph-roja); }
+.aph-prioridad-amarilla{ background: var(--aph-amarilla); color: #3a2900; }
+.aph-prioridad-verde{ background: var(--aph-verde); }
+.aph-prioridad-negra{ background: var(--aph-negra); }
+
+.aph-badge-pendiente{
+    background: var(--aph-badge-pendiente-bg);
+    color: var(--aph-badge-pendiente-fg);
+    font-size: .7rem;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 6px;
+}
+
+.aph-sub{
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: .8rem;
+    color: var(--aph-text-light);
+    margin: 2px 0;
+}
+
+.aph-card-actions{
+    display: flex;
+    gap: 8px;
+    margin-top: 12px;
+}
+
+.aph-card-actions button{
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 8px;
+    border-radius: 10px;
+    border: 1px solid var(--aph-border);
+    background: var(--aph-bg-input);
+    color: var(--aph-text);
+    font-size: .8rem;
+    cursor: pointer;
+    transition: .2s;
+}
+
+.aph-card-actions button:hover{ background: var(--aph-bg-input-hover); }
+.btn-borrar-aph{ flex: 0 0 auto !important; color: #ff6b6b !important; }
+
+/* ========================================================================
+   FORMULARIO — genérico (compartido por ambas vistas)
+======================================================================== */
+
+.form-section{
+    background: var(--aph-bg-section);
+    border: 1px solid var(--aph-border);
+    border-radius: 16px;
+    padding: 20px;
+    margin-bottom: 18px;
+}
+
+.form-section legend{
+    font-weight: 800;
+    font-size: .82rem;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    color: var(--aph-acento-claro);
+    padding: 0 8px;
+}
+
+.form-grid{
+    display: grid;
+    gap: 14px;
+    margin-bottom: 10px;
+}
+.form-grid.cols-2{ grid-template-columns: repeat(2, 1fr); }
+.form-grid.cols-3{ grid-template-columns: repeat(3, 1fr); }
+.form-grid.cols-4{ grid-template-columns: repeat(4, 1fr); }
+.form-grid.cols-6{ grid-template-columns: repeat(6, 1fr); }
+.form-grid .span-2{ grid-column: span 2; }
+
+.form-section label{
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    font-size: .78rem;
+    font-weight: 600;
+    color: var(--aph-text-light);
+}
+
+.form-section input[type="text"],
+.form-section input[type="tel"],
+.form-section input[type="date"],
+.form-section input[type="time"],
+.form-section input[type="number"],
+.form-section select,
+.form-section textarea{
+    padding: 9px 11px;
+    border-radius: 9px;
+    border: 1px solid var(--aph-border);
+    background: var(--aph-bg-input);
+    color: var(--aph-text);
+    font: inherit;
+    font-weight: 400;
+}
+
+.form-section input:focus,
+.form-section select:focus,
+.form-section textarea:focus{
+    outline: none;
+    border-color: var(--aph-border-hover);
+    background: var(--aph-bg-input-hover);
+}
+
+.form-section textarea{ resize: vertical; }
+
+.campo-completo{ display: flex; flex-direction: column; gap: 6px; }
+.campo-completo textarea{ width: 100%; }
+
+.form-note{
+    font-size: .74rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    color: var(--aph-text-mute);
+    margin: 4px 0;
+}
+
+.radio-inline{
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center;
+    gap: 8px;
+    font-weight: 600 !important;
+}
+.radio-inline input{ width: auto; }
+
+.aph-checkbox-grid{
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+    gap: 8px 16px;
+}
+.aph-checkbox-grid label{
+    flex-direction: row !important;
+    align-items: center;
+    gap: 8px;
+    font-weight: 500 !important;
+    color: var(--aph-text) !important;
+}
+.aph-checkbox-grid input{ width: auto; }
+
+@media (max-width: 700px){
+    .form-grid.cols-2, .form-grid.cols-3, .form-grid.cols-4, .form-grid.cols-6{
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
+/* ========================================================================
+   SIGNOS VITALES (bloques "Toma 1/2/3")
+======================================================================== */
+
+.aph-toma{
+    border: 1px dashed var(--aph-border);
+    border-radius: 12px;
+    padding: 14px;
+    margin-bottom: 14px;
+}
+
+.aph-toma-titulo{
+    font-weight: 800;
+    font-size: .78rem;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+    color: var(--aph-acento-claro);
+    margin: 0 0 10px;
+}
+
+/* ========================================================================
+   CUERPO 3D + LISTA DE LESIONES
+======================================================================== */
+
+.aph-cuerpo-layout{
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(220px, 320px);
+    gap: 18px;
+    align-items: start;
+}
+
+.aph-cuerpo3d-contenedor{
+    width: 100%;
+    height: 520px;
+    background: radial-gradient(circle at 50% 30%, rgba(8,145,178,.10), transparent 70%);
+    border: 1px solid var(--aph-border);
+    border-radius: 16px;
+    touch-action: none;
+    cursor: grab;
+}
+.aph-cuerpo3d-contenedor:active{ cursor: grabbing; }
+
+.cuerpo3d-menu{
+    position: absolute;
+    background: #12151f;
+    border: 1px solid var(--aph-border);
+    border-radius: 12px;
+    padding: 8px;
+    width: 210px;
+    box-shadow: 0 20px 50px rgba(0,0,0,.5);
+    z-index: 20;
+}
+
+.cuerpo3d-menu-titulo{
+    color: #fff;
+    font-weight: 800;
+    font-size: .78rem;
+    padding: 4px 8px 8px;
+    border-bottom: 1px solid var(--aph-border);
+    margin-bottom: 4px;
+}
+
+.cuerpo3d-menu button{
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    text-align: left;
+    background: none;
+    border: none;
+    color: #ddd;
+    padding: 7px 8px;
+    border-radius: 7px;
+    font-size: .78rem;
+    cursor: pointer;
+}
+.cuerpo3d-menu button:hover{ background: rgba(255,255,255,.08); }
+
+.cuerpo3d-punto{
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    display: inline-block;
+    flex-shrink: 0;
+}
+
+.cuerpo3d-menu-cancelar{ color: #f66 !important; border-top: 1px solid var(--aph-border); margin-top: 4px; }
+
+.aph-lesiones-lista{
+    background: var(--aph-bg-section);
+    border: 1px solid var(--aph-border);
+    border-radius: 14px;
+    padding: 14px;
+    max-height: 520px;
+    overflow-y: auto;
+}
+
+.aph-lesiones-titulo{
+    font-weight: 800;
+    font-size: .76rem;
+    text-transform: uppercase;
+    color: var(--aph-text-light);
+    margin: 0 0 10px;
+}
+
+.aph-lesion-item{
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 6px;
+    border-bottom: 1px solid var(--aph-border);
+    font-size: .8rem;
+}
+
+.aph-lesion-punto{ width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+.aph-lesion-texto{ flex: 1; color: var(--aph-text); }
+.aph-lesion-quitar{
+    background: none; border: none; color: #ff6b6b; cursor: pointer; padding: 4px;
+}
+
+@media (max-width: 850px){
+    .aph-cuerpo-layout{ grid-template-columns: 1fr; }
+    .aph-cuerpo3d-contenedor{ height: 420px; }
+}
+
+/* ========================================================================
+   FIRMAS (canvas)
+======================================================================== */
+
+.signature-grid{
+    display: grid;
+    gap: 20px;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    margin-top: 14px;
+}
+
+.signature-grid canvas{
+    width: 100%;
+    height: 160px;
+    display: block;
+    border: 2px dashed var(--aph-border);
+    border-radius: 12px;
+    background: #f8f9fb;
+    cursor: crosshair;
+    touch-action: none;
+}
+
+.signature-block label.signature-label{
+    display: block;
+    margin-bottom: 6px;
+    font-weight: 700;
+    font-size: .8rem;
+    color: var(--aph-text-light);
+}
+
+.clear-signature{ margin-top: 8px; }
+
+.aph-firmante{
+    border: 1px solid var(--aph-border);
+    border-radius: 12px;
+    padding: 14px;
+    margin-bottom: 14px;
+}
+
+.aph-texto-legal{
+    font-size: .85rem;
+    line-height: 1.6;
+    color: var(--aph-text-light);
+}
+.aph-texto-legal ol{ padding-left: 20px; }
+.aph-texto-legal strong{ color: var(--aph-text); }
+
+/* ========================================================================
+   BOTONES
+======================================================================== */
+
+.btn-principal{
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--aph-acento);
+    color: #fff;
+    border: none;
+    padding: 12px 20px;
+    border-radius: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: .2s;
+}
+.btn-principal:hover{ background: var(--aph-acento-oscuro); }
+
+.btn-secundario{
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--aph-bg-input);
+    color: var(--aph-text);
+    border: 1px solid var(--aph-border);
+    padding: 10px 16px;
+    border-radius: 10px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: .2s;
+}
+.btn-secundario:hover{ background: var(--aph-bg-input-hover); }
