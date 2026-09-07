@@ -91,7 +91,7 @@ function plantillaToma(n) {
                 </label>
                 <label>Nivel de conciencia (AVDN)
                     <select id="toma${n}_conciencia">
-                        <option value="">—</option><option>Alerta</option><option>Voz</option><option>Dolor</option><option>No responde</option>
+                        <option value="">—</option><option>Alerta</option><option>Verbal</option><option>Dolor</option><option>inconsciente</option>
                     </select>
                 </label>
                 <label>Pupila derecha
