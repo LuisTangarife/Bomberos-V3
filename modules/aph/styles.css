@@ -10,7 +10,7 @@
 
 :root{
 
-    --aph-bg-pagina: transparent;
+    --aph-bg-pagina: #05070c;
     --aph-bg-card: #12151f;
     --aph-bg-section: rgba(255,255,255,.03);
     --aph-bg-input: rgba(255,255,255,.06);
