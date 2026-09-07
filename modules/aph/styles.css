@@ -359,10 +359,108 @@ body{ background: var(--aph-bg-pagina); }
 }
 .aph-checkbox-grid input{ width: auto; }
 
+/* ========================================================================
+   RESPONSIVE
+
+   Tres cortes: escritorio (por defecto), tablet (≤700px) y celular
+   (≤480px). El de celular es el que realmente importa para el
+   personal en campo — la mayoría de esto se va a usar desde un
+   teléfono, no desde un computador.
+======================================================================== */
+
 @media (max-width: 700px){
+
+    .aph-page{ padding: 14px; }
+
     .form-grid.cols-2, .form-grid.cols-3, .form-grid.cols-4, .form-grid.cols-6{
         grid-template-columns: 1fr 1fr;
     }
+
+    .aph-checkbox-grid{
+        grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    }
+
+    .aph-toolbar{
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .aph-toolbar .btn-principal,
+    .aph-toolbar .btn-secundario{
+        width: 100%;
+        justify-content: center;
+    }
+
+    #buscarAtencion, #buscarConsentimiento{
+        max-width: none;
+    }
+
+    .aph-cards{
+        grid-template-columns: 1fr;
+    }
+
+    .signature-grid{
+        grid-template-columns: 1fr;
+    }
+
+}
+
+@media (max-width: 480px){
+
+    .aph-page{ padding: 10px; }
+
+    .aph-tabs{
+        gap: 0;
+    }
+
+    .aph-tab{
+        flex: 1;
+        flex-direction: column;
+        gap: 2px;
+        justify-content: center;
+        padding: 8px 4px;
+        font-size: .68rem;
+        text-align: center;
+        line-height: 1.15;
+    }
+
+    .aph-tab i{ font-size: 1rem; }
+
+    .aph-toolbar-titulo h1{
+        font-size: 1.15rem;
+    }
+
+    .form-section{
+        padding: 14px 12px;
+        border-radius: 12px;
+    }
+
+    .form-grid.cols-2, .form-grid.cols-3, .form-grid.cols-4, .form-grid.cols-6{
+        grid-template-columns: 1fr;
+    }
+
+    .form-grid .span-2{ grid-column: span 1; }
+
+    .aph-checkbox-grid{
+        grid-template-columns: 1fr 1fr;
+    }
+
+    /* Los inputs de hora/número se acortan solos en algunos navegadores
+       móviles y truncan el ícono nativo — mínimo ancho de seguridad. */
+    .form-section input[type="time"],
+    .form-section input[type="number"]{
+        min-width: 0;
+    }
+
+    .aph-card-actions{
+        flex-wrap: wrap;
+    }
+
+    .aph-card-actions button{
+        flex: 1 1 auto;
+        min-width: 90px;
+    }
+
 }
 
 /* ========================================================================
