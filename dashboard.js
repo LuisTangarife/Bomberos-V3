@@ -74,23 +74,23 @@ function marcarSinDatos(idContador, mensaje = "Módulo sin datos aún") {
 
 async function cargarDashboard(){
 
-    marcarSinDatos("totalAPH");
-
     try {
 
         const [
             { listarEmergencias },
             { listarInspecciones },
             { listarCensosFirestore },
-            { listarAyudasFirestore }
+            { listarAyudasFirestore },
+            { listarAtencionesFirestore }
         ] = await Promise.all([
             import("./modules/emergencia/firebase.js"),
             import("./modules/inspecciones/firebase.js"),
             import("./modules/censos/firebase.js"),
-            import("./modules/ayudas/firebase.js")
+            import("./modules/ayudas/firebase.js"),
+            import("./modules/aph/firebase.js")
         ]);
 
-        const [emergencias, inspecciones, censos, ayudas] = await Promise.all([
+        const [emergencias, inspecciones, censos, ayudas, atencionesAph] = await Promise.all([
             listarEmergencias().catch(error => {
                 console.error("[dashboard] No se pudieron cargar emergencias:", error);
                 return null;
@@ -106,14 +106,18 @@ async function cargarDashboard(){
             listarAyudasFirestore().catch(error => {
                 console.error("[dashboard] No se pudieron cargar ayudas humanitarias:", error);
                 return null;
+            }),
+            listarAtencionesFirestore().catch(error => {
+                console.error("[dashboard] No se pudieron cargar atenciones APH:", error);
+                return null;
             })
         ]);
 
-        if (Array.isArray(emergencias)) {
+        const inicioMes = new Date();
+        inicioMes.setDate(1);
+        inicioMes.setHours(0, 0, 0, 0);
 
-            const inicioMes = new Date();
-            inicioMes.setDate(1);
-            inicioMes.setHours(0, 0, 0, 0);
+        if (Array.isArray(emergencias)) {
 
             const esteMes = emergencias.filter(e => {
                 const match = /^(\d{4})-(\d{2})-(\d{2})/.exec(e.fecha || "");
@@ -169,6 +173,24 @@ async function cargarDashboard(){
 
         }
 
+        if (Array.isArray(atencionesAph)) {
+
+            // fechaServicio ya es "YYYY-MM-DD" (input type="date"), a
+            // diferencia del campo "fecha" de texto libre de
+            // Emergencia — no hace falta el regex, solo comparar.
+            const esteMesAph = atencionesAph.filter(a => {
+                if (!a.fechaServicio) return false;
+                return new Date(a.fechaServicio) >= inicioMes;
+            }).length;
+
+            document.getElementById("totalAPH").textContent = esteMesAph;
+
+        } else {
+
+            marcarSinDatos("totalAPH", "No se pudo cargar (revisa conexión)");
+
+        }
+
     } catch (error) {
 
         console.error("[dashboard] Error cargando datos reales del panel:", error);
@@ -177,6 +199,7 @@ async function cargarDashboard(){
         marcarSinDatos("totalInspecciones", "No se pudo cargar (revisa conexión)");
         marcarSinDatos("totalCensos", "No se pudo cargar (revisa conexión)");
         marcarSinDatos("totalAyudas", "No se pudo cargar (revisa conexión)");
+        marcarSinDatos("totalAPH", "No se pudo cargar (revisa conexión)");
 
     }
 
