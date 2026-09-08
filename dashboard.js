@@ -250,7 +250,7 @@ function abrirEmergencias() {
 
 function abrirAPH(){
 
-    alert("Próximamente");
+    location.href = "modules/aph/index.html";
 
 }
 
