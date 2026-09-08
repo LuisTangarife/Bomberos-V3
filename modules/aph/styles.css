@@ -617,7 +617,8 @@ body{ background: var(--aph-bg-pagina); }
     margin-top: 14px;
 }
 
-.signature-grid canvas{
+.signature-grid canvas,
+.signature-block canvas{
     width: 100%;
     height: 160px;
     display: block;
