@@ -84,8 +84,8 @@ function renderSidebar(active = "", autenticado = true) {
             </a>
 
             <a
-                href="#"
-                onclick="abrirAPH(); return false;">
+                href="${RAIZ_SITIO}modules/aph/index.html"
+                class="${active === "aph" ? "active" : ""}">
 
                 <i class="fa-solid fa-truck-medical"></i>
 
