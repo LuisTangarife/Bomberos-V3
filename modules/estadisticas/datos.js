@@ -21,6 +21,7 @@ import { listarEmergencias } from "../emergencia/firebase.js";
 import { listarInspecciones } from "../inspecciones/firebase.js";
 import { listarCensosFirestore } from "../censos/firebase.js";
 import { listarAyudasFirestore } from "../ayudas/firebase.js";
+import { listarAtencionesFirestore, listarConsentimientosFirestore } from "../aph/firebase.js";
 
 /* =========================================================
    CARGA
@@ -28,14 +29,16 @@ import { listarAyudasFirestore } from "../ayudas/firebase.js";
 
 export async function cargarDatos() {
 
-    // Las cuatro colecciones se piden en paralelo; si una falla
+    // Las seis colecciones se piden en paralelo; si una falla
     // (permisos, sin internet) no debe tumbar a las demás — por eso
     // Promise.allSettled en vez de Promise.all.
-    const [resEmergencias, resInspecciones, resCensos, resAyudas] = await Promise.allSettled([
+    const [resEmergencias, resInspecciones, resCensos, resAyudas, resAtencionesAPH, resConsentimientosAPH] = await Promise.allSettled([
         listarEmergencias(),
         listarInspecciones(),
         listarCensosFirestore(),
-        listarAyudasFirestore()
+        listarAyudasFirestore(),
+        listarAtencionesFirestore(),
+        listarConsentimientosFirestore()
     ]);
 
     if (resEmergencias.status === 'rejected') {
@@ -54,16 +57,27 @@ export async function cargarDatos() {
         console.error('[estadisticas] No se pudieron cargar ayudas humanitarias:', resAyudas.reason);
     }
 
+    if (resAtencionesAPH.status === 'rejected') {
+        console.error('[estadisticas] No se pudieron cargar atenciones APH:', resAtencionesAPH.reason);
+    }
+
+    if (resConsentimientosAPH.status === 'rejected') {
+        console.error('[estadisticas] No se pudieron cargar consentimientos APH:', resConsentimientosAPH.reason);
+    }
+
     return {
         emergencias: resEmergencias.status === 'fulfilled' ? resEmergencias.value : [],
         inspecciones: resInspecciones.status === 'fulfilled' ? resInspecciones.value : [],
         censos: resCensos.status === 'fulfilled' ? resCensos.value : [],
         ayudas: resAyudas.status === 'fulfilled' ? resAyudas.value : [],
+        atencionesAPH: resAtencionesAPH.status === 'fulfilled' ? resAtencionesAPH.value : [],
+        consentimientosAPH: resConsentimientosAPH.status === 'fulfilled' ? resConsentimientosAPH.value : [],
         errores: {
             emergencias: resEmergencias.status === 'rejected',
             inspecciones: resInspecciones.status === 'rejected',
             censos: resCensos.status === 'rejected',
-            ayudas: resAyudas.status === 'rejected'
+            ayudas: resAyudas.status === 'rejected',
+            aph: resAtencionesAPH.status === 'rejected' || resConsentimientosAPH.status === 'rejected'
         }
     };
 
@@ -294,6 +308,39 @@ function contarPor(lista, obtenerClave) {
         .sort((a, b) => b.total - a.total);
 }
 
+// Igual que contarPor(), pero para texto libre digitado a mano (nombres
+// de barrio/vereda) donde "El Palmar", "El palmar" y "LA ALDEA" son el
+// mismo lugar escrito de tres formas distintas. Sin esto, cada variante
+// de mayúsculas/espacios se contaba como un barrio aparte y ningún
+// barrio real acumulaba un número que se viera en la gráfica — la
+// "Top 10" terminaba siendo 10 variantes con 1-2 registros cada una.
+// Se agrupa ignorando mayúsculas/espacios repetidos, pero para mostrar
+// se usa la variante de escritura que más veces se repitió.
+function contarPorNormalizado(lista, obtenerClave) {
+
+    const grupos = new Map(); // clave normalizada -> Map(texto original -> conteo)
+
+    lista.forEach(item => {
+        const valor = obtenerClave(item);
+        if (valor === null || valor === undefined) return;
+        const texto = String(valor).trim().replace(/\s+/g, ' ');
+        if (!texto) return;
+        const normalizada = texto.toLowerCase();
+        if (!grupos.has(normalizada)) grupos.set(normalizada, new Map());
+        const variantes = grupos.get(normalizada);
+        variantes.set(texto, (variantes.get(texto) || 0) + 1);
+    });
+
+    return [...grupos.values()]
+        .map(variantes => {
+            const masFrecuente = [...variantes.entries()].sort((a, b) => b[1] - a[1])[0][0];
+            const total = [...variantes.values()].reduce((a, b) => a + b, 0);
+            return { clave: masFrecuente, total };
+        })
+        .sort((a, b) => b.total - a.total);
+
+}
+
 export function analizarEmergencias(emergencias) {
 
     const total = emergencias.length;
@@ -440,7 +487,7 @@ export function analizarInspecciones(inspecciones) {
 
     const porResultado = contarPor(inspecciones, i => i.resultadoInspeccion);
     const porTipo = contarPor(inspecciones, i => i.tipoInspeccion);
-    const porBarrio = contarPor(inspecciones, i => i.barrio).slice(0, 10);
+    const porBarrio = contarPorNormalizado(inspecciones, i => i.barrio).slice(0, 10);
 
     const noCumple = inspecciones.filter(i => i.resultadoInspeccion === 'No cumple').length;
     const tasaCumplimiento = total
@@ -509,17 +556,18 @@ export function analizarInspecciones(inspecciones) {
 
 export function indiceRiesgoPorBarrio(inspecciones) {
 
-    const porBarrio = new Map();
+    const porBarrio = new Map(); // clave normalizada -> registro
 
     inspecciones.forEach(i => {
-        const barrio = i.barrio?.trim();
-        if (!barrio) return;
+        const textoOriginal = i.barrio?.trim().replace(/\s+/g, ' ');
+        if (!textoOriginal) return;
+        const clave = textoOriginal.toLowerCase();
 
-        if (!porBarrio.has(barrio)) {
-            porBarrio.set(barrio, { barrio, inspecciones: 0, noCumple: 0, hallazgos: 0 });
+        if (!porBarrio.has(clave)) {
+            porBarrio.set(clave, { barrio: textoOriginal, inspecciones: 0, noCumple: 0, hallazgos: 0 });
         }
 
-        const registro = porBarrio.get(barrio);
+        const registro = porBarrio.get(clave);
         registro.inspecciones++;
         if (i.resultadoInspeccion === 'No cumple') registro.noCumple++;
         FACTORES_RIESGO.forEach(({ campo }) => {
@@ -588,7 +636,7 @@ export function analizarCensos(censos) {
 
     const recomendacionesEvacuar = censos.filter(c => c.recomendacionEvacuacion === 'SI').length;
 
-    const porBarrioVereda = contarPor(censos, c => c.barrioVereda || c.municipio).slice(0, 10);
+    const porBarrioVereda = contarPorNormalizado(censos, c => c.barrioVereda || c.municipio).slice(0, 10);
 
     const porTipoOcupante = contarPor(censos, c => c.tipoOcupante);
 
@@ -648,6 +696,70 @@ export function analizarAyudas(ayudas) {
         censados,
         porcentajeCensados: total ? Math.round((censados / total) * 100) : null,
         pendientesSync
+    };
+
+}
+
+/* =========================================================
+   ANÁLISIS: APH (ATENCIÓN PREHOSPITALARIA)
+
+   Dos colecciones independientes conviven en el módulo APH: la
+   historia clínica del traslado ("atenciones") y el consentimiento
+   informado ("consentimientos") — se analizan por separado porque
+   miden cosas distintas (una es la atención en sí, la otra es el
+   trámite de autorización).
+========================================================= */
+
+const ETIQUETA_PRIORIDAD = {
+    R: 'Roja', A: 'Amarilla', V: 'Verde', N: 'Negra', S: 'Sin clasificar'
+};
+
+export function analizarAPH(atenciones, consentimientos) {
+
+    const total = atenciones.length;
+
+    const porPrioridad = contarPor(atenciones, a => ETIQUETA_PRIORIDAD[a.prioridad] || null);
+    const porTipoServicio = contarPor(atenciones, a => a.tipoServicio);
+    const porTripTipo = contarPor(atenciones, a => a.tripTipo);
+    const porProblema = contarPorMultivalor(atenciones, a => a.problemaPresentado).slice(0, 10);
+
+    const rechazaronTraslado = atenciones.filter(a => a.rechazaTraslado === true).length;
+
+    // Duración del traslado: salida de la estación → llegada al
+    // destino. Mismo criterio de descarte de valores absurdos
+    // (>12h) que ya usa minutosEntreHoras() para emergencias.
+    const duraciones = atenciones
+        .map(a => minutosEntreHoras(a.tiempoSalida, a.tiempoLlegadaDestino))
+        .filter(m => m !== null);
+    const duracionPromedio = duraciones.length
+        ? Math.round(duraciones.reduce((a, b) => a + b, 0) / duraciones.length)
+        : null;
+
+    const pendientesSync = atenciones.filter(a => a.pending === true).length;
+
+    // Firma de consentimiento: hasta 3 firmantes posibles por
+    // registro, con al menos el primero requerido en el formulario.
+    const consentimientosConFirma = consentimientos.filter(
+        c => typeof c.firmaPaciente1 === 'string' && c.firmaPaciente1.startsWith('data:image')
+    ).length;
+
+    return {
+        total,
+        porPrioridad,
+        porTipoServicio,
+        porTripTipo,
+        porProblema,
+        rechazaronTraslado,
+        porcentajeRechazo: total ? Math.round((rechazaronTraslado / total) * 100) : null,
+        duracionPromedio,
+        pendientesSync,
+        consentimientos: {
+            total: consentimientos.length,
+            conFirma: consentimientosConFirma,
+            porcentajeConFirma: consentimientos.length
+                ? Math.round((consentimientosConFirma / consentimientos.length) * 100)
+                : null
+        }
     };
 
 }

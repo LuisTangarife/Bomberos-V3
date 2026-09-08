@@ -13,6 +13,7 @@ import {
     analizarInspecciones,
     analizarCensos,
     analizarAyudas,
+    analizarAPH,
     indiceRiesgoPorBarrio
 } from "./datos.js";
 
@@ -62,6 +63,38 @@ const OPCIONES_BASE = {
     }
 };
 
+// Opciones para barras HORIZONTALES (indexAxis:'y'). No se puede
+// reutilizar OPCIONES_BASE.scales tal cual: ahí "beginAtZero" está en
+// el eje y porque en una barra vertical normal el eje y es el que
+// mide. Con indexAxis:'y' los papeles se invierten — el eje x pasa a
+// medir los valores y el eje y solo lista las categorías (nombres de
+// barrio, tipos de evento, etc.) — así que beginAtZero tiene que vivir
+// en x, no en y. Ponerlo en el eje equivocado es lo que hacía que
+// estas gráficas se vieran vacías con un eje fijo de 0 a 1.
+function opcionesHorizontal(maxX = undefined) {
+    return {
+        responsive: true,
+        maintainAspectRatio: false,
+        indexAxis: 'y',
+        plugins: {
+            legend: { display: false },
+            tooltip: { padding: 10 }
+        },
+        scales: {
+            x: {
+                ticks: { color: COLORES.textLight },
+                grid: { color: 'rgba(255,255,255,.05)' },
+                beginAtZero: true,
+                ...(maxX !== undefined ? { max: maxX } : {})
+            },
+            y: {
+                ticks: { color: COLORES.textLight },
+                grid: { display: false }
+            }
+        }
+    };
+}
+
 /* =========================================================
    ARRANQUE
 ========================================================= */
@@ -73,21 +106,23 @@ document.addEventListener("DOMContentLoaded", async () => {
     renderSidebar("estadisticas");
     renderHeader("Reportes y Estadísticas");
 
-    const { emergencias, inspecciones, censos, ayudas, errores } = await cargarDatos();
+    const { emergencias, inspecciones, censos, ayudas, atencionesAPH, consentimientosAPH, errores } = await cargarDatos();
 
-    mostrarAvisoFuente(emergencias, inspecciones, censos, ayudas, errores);
+    mostrarAvisoFuente(emergencias, inspecciones, censos, ayudas, atencionesAPH, errores);
 
     const anE = analizarEmergencias(emergencias);
     const anI = analizarInspecciones(inspecciones);
     const anC = analizarCensos(censos);
     const anA = analizarAyudas(ayudas);
+    const anAPH = analizarAPH(atencionesAPH, consentimientosAPH);
     const serieEmergencias = serieMensual(emergencias, 'fecha');
     const serieInspecciones = serieMensual(inspecciones, 'fecha');
     const proyeccion = proyeccionLineal(serieEmergencias, 3);
     const riesgoBarrios = indiceRiesgoPorBarrio(inspecciones);
 
-    renderVistaGeneral(anE, anI, anC, anA, serieEmergencias, serieInspecciones);
+    renderVistaGeneral(anE, anI, anC, anA, anAPH, serieEmergencias, serieInspecciones);
     renderVistaEmergencias(anE);
+    renderVistaAPH(anAPH);
     renderVistaInspecciones(anI, riesgoBarrios);
     renderVistaCensos(anC);
     renderVistaAyudas(anA);
@@ -95,12 +130,12 @@ document.addEventListener("DOMContentLoaded", async () => {
 
 });
 
-function mostrarAvisoFuente(emergencias, inspecciones, censos, ayudas, errores) {
+function mostrarAvisoFuente(emergencias, inspecciones, censos, ayudas, atencionesAPH, errores) {
 
     const aviso = document.getElementById('avisoFuente');
     const texto = document.getElementById('avisoFuenteTexto');
 
-    const huboError = errores.emergencias || errores.inspecciones || errores.censos || errores.ayudas;
+    const huboError = errores.emergencias || errores.inspecciones || errores.censos || errores.ayudas || errores.aph;
 
     if (huboError) {
         aviso.classList.add('alerta');
@@ -110,18 +145,18 @@ function mostrarAvisoFuente(emergencias, inspecciones, censos, ayudas, errores) 
         return;
     }
 
-    if (!emergencias.length && !inspecciones.length && !censos.length && !ayudas.length) {
+    if (!emergencias.length && !inspecciones.length && !censos.length && !ayudas.length && !atencionesAPH.length) {
         aviso.classList.add('alerta');
         texto.textContent =
             'Todavía no hay reportes guardados en ninguna colección — en cuanto se registre ' +
-            'el primero (emergencia, inspección, censo o entrega de ayuda), esta pantalla se llena sola.';
+            'el primero (emergencia, inspección, censo, APH o entrega de ayuda), esta pantalla se llena sola.';
         return;
     }
 
     texto.textContent =
         `${emergencias.length} emergencia(s), ${inspecciones.length} inspección(es), ` +
-        `${censos.length} censo(s) y ${ayudas.length} entrega(s) de ayuda humanitaria reales, ` +
-        `tomadas en vivo de Firestore.`;
+        `${censos.length} censo(s), ${atencionesAPH.length} atención(es) APH y ${ayudas.length} entrega(s) ` +
+        `de ayuda humanitaria reales, tomadas en vivo de Firestore.`;
 
 }
 
@@ -172,10 +207,11 @@ function renderKPI(idContenedor, items) {
    VISTA GENERAL
 ========================================================= */
 
-function renderVistaGeneral(anE, anI, anC, anA, serieEmergencias, serieInspecciones) {
+function renderVistaGeneral(anE, anI, anC, anA, anAPH, serieEmergencias, serieInspecciones) {
 
     renderKPI('kpiGeneral', [
         { clase: 'emergency', icono: 'fa-fire-extinguisher', etiqueta: 'Emergencias', valor: anE.total, nota: 'Total histórico' },
+        { clase: 'aph', icono: 'fa-truck-medical', etiqueta: 'Atenciones APH', valor: anAPH.total, nota: anAPH.porcentajeRechazo !== null ? `${anAPH.porcentajeRechazo}% rechazó traslado` : 'Total histórico' },
         { clase: 'inspection', icono: 'fa-building-shield', etiqueta: 'Inspecciones', valor: anI.total, nota: 'Total histórico' },
         { clase: 'census', icono: 'fa-people-roof', etiqueta: 'Censos', valor: anC.total, nota: `${anC.totalPersonasCensadas} persona(s) censada(s)` },
         { clase: 'help', icono: 'fa-box-open', etiqueta: 'Ayudas Humanitarias', valor: anA.total, nota: `${anA.totalKitsEntregados} kit(s) entregado(s)` },
@@ -287,20 +323,18 @@ function renderCobertura({ afectadosTotal, afectadosConFirma, porcentajeAfectado
             }]
         },
         options: {
-            ...OPCIONES_BASE,
-            indexAxis: 'y',
+            ...opcionesHorizontal(100),
             plugins: {
-                ...OPCIONES_BASE.plugins,
-                legend: { display: false },
+                ...opcionesHorizontal().plugins,
                 tooltip: {
+                    padding: 10,
                     callbacks: {
                         label: (ctx) => ctx.label === 'Afectados con firma'
                             ? `${afectadosConFirma} de ${afectadosTotal} afectados (${porcentajeAfectados}%)`
                             : `${emergenciasConFirmaBombero} de ${emergenciasConBombero} emergencias (${porcentajeBomberos}%)`
                     }
                 }
-            },
-            scales: { x: { ...OPCIONES_BASE.scales.x, max: 100 }, y: OPCIONES_BASE.scales.y }
+            }
         }
     });
 
@@ -349,7 +383,7 @@ function renderVistaEmergencias(anE) {
                 labels: anE.porEvento.map(p => p.clave),
                 datasets: [{ data: anE.porEvento.map(p => p.total), backgroundColor: COLORES.primary, borderRadius: 6 }]
             },
-            options: { ...OPCIONES_BASE, indexAxis: 'y', plugins: { legend: { display: false } } }
+            options: opcionesHorizontal()
         });
     } else {
         marcarVacio('chartTopEvento', 'Sin datos.');
@@ -416,6 +450,85 @@ function renderTablaRanking(idContenedor, items, etiquetaColumna) {
 }
 
 /* =========================================================
+   VISTA APH (ATENCIÓN PREHOSPITALARIA)
+========================================================= */
+
+function renderVistaAPH(anAPH) {
+
+    renderKPI('kpiAPH', [
+        { clase: 'aph', icono: 'fa-truck-medical', etiqueta: 'Atenciones registradas', valor: anAPH.total, nota: 'Historia clínica del traslado (FT-AMB)' },
+        { clase: 'emergency', icono: 'fa-ban', etiqueta: 'Rechazaron traslado', valor: anAPH.rechazaronTraslado, nota: anAPH.porcentajeRechazo !== null ? `${anAPH.porcentajeRechazo}% del total` : 'Sin datos' },
+        { clase: 'help', icono: 'fa-stopwatch', etiqueta: 'Duración promedio', valor: anAPH.duracionPromedio !== null ? `${anAPH.duracionPromedio} min` : '—', nota: 'Salida de estación → llegada a destino' },
+        { clase: 'census', icono: 'fa-file-signature', etiqueta: 'Consentimientos con firma', valor: anAPH.consentimientos.conFirma, nota: anAPH.consentimientos.porcentajeConFirma !== null ? `${anAPH.consentimientos.porcentajeConFirma}% de ${anAPH.consentimientos.total}` : 'Sin datos' }
+    ]);
+
+    if (!anAPH.total) {
+        ['chartAPHPrioridad', 'chartAPHServicio', 'chartAPHTrip', 'chartAPHProblema'].forEach(id =>
+            marcarVacio(id, 'Sin atenciones APH registradas todavía.'));
+        return;
+    }
+
+    const COLOR_PRIORIDAD = { Roja: '#FF3B30', Amarilla: '#FFB300', Verde: '#00C874', Negra: '#64748B', 'Sin clasificar': COLORES.textLight };
+
+    if (anAPH.porPrioridad.length) {
+        dibujar('chartAPHPrioridad', {
+            type: 'doughnut',
+            data: {
+                labels: anAPH.porPrioridad.map(p => p.clave),
+                datasets: [{
+                    data: anAPH.porPrioridad.map(p => p.total),
+                    backgroundColor: anAPH.porPrioridad.map(p => COLOR_PRIORIDAD[p.clave] || COLORES.textLight),
+                    borderWidth: 0
+                }]
+            },
+            options: { ...OPCIONES_BASE, scales: undefined, cutout: '62%' }
+        });
+    } else {
+        marcarVacio('chartAPHPrioridad', 'Ninguna atención tiene prioridad de triage registrada.');
+    }
+
+    if (anAPH.porTipoServicio.length) {
+        dibujar('chartAPHServicio', {
+            type: 'doughnut',
+            data: {
+                labels: anAPH.porTipoServicio.map(p => p.clave),
+                datasets: [{ data: anAPH.porTipoServicio.map(p => p.total), backgroundColor: [COLORES.blue, COLORES.violet], borderWidth: 0 }]
+            },
+            options: { ...OPCIONES_BASE, scales: undefined, cutout: '62%' }
+        });
+    } else {
+        marcarVacio('chartAPHServicio', 'Ninguna atención tiene tipo de servicio registrado.');
+    }
+
+    if (anAPH.porTripTipo.length) {
+        dibujar('chartAPHTrip', {
+            type: 'bar',
+            data: {
+                labels: anAPH.porTripTipo.map(p => p.clave),
+                datasets: [{ data: anAPH.porTripTipo.map(p => p.total), backgroundColor: COLORES.cyan, borderRadius: 6 }]
+            },
+            options: opcionesHorizontal()
+        });
+    } else {
+        marcarVacio('chartAPHTrip', 'Ninguna atención tiene personal TRIP diligenciado todavía.');
+    }
+
+    if (anAPH.porProblema.length) {
+        dibujar('chartAPHProblema', {
+            type: 'bar',
+            data: {
+                labels: anAPH.porProblema.map(p => p.clave),
+                datasets: [{ data: anAPH.porProblema.map(p => p.total), backgroundColor: COLORES.primary, borderRadius: 6 }]
+            },
+            options: opcionesHorizontal()
+        });
+    } else {
+        marcarVacio('chartAPHProblema', 'Ninguna atención tiene problema presentado marcado todavía.');
+    }
+
+}
+
+/* =========================================================
    VISTA INSPECCIONES
 ========================================================= */
 
@@ -461,10 +574,7 @@ function renderVistaInspecciones(anI, riesgoBarrios) {
             labels: anI.hallazgos.map(h => h.clave),
             datasets: [{ data: anI.hallazgos.map(h => h.porcentaje), backgroundColor: COLORES.secondary, borderRadius: 6 }]
         },
-        options: {
-            ...OPCIONES_BASE, indexAxis: 'y', plugins: { legend: { display: false } },
-            scales: { x: { ...OPCIONES_BASE.scales.x, max: 100 }, y: OPCIONES_BASE.scales.y }
-        }
+        options: opcionesHorizontal(100)
     });
 
     if (anI.extintores.revisados) {
@@ -540,7 +650,7 @@ function renderVistaCensos(anC) {
                     borderRadius: 6
                 }]
             },
-            options: { ...OPCIONES_BASE, indexAxis: 'y', plugins: { ...OPCIONES_BASE.plugins, legend: { display: false } } }
+            options: opcionesHorizontal()
         });
     }
 
@@ -619,7 +729,7 @@ function renderVistaAyudas(anA) {
                     borderRadius: 8
                 }]
             },
-            options: { ...OPCIONES_BASE, indexAxis: 'y', plugins: { ...OPCIONES_BASE.plugins, legend: { display: false } } }
+            options: opcionesHorizontal()
         });
     }
 

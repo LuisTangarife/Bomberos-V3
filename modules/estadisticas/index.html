@@ -45,6 +45,9 @@
                 <button data-vista="emergencias" onclick="cambiarVista('emergencias')">
                     <i class="fa-solid fa-fire-extinguisher"></i> Emergencias
                 </button>
+                <button data-vista="aph" onclick="cambiarVista('aph')">
+                    <i class="fa-solid fa-truck-medical"></i> APH
+                </button>
                 <button data-vista="inspecciones" onclick="cambiarVista('inspecciones')">
                     <i class="fa-solid fa-building-shield"></i> Inspecciones
                 </button>
@@ -124,6 +127,40 @@
                     <div class="chart-card">
                         <h3><i class="fa-solid fa-truck"></i> Vehículos más utilizados</h3>
                         <div id="tablaVehiculos"></div>
+                    </div>
+
+                </div>
+
+            </section>
+
+            <!-- ============ VISTA APH ============ -->
+            <section id="vistaAph" class="vista" style="display:none">
+
+                <div class="kpi-grid" id="kpiAPH"></div>
+
+                <div class="charts-grid">
+
+                    <div class="chart-card">
+                        <h3><i class="fa-solid fa-triangle-exclamation"></i> Prioridad de triage</h3>
+                        <div class="subtitulo">Rojo / Amarillo / Verde / Negro, según código de colores TRIP</div>
+                        <div class="lienzo"><canvas id="chartAPHPrioridad"></canvas></div>
+                    </div>
+
+                    <div class="chart-card">
+                        <h3><i class="fa-solid fa-road"></i> Tipo de servicio</h3>
+                        <div class="lienzo"><canvas id="chartAPHServicio"></canvas></div>
+                    </div>
+
+                    <div class="chart-card">
+                        <h3><i class="fa-solid fa-user-nurse"></i> Personal TRIP que atendió</h3>
+                        <div class="subtitulo">Tipo de personal registrado en la sección 14</div>
+                        <div class="lienzo"><canvas id="chartAPHTrip"></canvas></div>
+                    </div>
+
+                    <div class="chart-card ancho">
+                        <h3><i class="fa-solid fa-notes-medical"></i> Problema presentado más frecuente</h3>
+                        <div class="subtitulo">Un mismo paciente puede marcar varios problemas a la vez</div>
+                        <div class="lienzo"><canvas id="chartAPHProblema"></canvas></div>
                     </div>
 
                 </div>
