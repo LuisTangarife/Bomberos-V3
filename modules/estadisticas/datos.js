@@ -623,7 +623,14 @@ export function analizarAyudas(ayudas) {
         0
     );
 
-    const porTipoKit = contarPor(ayudas, a => a.tipoKit);
+    // tipoKit puede venir como texto combinado ("Kit Alimentario, Kit
+    // Aseo") cuando una entrega incluyó varios kits a la vez — se
+    // separa por coma para contar cada tipo individualmente, en vez de
+    // tratar cada combinación como si fuera una categoría propia.
+    const porTipoKit = contarPorMultivalor(
+        ayudas,
+        a => (a.tipoKit || '').split(',').map(t => t.trim()).filter(Boolean)
+    );
 
     const beneficiariosUnicos = new Set(
         ayudas.map(a => (a.beneficiarioCedula || '').trim()).filter(Boolean)

@@ -5,12 +5,14 @@
 ==================================================*/
 
 .estadisticas{
-    max-width:1400px;
+    max-width:1800px;
+    width:100%;
     margin:0 auto;
-    padding:28px 32px 60px;
+    padding:28px 40px 60px;
     display:flex;
     flex-direction:column;
     gap:28px;
+    box-sizing:border-box;
 }
 
 /* ---------- Aviso de fuente de datos ---------- */
@@ -179,6 +181,20 @@
     padding-top:12px;
     margin-top:auto;
 }
+
+.explicacion-proyeccion{
+    font-size:14px;
+    line-height:1.6;
+    color:var(--text);
+    background:rgba(255,255,255,.03);
+    border:1px solid var(--border);
+    border-radius:14px;
+    padding:16px 20px;
+}
+
+.explicacion-proyeccion p{ margin:0 0 10px; }
+.explicacion-proyeccion p:last-child{ margin-bottom:0; }
+.explicacion-proyeccion strong{ color:var(--white); }
 
 /* ---------- Índice de riesgo por barrio ---------- */
 .riesgo-barrio{

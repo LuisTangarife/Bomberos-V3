@@ -636,6 +636,10 @@ function renderVistaPredictivo(serieEmergencias, proyeccion) {
     if (!proyeccion) {
         marcarVacio('chartProyeccion', 'Se necesitan al menos 4 meses con emergencias registradas para proyectar una tendencia. Por ahora no hay suficiente historia — esto no es una limitación técnica, es que con menos datos cualquier proyección sería inventada.');
         badge.innerHTML = '';
+        const explicacion = document.getElementById('explicacionProyeccion');
+        if (explicacion) explicacion.innerHTML = '';
+        const tabla = document.getElementById('tablaProyeccion');
+        if (tabla) tabla.innerHTML = '<div class="vacio">Sin suficiente historia todavía.</div>';
         return;
     }
 
@@ -701,5 +705,68 @@ function renderVistaPredictivo(serieEmergencias, proyeccion) {
             }
         }
     });
+
+    /* -----------------------------------------------------------
+       EXPLICACIÓN EN LENGUAJE LLANO — no todo el mundo lee un
+       r² o una banda de incertidumbre de un vistazo. Se traduce el
+       mismo resultado numérico a una frase que cualquiera pueda
+       leer sin tener que interpretar la gráfica.
+    ----------------------------------------------------------- */
+    const primerMes = proyeccion.proyeccion[0];
+    const ultimoMes = proyeccion.proyeccion[proyeccion.proyeccion.length - 1];
+    const r2pct = Math.round(proyeccion.r2 * 100);
+
+    const fraseTendencia = proyeccion.tendencia === 'subiendo'
+        ? `las emergencias vienen <strong>en aumento</strong> mes a mes`
+        : proyeccion.tendencia === 'bajando'
+            ? `las emergencias vienen <strong>en descenso</strong> mes a mes`
+            : `el número de emergencias se ha mantenido <strong>relativamente estable</strong>`;
+
+    const fraseConfianza = proyeccion.r2 >= 0.7
+        ? `la recta se ajusta bien a lo ya ocurrido (r² ${r2pct}%), así que el patrón histórico ha sido bastante consistente`
+        : proyeccion.r2 >= 0.4
+            ? `el ajuste es moderado (r² ${r2pct}%) — hay variación real entre meses, así que tómala como una referencia, no como un número fijo`
+            : `el ajuste es bajo (r² ${r2pct}%) — el número de emergencias varía bastante de un mes a otro, así que esta proyección es más una idea general que una cifra confiable`;
+
+    document.getElementById('explicacionProyeccion').innerHTML = `
+        <p>
+            Con los últimos <strong>${serieEmergencias.length} meses</strong> de historia,
+            ${fraseTendencia}. Si esa tendencia se mantiene igual, en
+            <strong>${primerMes.etiqueta}</strong> se esperarían alrededor de
+            <strong>${primerMes.total} emergencia(s)</strong>
+            (probablemente entre ${primerMes.min} y ${primerMes.max}),
+            y para <strong>${ultimoMes.etiqueta}</strong> entre ${ultimoMes.min} y ${ultimoMes.max}.
+        </p>
+        <p>${fraseConfianza}.</p>
+        <p class="nota-metodologica" style="margin-top:0;padding-top:0;border-top:none">
+            Recuerda: esto asume que nada cambia (ni el clima, ni la población, ni nuevas
+            políticas de prevención). Es una línea de tendencia, no un pronóstico meteorológico.
+        </p>
+    `;
+
+    /* -----------------------------------------------------------
+       TABLA MES A MES — el mismo dato de la gráfica pero en texto,
+       para quien prefiere leer números exactos en vez de interpretar
+       la banda sombreada.
+    ----------------------------------------------------------- */
+    const tabla = document.getElementById('tablaProyeccion');
+    if (tabla) {
+        tabla.innerHTML = `
+            <table class="tabla-ranking">
+                <thead>
+                    <tr><th>Mes</th><th>Proyección central</th><th>Rango esperado</th></tr>
+                </thead>
+                <tbody>
+                    ${proyeccion.proyeccion.map(p => `
+                        <tr>
+                            <td>${p.etiqueta}</td>
+                            <td><strong>${p.total}</strong> emergencia(s)</td>
+                            <td>${p.min} – ${p.max}</td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            </table>
+        `;
+    }
 
 }
