@@ -4,7 +4,7 @@
    y sea instalable como PWA.
 ======================================================================== */
 
-const SW_VERSION = 'v78'; // v77 -> v78: módulo APH corregido (guardado, firma de TRIP, jsPDF/sidebar/header faltantes, canvas de firmas de Consentimiento sin CSS). Estadísticas: ancho de página ampliado (1400px -> 1800px fluido), "Entregas por tipo de kit" ahora separa entregas combinadas ("Kit Alimentario, Kit Aseo") en sus tipos individuales en vez de contarlas como una categoría propia, y la vista Proyección ahora incluye una explicación en lenguaje llano (sin jerga estadística) más una tabla mes a mes con el valor central y el rango esperado.
+const SW_VERSION = 'v79'; // v78 -> v79: corregido bug real en las gráficas horizontales de Chart.js (Cobertura de firmas, Top 10 eventos, Censos por barrio, Beneficiarios censados, Hallazgos de riesgo) — "beginAtZero" vivía en el eje equivocado al usar indexAxis:'y', dejando esas gráficas con un eje fijo 0-1.0 y sin barras visibles pese a tener datos reales detrás. También se corrigió el conteo de barrio/vereda para que no fragmente "El Palmar", "El palmar" y "LA ALDEA" como si fueran lugares distintos. Se agregó una pestaña "APH" completa a Estadísticas (prioridad de triage, tipo de servicio, personal TRIP, problema presentado, % de rechazo de traslado, duración promedio, cobertura de firma de consentimiento) que antes no existía en el módulo.
 const STATIC_CACHE = `bomberos-static-${SW_VERSION}`;
 const DYNAMIC_CACHE = `bomberos-dynamic-${SW_VERSION}`;
 const CACHES_VIGENTES = [STATIC_CACHE, DYNAMIC_CACHE];
