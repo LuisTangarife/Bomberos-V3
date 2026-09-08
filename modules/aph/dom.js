@@ -4,6 +4,8 @@
 
 export const UI = {
 
+    btnVolverPanelGeneral: null,
+
     // Pestañas (vista = "atencion" | "consentimiento")
     tabAtencion: null,
     tabConsentimiento: null,
@@ -44,6 +46,8 @@ export const UI = {
 };
 
 export function inicializarDOM() {
+
+    UI.btnVolverPanelGeneral = document.getElementById("btnVolverPanelGeneral");
 
     UI.tabAtencion = document.getElementById("tabAtencion");
     UI.tabConsentimiento = document.getElementById("tabConsentimiento");

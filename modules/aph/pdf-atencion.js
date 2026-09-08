@@ -122,6 +122,9 @@ export async function generarPDFAtencion(atencion) {
     y = dibujarTituloSeccion(doc, "14. TRIP — Personal que atendió", y);
     y = dibujarFilaEtiquetaValor(doc, "Tipo de personal", texto(atencion.tripTipo), y);
     y = dibujarFilaEtiquetaValor(doc, "Nombre", texto(atencion.tripNombre), y);
+    y += 4;
+    y = asegurarEspacio(doc, y, 35);
+    y = dibujarBloqueFirma(doc, "Firma de quien atendió", atencion.firmaTrip, "", y);
 
     dibujarPiePagina(doc);
 

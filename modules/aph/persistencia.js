@@ -29,7 +29,7 @@ import {
 } from "./firebase.js";
 import { renderizarListadoAtenciones, renderizarListadoConsentimientos } from "./listado.js";
 
-const CAMPOS_PESADOS_ATENCION = ["firmaRechazoPaciente", "firmaRechazoTestigo", "firmaRecibe"];
+const CAMPOS_PESADOS_ATENCION = ["firmaRechazoPaciente", "firmaRechazoTestigo", "firmaRecibe", "firmaTrip"];
 const CAMPOS_PESADOS_CONSENTIMIENTO = ["firmaPaciente1", "firmaPaciente2", "firmaPaciente3"];
 
 function aligerar(registro, camposPesados) {

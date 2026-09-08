@@ -36,7 +36,8 @@ export const state = {
     firmas: {
         rechazoPaciente: null,
         rechazoTestigo: null,
-        recibe: null
+        recibe: null,
+        trip: null
     },
 
     // Lesiones marcadas en el cuerpo 3D — ver modules/aph/cuerpo3d.js

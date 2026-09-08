@@ -49,6 +49,7 @@ async function iniciarAplicacion() {
     registrarFirma("rechazoPaciente", "firmaRechazoPaciente", "firmas");
     registrarFirma("rechazoTestigo", "firmaRechazoTestigo", "firmas");
     registrarFirma("recibe", "firmaRecibe", "firmas");
+    registrarFirma("trip", "firmaTrip", "firmas");
     registrarFirma("paciente1", "firmaPaciente1", "firmasConsentimiento", 0);
     registrarFirma("paciente2", "firmaPaciente2", "firmasConsentimiento", 1);
     registrarFirma("paciente3", "firmaPaciente3", "firmasConsentimiento", 2);
@@ -250,12 +251,31 @@ function configurarEventos() {
     UI.btnNuevaAtencion?.addEventListener("click", () => nuevoFormularioAtencion());
     UI.btnVolverListadoAtencion?.addEventListener("click", mostrarVistaListadoAtencion);
     UI.formAtencion?.addEventListener("submit", manejarGuardarAtencion);
+    // btnGuardarAtencion vive en el toolbar, FUERA de <form id="formAtencion">
+    // (así quedó también en el HTML), y es type="button" a propósito para no
+    // desalinear el toolbar. Por eso el submit del form no se dispara solo con
+    // el click del botón: hay que pedirlo explícitamente con requestSubmit(),
+    // que sí dispara "submit" (y por tanto manejarGuardarAtencion) igual que si
+    // el botón fuera type="submit" y estuviera dentro del form.
+    UI.btnGuardarAtencion?.addEventListener("click", () => UI.formAtencion?.requestSubmit());
     UI.buscadorAtenciones?.addEventListener("input", () => filtrarListadoAtenciones(UI.buscadorAtenciones.value));
 
     UI.btnNuevoConsentimiento?.addEventListener("click", () => nuevoFormularioConsentimiento());
     UI.btnVolverListadoConsentimiento?.addEventListener("click", mostrarVistaListadoConsentimiento);
     UI.formConsentimiento?.addEventListener("submit", manejarGuardarConsentimiento);
+    // Mismo caso que btnGuardarAtencion: botón fuera del form.
+    UI.btnGuardarConsentimiento?.addEventListener("click", () => UI.formConsentimiento?.requestSubmit());
     UI.buscadorConsentimientos?.addEventListener("input", () => filtrarListadoConsentimientos(UI.buscadorConsentimientos.value));
+
+    // Invitado (sin sesión real) no puede entrar al Panel General
+    // protegido (protegerPagina() lo redirigiría a login) — lo mandamos
+    // de vuelta a invitado.html, su propio panel. Misma detección de
+    // ruta base (GitHub Pages vs. localhost) que shared/sidebar.js.
+    UI.btnVolverPanelGeneral?.addEventListener("click", () => {
+        const basePath = window.location.pathname.includes("/Bomberos-V3/") ? "/Bomberos-V3/" : "/";
+        const raizSitio = `${window.location.origin}${basePath}`;
+        location.href = state.invitado ? `${raizSitio}invitado.html` : `${raizSitio}index.html`;
+    });
 
     document.getElementById("rechazaTraslado")?.addEventListener("change", actualizarBloqueRechazo);
 
@@ -392,6 +412,7 @@ export function cargarFormularioAtencion(atencion) {
         restaurarFirma("rechazoPaciente", atencion.firmaRechazoPaciente);
         restaurarFirma("rechazoTestigo", atencion.firmaRechazoTestigo);
         restaurarFirma("recibe", atencion.firmaRecibe);
+        restaurarFirma("trip", atencion.firmaTrip);
         cuerpo3dApi?.cargarLesiones(atencion.lesiones || []);
     });
 
@@ -535,6 +556,7 @@ function recopilarDatosAtencion() {
 
         tripTipo: valorCampo("tripTipo"),
         tripNombre: valorCampo("tripNombre"),
+        firmaTrip: state.firmas.trip || null,
 
         pending: !navigator.onLine,
         synced: navigator.onLine

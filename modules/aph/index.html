@@ -42,6 +42,10 @@
 
         <main class="aph-page">
 
+            <button type="button" id="btnVolverPanelGeneral" class="btn-secundario" style="margin-bottom:12px;">
+                <i class="fa-solid fa-arrow-left"></i> Volver al Panel General
+            </button>
+
             <!-- =======================================================
                  PESTAÑAS: Atención APH / Consentimiento Informado
             =========================================================== -->
@@ -345,6 +349,16 @@
                                     </select>
                                 </label>
                                 <label>Nombre<input type="text" id="tripNombre"></label>
+                            </div>
+
+                            <div class="signature-grid">
+                                <div class="signature-block">
+                                    <label class="signature-label">Firma de quien atendió</label>
+                                    <canvas id="firmaTrip"></canvas>
+                                    <button type="button" class="clear-signature btn-secundario" data-firma="trip">
+                                        <i class="fa-solid fa-eraser"></i> Borrar firma
+                                    </button>
+                                </div>
                             </div>
                         </fieldset>
 
