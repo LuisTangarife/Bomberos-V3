@@ -14,6 +14,7 @@ const ICONOS_KIT = {
     "Kit Aseo": "fa-solid fa-pump-soap",
     "Kit Cocina": "fa-solid fa-utensils",
     "Kit Noche": "fa-solid fa-bed",
+    "Kit Techo": "fa-house-chimney",
     "Kit Mascota": "fa-solid fa-paw"
 };
 
