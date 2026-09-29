@@ -132,6 +132,7 @@ const SEMILLAS = {
         { grupo: "", valor: "Kit Aseo" },
         { grupo: "", valor: "Kit Cocina" },
         { grupo: "", valor: "Kit Noche" },
+        { grupo: "", valor: "Kit Techo" },
         { grupo: "", valor: "Kit Mascota" }
     ],
 
