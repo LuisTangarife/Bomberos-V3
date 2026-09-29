@@ -53,7 +53,7 @@
 
                 <div class="ayuda-toolbar-titulo">
                     <h1><i class="fa-solid fa-box-open"></i> Ayudas Humanitarias</h1>
-                    <p>Registro de entrega de kits (alimentario, aseo, cocina, noche y mascota) durante la atención de emergencias.</p>
+                    <p>Registro de entrega de kits (alimentario, aseo, cocina, techo, noche y mascota) durante la atención de emergencias.</p>
 
                     <p id="avisoInvitadoAyudas" class="aviso-invitado" style="display:none;">
                         <i class="fa-solid fa-circle-info"></i>
@@ -142,6 +142,15 @@
                             <button type="button" class="kit-tile-toggle">
                                 <i class="fa-solid fa-bed"></i>
                                 <span>Noche</span>
+                            </button>
+                            <label class="kit-tile-cantidad">Cantidad
+                                <input type="number" min="1" value="1" class="kit-cantidad-input">
+                            </label>
+                        </div>
+                        <div class="kit-tile" data-valor="Kit Techo">
+                            <button type="button" class="kit-tile-toggle">
+                                <i class="fa-solid fa-pump-soap"></i>
+                                <span>Aseo</span>
                             </button>
                             <label class="kit-tile-cantidad">Cantidad
                                 <input type="number" min="1" value="1" class="kit-cantidad-input">
