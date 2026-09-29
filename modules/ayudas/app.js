@@ -136,6 +136,7 @@ const ICONOS_KIT = {
     "Kit Aseo": "fa-pump-soap",
     "Kit Cocina": "fa-utensils",
     "Kit Noche": "fa-bed",
+    "Kit Techo": "fa-house-chimney",
     "Kit Mascota": "fa-paw"
 };
 
