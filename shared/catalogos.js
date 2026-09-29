@@ -128,13 +128,13 @@ const SEMILLAS = {
     ],
 
     "ayudas__tipoKit": [
-        { grupo: "", valor: "Kit Alimentario" },
-        { grupo: "", valor: "Kit Aseo" },
-        { grupo: "", valor: "Kit Cocina" },
-        { grupo: "", valor: "Kit Noche" },
-        { grupo: "", valor: "Kit Techo" },
-        { grupo: "", valor: "Kit Mascota" }
-    ],
+       { grupo: "", valor: "Kit Alimentario" },
+       { grupo: "", valor: "Kit Aseo" },
+       { grupo: "", valor: "Kit Cocina" },
+       { grupo: "", valor: "Kit Noche" },
+       { grupo: "", valor: "Kit Techo" },
+       { grupo: "", valor: "Kit Mascota" }
+   ],
 
     "censos__barrioVereda": [
         { grupo: "Veredas", valor: "Alto Arroyo" },
