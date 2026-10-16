@@ -901,15 +901,20 @@ export async function generarPDFDesdeWordBlob(blob) {
         // docx-preview envuelve las páginas (<section>) en un wrapper
         // con fondo gris y relleno; se neutraliza para capturar solo
         // la hoja.
-        const wrapper = contenedor.firstElementChild || contenedor;
+        // OJO: docx-preview inserta un <style> en este mismo contenedor,
+        // así que firstElementChild NO es el wrapper. Se busca por las
+        // páginas (<section>) y se toma su padre.
+        const primera = contenedor.querySelector('section');
+
+        if (!primera) {
+            throw new Error('No se encontraron páginas en el documento renderizado.');
+        }
+
+        const wrapper = primera.parentElement;
         wrapper.style.background = '#fff';
         wrapper.style.padding = '0';
 
         const paginas = Array.from(wrapper.children).filter(el => el.tagName === 'SECTION');
-
-        if (!paginas.length) {
-            throw new Error('No se encontraron páginas en el documento renderizado.');
-        }
 
         paginas.forEach(pagina => {
             pagina.style.margin = '0';
