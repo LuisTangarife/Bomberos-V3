@@ -1356,10 +1356,10 @@ async function saveReport() {
 // esta sesión (ultimoReporteGuardado).
 function mostrarBotonDescarga(visible) {
 
-  const btn = document.getElementById('btnDescargarReporte');
-  if (!btn) return;
-
-  btn.style.display = visible ? '' : 'none';
+  ['btnDescargarReporte', 'btnDescargarReportePDF'].forEach(id => {
+    const btn = document.getElementById(id);
+    if (btn) btn.style.display = visible ? '' : 'none';
+  });
 
 }
 
@@ -1402,6 +1402,50 @@ async function descargarReporteActual() {
     console.error('No se pudo descargar el reporte:', err);
     if (fb) {
       fb.textContent = '❌ No se pudo generar la descarga del reporte';
+      fb.className = 'save-feedback err';
+    }
+
+  } finally {
+    if (btn) btn.disabled = false;
+  }
+
+}
+
+/**
+ * Igual que descargarReporteActual, pero entrega el reporte en PDF.
+ * Reutiliza window.descargarReportePDFDirecto (expuesto por gestor.js).
+ */
+async function descargarReportePDFActual() {
+
+  const fb = document.getElementById('saveFeedback');
+
+  if (!ultimoReporteGuardado) {
+    if (fb) {
+      fb.textContent = 'Primero guarda el reporte para poder descargarlo.';
+      fb.className = 'save-feedback err';
+    }
+    return;
+  }
+
+  const btn = document.getElementById('btnDescargarReportePDF');
+
+  try {
+
+    if (btn) btn.disabled = true;
+    if (fb) {
+      fb.textContent = 'Generando PDF...';
+      fb.className = 'save-feedback ok';
+    }
+
+    await window.descargarReportePDFDirecto(ultimoReporteGuardado);
+
+    if (fb) fb.textContent = '✅ Reporte guardado correctamente';
+
+  } catch (err) {
+
+    console.error('No se pudo descargar el PDF del reporte:', err);
+    if (fb) {
+      fb.textContent = '❌ No se pudo generar el PDF del reporte';
       fb.className = 'save-feedback err';
     }
 

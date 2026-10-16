@@ -22,7 +22,7 @@
 
 // Espera a que todas las imágenes dentro del contenedor (firmas, fotos
 // adjuntas, QR de verificación) terminen de cargar antes de rasterizar.
-function esperarImagenes(contenedor) {
+export function esperarImagenes(contenedor) {
 
     const imagenes = Array.from(contenedor.querySelectorAll('img'));
 

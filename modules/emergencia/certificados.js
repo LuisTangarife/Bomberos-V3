@@ -22,7 +22,7 @@ import {
   generarDocNum
 } from "./report-helpers.js";
 
-import { generarDocumentoWordBlob, descargarBlobWord, renderizarDocxEnContenedor, prepararBlobParaVistaPrevia } from "./docx-engine.js";
+import { generarDocumentoWordBlob, generarPDFDesdeWordBlob, descargarBlobWord, renderizarDocxEnContenedor, prepararBlobParaVistaPrevia } from "./docx-engine.js";
 
 const RUTA_PLANTILLA = "./plantillas/plantilla1.html";
 
@@ -315,6 +315,65 @@ export async function descargarReporteDirecto(data) {
   const { blob, nombreArchivo } = await generarDocumentoWordBlob(data, docNum);
 
   descargarBlobWord(blob, nombreArchivo);
+
+}
+
+/**
+ * Descarga como PDF el reporte actualmente abierto en el modal.
+ * Convierte el mismo Blob del Word que se muestra/descarga, así que el
+ * PDF es idéntico al documento.
+ */
+export async function descargarPDF() {
+
+  if (!_ultimoWordBlob) {
+    alert('Primero genera el certificado.');
+    return;
+  }
+
+  const btn = document.querySelector('#certModal .btn-pdf');
+  const textoOriginal = btn ? btn.innerHTML : '';
+
+  try {
+
+    if (btn) {
+      btn.disabled = true;
+      btn.innerHTML = 'Generando PDF...';
+    }
+
+    const pdf = await generarPDFDesdeWordBlob(_ultimoWordBlob);
+    const nombre = (_ultimoWordNombre || 'certificado.docx').replace(/\.docx$/i, '.pdf');
+
+    descargarBlobWord(pdf, nombre);
+
+  } catch (error) {
+
+    console.error('[certificados] No se pudo generar el PDF:', error);
+    alert('No fue posible generar el PDF: ' + (error && error.message ? error.message : ''));
+
+  } finally {
+
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = textoOriginal;
+    }
+
+  }
+
+}
+
+/**
+ * Igual que descargarReporteDirecto, pero entrega el reporte en PDF.
+ * Pensada para el botón "Descargar PDF" del formulario de registro.
+ */
+export async function descargarReportePDFDirecto(data) {
+
+  const docNum = generarDocNum();
+
+  const { blob, nombreArchivo } = await generarDocumentoWordBlob(data, docNum);
+
+  const pdf = await generarPDFDesdeWordBlob(blob);
+
+  descargarBlobWord(pdf, nombreArchivo.replace(/\.docx$/i, '.pdf'));
 
 }
 

@@ -19,13 +19,15 @@ import { inicializarMapa, renderizarMapa } from "./mapas.js";
 import { actualizarClima } from "./clima.js";
 import { protegerPagina } from "../../shared/auth.js";
 
-import { renderCertificate, printCertificate, closeModal, descargarWord, descargarReporteDirecto } from "./certificados.js";
+import { renderCertificate, printCertificate, closeModal, descargarWord, descargarPDF, descargarReporteDirecto, descargarReportePDFDirecto } from "./certificados.js";
 
 window.renderCertificate = renderCertificate;
 window.printCertificate = printCertificate;
 window.closeModal = closeModal;
 window.descargarWord = descargarWord;
 window.descargarReporteDirecto = descargarReporteDirecto;
+window.descargarPDF = descargarPDF;
+window.descargarReportePDFDirecto = descargarReportePDFDirecto;
 
 let emergencias = [];
 let cargando = false;
@@ -593,6 +595,9 @@ function crearTarjeta(emergencia) {
             <button type="button" class="action-word-em">
                 <i class="fa-solid fa-file-word"></i> Word
             </button>
+            <button type="button" class="action-pdf-em">
+                <i class="fa-solid fa-file-pdf"></i> PDF
+            </button>
             <button type="button" class="action-delete-em">
                 <i class="fa-solid fa-trash"></i>
             </button>
@@ -649,6 +654,16 @@ function crearTarjeta(emergencia) {
             }
             if (typeof window.descargarWord === "function") {
                 window.descargarWord();
+            }
+        });
+
+    card.querySelector(".action-pdf-em")
+        .addEventListener("click", async () => {
+            if (typeof window.renderCertificate === "function") {
+                await window.renderCertificate(emergencia);
+            }
+            if (typeof window.descargarPDF === "function") {
+                await window.descargarPDF();
             }
         });
 

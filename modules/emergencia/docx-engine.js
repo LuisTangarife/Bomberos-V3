@@ -30,6 +30,7 @@
 
 import { cargarPlantillaDOCX } from "./template-loader.js";
 import { crearContexto } from "./placeholder-engine.js";
+import { esperarImagenes } from "./pdf-engine.js";
 
 let doc = null;
 
@@ -847,5 +848,117 @@ export async function renderizarDocxEnContenedor(blob, contenedor) {
         // corresponden a un salto real, generando páginas de más.
         ignoreLastRenderedPageBreak: true
     });
+
+}
+
+/**
+ * Convierte el Word ya generado (el mismo Blob que se descarga como
+ * .docx) en un PDF, página por página: lo renderiza con docx-preview en
+ * un contenedor temporal, captura cada página con html2canvas y la
+ * agrega a un PDF de jsPDF con el tamaño exacto de la página del Word.
+ *
+ * Usa html2canvas + jsPDF directamente (igual que pdf-engine.js), que
+ * ya están cargados en index.html y gestor.html.
+ *
+ * Nota: el PDF resultante es de imagen (el texto no es seleccionable).
+ *
+ * @param {Blob} blob  El .docx ya generado por generarDocumentoWordBlob.
+ * @returns {Promise<Blob>} el PDF como Blob (application/pdf).
+ */
+export async function generarPDFDesdeWordBlob(blob) {
+
+    if (typeof window.html2canvas !== 'function') {
+        throw new Error('La librería html2canvas no está cargada en esta página.');
+    }
+
+    const JsPDFCtor = (window.jspdf && window.jspdf.jsPDF) || window.jsPDF;
+
+    if (typeof JsPDFCtor !== 'function') {
+        throw new Error('No se encontró el constructor de jsPDF en esta página.');
+    }
+
+    // Misma normalización de encabezados/pies que usa la vista previa,
+    // para que el PDF salga igual a lo que se ve en el modal.
+    const blobVista = await prepararBlobParaVistaPrevia(blob);
+
+    const contenedor = document.createElement('div');
+
+    // Igual que pdf-engine.js: dentro del viewport (0,0); fuera de
+    // pantalla html2canvas no captura de forma confiable.
+    contenedor.style.position = 'fixed';
+    contenedor.style.top = '0';
+    contenedor.style.left = '0';
+    contenedor.style.zIndex = '2147483647';
+    contenedor.style.background = '#fff';
+    contenedor.style.pointerEvents = 'none';
+
+    document.body.appendChild(contenedor);
+
+    try {
+
+        await renderizarDocxEnContenedor(blobVista, contenedor);
+
+        // docx-preview envuelve las páginas (<section>) en un wrapper
+        // con fondo gris y relleno; se neutraliza para capturar solo
+        // la hoja.
+        const wrapper = contenedor.firstElementChild || contenedor;
+        wrapper.style.background = '#fff';
+        wrapper.style.padding = '0';
+
+        const paginas = Array.from(wrapper.children).filter(el => el.tagName === 'SECTION');
+
+        if (!paginas.length) {
+            throw new Error('No se encontraron páginas en el documento renderizado.');
+        }
+
+        paginas.forEach(pagina => {
+            pagina.style.margin = '0';
+            pagina.style.boxShadow = 'none';
+        });
+
+        if (document.fonts && document.fonts.ready) {
+            await document.fonts.ready;
+        }
+
+        await esperarImagenes(contenedor);
+
+        let pdf = null;
+
+        for (const pagina of paginas) {
+
+            // 96 px = 1 in = 25.4 mm
+            const anchoMM = pagina.offsetWidth * 25.4 / 96;
+            const altoMM = pagina.offsetHeight * 25.4 / 96;
+            const orientacion = anchoMM > altoMM ? 'landscape' : 'portrait';
+
+            const canvas = await window.html2canvas(pagina, {
+                scale: 2,
+                useCORS: true,
+                backgroundColor: '#ffffff'
+            });
+
+            const imgData = canvas.toDataURL('image/jpeg', 0.95);
+
+            if (!pdf) {
+                pdf = new JsPDFCtor({
+                    unit: 'mm',
+                    format: [anchoMM, altoMM],
+                    orientation: orientacion
+                });
+            } else {
+                pdf.addPage([anchoMM, altoMM], orientacion);
+            }
+
+            pdf.addImage(imgData, 'JPEG', 0, 0, anchoMM, altoMM);
+
+        }
+
+        return pdf.output('blob');
+
+    } finally {
+
+        contenedor.remove();
+
+    }
 
 }

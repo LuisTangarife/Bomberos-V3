@@ -203,6 +203,9 @@
 <script src="https://unpkg.com/pizzip@3.2.0/dist/pizzip.js"></script>
 <script src="https://unpkg.com/docxtemplater@3.69.3/build/docxtemplater.js"></script>
 <script src="https://unpkg.com/file-saver@1.3.8/FileSaver.js"></script>
+<!-- Para convertir el Word en PDF (docx-engine.js → generarPDFDesdeWordBlob) -->
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
 <!-- CERTIFICATE MODAL — mismos ids que espera certificados.js -->
 <div class="modal-overlay" id="certModal" style="display:none">
   <div class="modal">
@@ -215,6 +218,7 @@
     <div class="modal-actions">
       <button onclick="printCertificate()" class="btn-print">🖨 Imprimir</button>
       <button onclick="descargarWord()" class="btn-word">📄 Descargar Word</button>
+      <button onclick="descargarPDF()" class="btn-word btn-pdf">📕 Descargar PDF</button>
       <button onclick="closeModal()" class="btn-close-modal">Cerrar</button>
     </div>
   </div>
