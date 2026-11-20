@@ -277,7 +277,7 @@ function dibujarBloqueConstanciaYFirmas(doc, ayuda, y) {
     const verboEntregado = kits.length === 1 ? "entregado" : "entregados";
 
     const textoDeclaracion =
-        `Declaro que recibí a satisfacción ${descripcionKits} ${verboEntregado} por la Alcaldía de Villamaría — Secretaría de Desarrollo Social, en el marco de la atención humanitaria por la emergencia.`;
+        `Declaro que recibí a satisfacción ${descripcionKits} ${verboEntregado} por la Alcaldía de Villamaría — Cuerpo de Bomberos, en el marco de la atención humanitaria por la emergencia.`;
 
     // --- Medir cada pieza SIN dibujar nada todavía ---
 
